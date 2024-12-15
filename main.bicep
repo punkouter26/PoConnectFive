@@ -9,12 +9,5 @@ resource staticWebApp 'Microsoft.Web/staticSites@2022-03-01' = {
     name: 'Free'
     tier: 'Free'
   }
-  properties: {
-    repositoryUrl: ''  // Will be filled by GitHub Actions
-    branch: 'main'
-    buildProperties: {
-      appLocation: 'PoConnectFive.Client'
-      outputLocation: 'wwwroot'
-    }
-  }
+  properties: {}
 } 
