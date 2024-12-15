@@ -1,0 +1,364 @@
+@page "/"
+@using PoConnectFive.Shared.Models
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>Connect Five - Welcome</PageTitle>
+
+<div class="welcome-container">
+    <div class="welcome-header">
+        <h1>Connect Five</h1>
+        <p class="subtitle">A strategic game of alignment and tactics</p>
+    </div>
+
+    <div class="game-modes">
+        <div class="mode-card" @onclick="() => ShowDifficultyOptions()">
+            <div class="mode-icon">🤖</div>
+            <h2>Single Player</h2>
+            <p>Challenge our adaptive AI with multiple difficulty levels</p>
+            @if (_showDifficulties)
+            {
+                <div class="difficulty-options">
+                    @foreach (var difficulty in Enum.GetValues<AIDifficulty>())
+                    {
+                        var difficultyName = difficulty.ToString();
+                        <button class="difficulty-btn @difficulty.ToString().ToLower()" 
+                                @onclick="() => StartGameWithDifficulty(difficulty)"
+                                @onclick:stopPropagation="true">
+                            <span class="difficulty-icon">
+                                @(difficulty switch {
+                                    AIDifficulty.Easy => "😊",
+                                    AIDifficulty.Medium => "🤔",
+                                    AIDifficulty.Hard => "🤯",
+                                    _ => "🤖"
+                                })
+                            </span>
+                            <div class="difficulty-info">
+                                <span class="difficulty-name">@difficultyName Mode</span>
+                                <span class="difficulty-desc">
+                                    @(difficulty switch {
+                                        AIDifficulty.Easy => "Perfect for beginners",
+                                        AIDifficulty.Medium => "For experienced players",
+                                        AIDifficulty.Hard => "Test your mastery",
+                                        _ => ""
+                                    })
+                                </span>
+                            </div>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="mode-card" @onclick="StartTwoPlayer">
+            <div class="mode-icon">👥</div>
+            <h2>Two Players</h2>
+            <p>Play against a friend on the same device</p>
+        </div>
+    </div>
+
+    <div class="additional-options">
+        <button class="btn-secondary" @onclick="ViewLeaderboard">
+            <span class="btn-icon">🏆</span>
+            <span>Leaderboard</span>
+        </button>
+        <button class="btn-secondary" @onclick="OpenSettings">
+            <span class="btn-icon">⚙️</span>
+            <span>Settings</span>
+        </button>
+    </div>
+
+    @if (_showTutorial)
+    {
+        <div class="tutorial-overlay" @onclick="CloseTutorial">
+            <div class="tutorial-content" @onclick:stopPropagation="true">
+                <h2>How to Play</h2>
+                <div class="tutorial-steps">
+                    <div class="tutorial-step">
+                        <div class="step-number">1</div>
+                        <p>Take turns dropping pieces into any column</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-number">2</div>
+                        <p>Pieces fall to the lowest available position</p>
+                    </div>
+                    <div class="tutorial-step">
+                        <div class="step-number">3</div>
+                        <p>Connect 5 pieces horizontally, vertically, or diagonally to win!</p>
+                    </div>
+                </div>
+                <button class="btn-primary" @onclick="CloseTutorial">Got it!</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _showDifficulties;
+    private bool _showTutorial = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var hasPlayedString = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "hasPlayedBefore");
+            _showTutorial = string.IsNullOrEmpty(hasPlayedString) || !bool.Parse(hasPlayedString);
+        }
+        catch
+        {
+            _showTutorial = true; // Default to showing tutorial if there's any error
+        }
+    }
+
+    private void ShowDifficultyOptions()
+    {
+        _showDifficulties = true;
+    }
+
+    private async Task StartGameWithDifficulty(AIDifficulty difficulty)
+    {
+        var queryParams = System.Web.HttpUtility.ParseQueryString(string.Empty);
+        queryParams["mode"] = "single";
+        queryParams["difficulty"] = difficulty.ToString();
+        NavigationManager.NavigateTo($"/game?{queryParams}");
+    }
+
+    private void StartTwoPlayer()
+    {
+        var queryParams = System.Web.HttpUtility.ParseQueryString(string.Empty);
+        queryParams["mode"] = "two-player";
+        NavigationManager.NavigateTo($"/game?{queryParams}");
+    }
+
+    private void ViewLeaderboard()
+    {
+        NavigationManager.NavigateTo("/leaderboard");
+    }
+
+    private void OpenSettings()
+    {
+        NavigationManager.NavigateTo("/settings");
+    }
+
+    private async Task CloseTutorial()
+    {
+        _showTutorial = false;
+        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "hasPlayedBefore", "true");
+    }
+}
+
+<style>
+    .welcome-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .welcome-header {
+        margin-bottom: 3rem;
+    }
+
+    .welcome-header h1 {
+        font-size: 3rem;
+        color: #2196F3;
+        margin-bottom: 0.5rem;
+        animation: fadeInDown 0.8s ease-out;
+    }
+
+    .subtitle {
+        font-size: 1.2rem;
+        color: #666;
+        animation: fadeInUp 0.8s ease-out;
+    }
+
+    .game-modes {
+        display: flex;
+        gap: 2rem;
+        justify-content: center;
+        margin-bottom: 2rem;
+        animation: fadeIn 1s ease-out;
+    }
+
+    .mode-card {
+        background: white;
+        border-radius: 8px;
+        padding: 2rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+        width: 300px;
+        position: relative;
+    }
+
+    .mode-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .mode-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .mode-card h2 {
+        color: #2196F3;
+        margin-bottom: 1rem;
+    }
+
+    .mode-card p {
+        color: #666;
+    }
+
+    .difficulty-options {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 0 0 8px 8px;
+        padding: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        z-index: 10;
+    }
+
+    .difficulty-btn {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 1rem;
+        margin: 0.5rem 0;
+        border: none;
+        background: #f5f5f5;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .difficulty-btn:hover {
+        background: #e3f2fd;
+    }
+
+    .difficulty-btn.easy {
+        border-left: 4px solid #4CAF50;
+    }
+
+    .difficulty-btn.medium {
+        border-left: 4px solid #FFC107;
+    }
+
+    .difficulty-btn.hard {
+        border-left: 4px solid #f44336;
+    }
+
+    .difficulty-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .difficulty-info {
+        text-align: left;
+    }
+
+    .difficulty-name {
+        display: block;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .difficulty-desc {
+        display: block;
+        font-size: 0.8rem;
+        color: #666;
+    }
+
+    .additional-options {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        animation: fadeInUp 1.2s ease-out;
+    }
+
+    .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        border: 2px solid #2196F3;
+        background: transparent;
+        color: #2196F3;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-secondary:hover {
+        background: #2196F3;
+        color: white;
+    }
+
+    .btn-icon {
+        font-size: 1.2rem;
+    }
+
+    .tutorial-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .tutorial-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 8px;
+        max-width: 500px;
+        width: 90%;
+        animation: scaleIn 0.3s ease-out;
+    }
+
+    .tutorial-steps {
+        margin: 2rem 0;
+    }
+
+    .tutorial-step {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 1rem 0;
+        text-align: left;
+    }
+
+    .step-number {
+        width: 30px;
+        height: 30px;
+        background: #2196F3;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+    }
+
+    .btn-primary {
+        padding: 0.75rem 1.5rem;
+        background: #2196F3;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-primary:hover {
+        background: #1976D2;
+    }
+</style>

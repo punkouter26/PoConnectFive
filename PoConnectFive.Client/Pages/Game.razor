@@ -1,0 +1,473 @@
+@page "/game"
+@using PoConnectFive.Shared.Models
+@using PoConnectFive.Shared.Interfaces
+@using PoConnectFive.Shared.Services
+@using PoConnectFive.Client.Components
+@using PoConnectFive.Client.Services
+@inject IGameService GameService
+@inject IPlayerDataService PlayerDataService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+
+<PageTitle>Connect Five - Game</PageTitle>
+
+<div class="game-container">
+    <header class="game-header">
+        <button class="btn-back" @onclick="NavigateToMenu">
+            <span>←</span> Back to Menu
+        </button>
+        
+        @if (_currentState != null)
+        {
+            <div class="game-status @(_currentState.Status.ToString().ToLower())">
+                <div class="player-info">
+                    <div class="player @(IsCurrentPlayer(_currentState.Player1) ? "active" : "")">
+                        <span class="player-name">@_currentState.Player1.Name</span>
+                        <span class="player-piece red"></span>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="player @(IsCurrentPlayer(_currentState.Player2) ? "active" : "")">
+                        <span class="player-name">@_currentState.Player2.Name</span>
+                        <span class="player-piece yellow"></span>
+                    </div>
+                </div>
+                <div class="status-message">
+                    <h2>@GetStatusMessage()</h2>
+                    <p>@GetGameMessage()</p>
+                </div>
+            </div>
+        }
+    </header>
+
+    @if (_currentState != null)
+    {
+        <div class="game-board-wrapper">
+            <GameBoardComponent @ref="gameBoardRef" 
+                              Board="@_currentState.Board" 
+                              CurrentState="@_currentState"
+                              OnColumnClicked="OnColumnClicked" />
+        </div>
+    }
+
+    <div class="game-controls">
+        <button class="btn-primary" @onclick="OnNewGameClick">New Game</button>
+        <button class="btn-secondary" @onclick="OnResetClick">Reset</button>
+    </div>
+</div>
+
+@code {
+    private GameState? _currentState;
+    private DateTime _gameStartTime;
+    private string? _player1Id;
+    private string? _player2Id;
+    private GameBoardComponent? gameBoardRef;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        
+        string? mode = query["mode"];
+        if (mode == "single")
+        {
+            string? difficultyStr = query["difficulty"];
+            if (Enum.TryParse<AIDifficulty>(difficultyStr, true, out var difficulty))
+            {
+                await StartNewGameWithAI(difficulty);
+            }
+        }
+        else if (mode == "two-player")
+        {
+            await StartNewGameTwoPlayer();
+        }
+        else
+        {
+            await StartNewGameTwoPlayer(); // Default to two player mode
+        }
+    }
+
+    private async Task OnColumnClicked(int column)
+    {
+        if (_currentState?.Status != GameStatus.InProgress)
+            return;
+
+        try
+        {
+            if (await GameService.IsValidMove(_currentState, column))
+            {
+                var previousState = _currentState;
+                _currentState = await GameService.MakeMove(_currentState, column);
+                StateHasChanged();
+
+                // Check if game ended
+                if (_currentState.Status != GameStatus.InProgress && 
+                    previousState.Status == GameStatus.InProgress)
+                {
+                    await HandleGameEnd();
+                }
+                // Handle AI move if it's AI's turn
+                else if (_currentState.Status == GameStatus.InProgress && 
+                         _currentState.CurrentPlayer.Type == PlayerType.AI)
+                {
+                    try
+                    {
+                        int aiMove = await GameService.GetAIMove(_currentState);
+                        if (await GameService.IsValidMove(_currentState, aiMove))
+                        {
+                            // Get reference to GameBoard component
+                            if (gameBoardRef != null)
+                            {
+                                await gameBoardRef.AnimatePieceDrop(aiMove);
+                            }
+                            _currentState = await GameService.MakeMove(_currentState, aiMove);
+                            StateHasChanged();
+
+                            if (_currentState.Status != GameStatus.InProgress)
+                            {
+                                await HandleGameEnd();
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        await JSRuntime.InvokeVoidAsync("alert", $"AI Error: {ex.Message}");
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            await JSRuntime.InvokeVoidAsync("alert", ex.Message);
+        }
+    }
+
+    private async Task HandleGameEnd()
+    {
+        var gameTime = DateTime.UtcNow - _gameStartTime;
+
+        // Update player statistics
+        if (_player1Id != null)
+        {
+            var result = _currentState!.Status switch
+            {
+                GameStatus.Player1Won => GameResult.Win,
+                GameStatus.Player2Won => GameResult.Loss,
+                GameStatus.Draw => GameResult.Draw,
+                _ => throw new InvalidOperationException("Invalid game status")
+            };
+            await PlayerDataService.UpdatePlayerStats(_player1Id, result, gameTime);
+        }
+
+        if (_player2Id != null && _currentState!.Player2.Type == PlayerType.Human)
+        {
+            var result = _currentState.Status switch
+            {
+                GameStatus.Player2Won => GameResult.Win,
+                GameStatus.Player1Won => GameResult.Loss,
+                GameStatus.Draw => GameResult.Draw,
+                _ => throw new InvalidOperationException("Invalid game status")
+            };
+            await PlayerDataService.UpdatePlayerStats(_player2Id, result, gameTime);
+        }
+
+        // Show game end dialog after a short delay to allow animation to complete
+        await Task.Delay(500);
+        var message = _currentState!.Status switch
+        {
+            GameStatus.Player1Won => $"🎉 {_currentState.Player1.Name} Wins! 🎉",
+            GameStatus.Player2Won => $"🎉 {_currentState.Player2.Name} Wins! 🎉",
+            GameStatus.Draw => "🤝 Game Draw! 🤝",
+            _ => string.Empty
+        };
+
+        var playAgain = await JSRuntime.InvokeAsync<bool>("confirm", $"{message}\n\nPlay again?");
+        if (playAgain)
+        {
+            await OnResetClick();
+        }
+    }
+
+    private async Task OnNewGameClick()
+    {
+        if (_currentState?.Status == GameStatus.InProgress)
+        {
+            if (!await JSRuntime.InvokeAsync<bool>("confirm", "Current game is in progress. Start new game anyway?"))
+                return;
+        }
+
+        bool isAI = await JSRuntime.InvokeAsync<bool>("confirm", "Play against AI?");
+        if (isAI)
+        {
+            var difficulties = Enum.GetNames(typeof(AIDifficulty));
+            var difficultyChoice = await JSRuntime.InvokeAsync<string>("prompt", 
+                $"Select AI Difficulty ({string.Join(", ", difficulties)}):", 
+                difficulties[0]);
+
+            if (!string.IsNullOrEmpty(difficultyChoice) && 
+                Enum.TryParse<AIDifficulty>(difficultyChoice, true, out var difficulty))
+            {
+                await StartNewGameWithAI(difficulty);
+            }
+        }
+        else
+        {
+            await StartNewGameTwoPlayer();
+        }
+    }
+
+    private async Task StartNewGameWithAI(AIDifficulty difficulty)
+    {
+        string player1Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter your name:", "Player 1");
+        if (string.IsNullOrEmpty(player1Name)) return;
+
+        // Create or get player stats
+        var player1Stats = await PlayerDataService.CreatePlayer(player1Name);
+        _player1Id = player1Stats.PlayerId;
+        _player2Id = null;
+
+        _gameStartTime = DateTime.UtcNow;
+        _currentState = await GameService.StartNewGame(
+            player1Name,
+            $"AI ({difficulty})",
+            true,
+            difficulty
+        );
+        StateHasChanged();
+    }
+
+    private async Task StartNewGameTwoPlayer()
+    {
+        string player1Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter name for Player 1:", "Player 1");
+        if (string.IsNullOrEmpty(player1Name)) return;
+
+        string player2Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter name for Player 2:", "Player 2");
+        if (string.IsNullOrEmpty(player2Name)) return;
+
+        // Create or get player stats
+        var player1Stats = await PlayerDataService.CreatePlayer(player1Name);
+        var player2Stats = await PlayerDataService.CreatePlayer(player2Name);
+        _player1Id = player1Stats.PlayerId;
+        _player2Id = player2Stats.PlayerId;
+
+        _gameStartTime = DateTime.UtcNow;
+        _currentState = await GameService.StartNewGame(player1Name, player2Name);
+        StateHasChanged();
+    }
+
+    private async Task OnResetClick()
+    {
+        if (_currentState?.Status == GameStatus.InProgress)
+        {
+            if (!await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to reset the current game?"))
+                return;
+        }
+
+        _gameStartTime = DateTime.UtcNow;
+        _currentState = await GameService.StartNewGame(
+            _currentState!.Player1.Name,
+            _currentState.Player2.Name,
+            _currentState.Player2.Type == PlayerType.AI,
+            _currentState.Player2.AIDifficulty
+        );
+        StateHasChanged();
+    }
+
+    private string GetStatusMessage()
+    {
+        return _currentState?.Status switch
+        {
+            GameStatus.InProgress => $"{_currentState.CurrentPlayer.Name}'s Turn",
+            GameStatus.Player1Won => $"{_currentState.Player1.Name} Wins!",
+            GameStatus.Player2Won => $"{_currentState.Player2.Name} Wins!",
+            GameStatus.Draw => "Game Draw!",
+            _ => string.Empty
+        };
+    }
+
+    private string GetGameMessage()
+    {
+        return _currentState?.Status switch
+        {
+            GameStatus.InProgress => _currentState.CurrentPlayer.Type == PlayerType.AI ? 
+                "AI is thinking..." : "Click a column to place your piece",
+            _ => "Click New Game to play again"
+        };
+    }
+
+    private bool IsCurrentPlayer(Player player)
+    {
+        return _currentState?.CurrentPlayer == player;
+    }
+
+    private async Task NavigateToMenu()
+    {
+        if (_currentState?.Status == GameStatus.InProgress)
+        {
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Current game will be lost. Return to menu?");
+            if (confirmed)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+}
+
+<style>
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .game-header {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .btn-back {
+        padding: 0.5rem 1rem;
+        background: transparent;
+        border: none;
+        color: #2196F3;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+    }
+
+    .btn-back:hover {
+        color: #1976D2;
+    }
+
+    .game-status {
+        flex-grow: 1;
+        text-align: center;
+        padding: 1rem;
+        border-radius: 8px;
+        background: white;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+        margin: 0 1rem;
+    }
+
+    .player-info {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 2rem;
+        margin-bottom: 1rem;
+    }
+
+    .player {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .player.active {
+        background: #e3f2fd;
+    }
+
+    .player-name {
+        font-weight: bold;
+    }
+
+    .player-piece {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+    }
+
+    .player-piece.red {
+        background: #FF0000;
+    }
+
+    .player-piece.yellow {
+        background: #FFFF00;
+    }
+
+    .vs {
+        font-weight: bold;
+        color: #666;
+    }
+
+    .status-message h2 {
+        margin: 0;
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .status-message p {
+        margin: 0;
+        color: #666;
+    }
+
+    .game-status.player1won {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .game-status.player2won {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .game-status.draw {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .game-board-wrapper {
+        position: relative;
+    }
+
+    .game-controls {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .btn-primary, .btn-secondary {
+        padding: 0.75rem 1.5rem;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+
+    .btn-primary {
+        background: #2196F3;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary {
+        background: transparent;
+        color: #2196F3;
+        border: 2px solid #2196F3;
+    }
+
+    .btn-primary:hover {
+        background: #1976D2;
+    }
+
+    .btn-secondary:hover {
+        background: #2196F3;
+        color: white;
+    }
+</style>
