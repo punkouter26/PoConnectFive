@@ -1,4 +1,4 @@
-param location string = resourceGroup().location
+param location string = 'eastus2'
 param appName string = 'PoConnectFive'
 
 // Static Web App resource

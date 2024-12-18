@@ -16,54 +16,6 @@
 
     <div class="settings-content">
         <div class="settings-section">
-            <h2>Theme</h2>
-            <div class="setting-item">
-                <label>Color Scheme</label>
-                <select @bind="GameSettings.Theme">
-                    <option value="classic">Classic</option>
-                    <option value="dark">Dark</option>
-                    <option value="light">Light</option>
-                    <option value="neon">Neon</option>
-                </select>
-            </div>
-            <div class="setting-item">
-                <label>Player 1 Color</label>
-                <input type="color" @bind="GameSettings.Player1Color" />
-            </div>
-            <div class="setting-item">
-                <label>Player 2 Color</label>
-                <input type="color" @bind="GameSettings.Player2Color" />
-            </div>
-        </div>
-
-        <div class="settings-section">
-            <h2>Accessibility</h2>
-            <div class="setting-item">
-                <label>High Contrast Mode</label>
-                <label class="switch">
-                    <input type="checkbox" @bind="GameSettings.HighContrastEnabled">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="setting-item">
-                <label>Screen Reader Hints</label>
-                <label class="switch">
-                    <input type="checkbox" @bind="GameSettings.ScreenReaderEnabled">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="setting-item">
-                <label>Animation Speed</label>
-                <select @bind="GameSettings.AnimationSpeed">
-                    <option value="normal">Normal</option>
-                    <option value="slow">Slow</option>
-                    <option value="fast">Fast</option>
-                    <option value="none">None</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="settings-section">
             <h2>Game Data</h2>
             <div class="setting-item">
                 <button class="btn-danger" @onclick="ResetGameData">Reset All Game Data</button>
@@ -90,14 +42,14 @@
         {
             GameSettings = savedSettings;
             OriginalSettings = new GameSettingsData
-            {
-                Theme = savedSettings.Theme,
-                Player1Color = savedSettings.Player1Color,
-                Player2Color = savedSettings.Player2Color,
-                HighContrastEnabled = savedSettings.HighContrastEnabled,
-                ScreenReaderEnabled = savedSettings.ScreenReaderEnabled,
-                AnimationSpeed = savedSettings.AnimationSpeed
-            };
+                {
+                    Theme = savedSettings.Theme,
+                    Player1Color = savedSettings.Player1Color,
+                    Player2Color = savedSettings.Player2Color,
+                    HighContrastEnabled = savedSettings.HighContrastEnabled,
+                    ScreenReaderEnabled = savedSettings.ScreenReaderEnabled,
+                    AnimationSpeed = savedSettings.AnimationSpeed
+                };
         }
     }
 
@@ -110,7 +62,7 @@
 
     private async Task ResetGameData()
     {
-        if (await JSRuntime.InvokeAsync<bool>("confirm", 
+        if (await JSRuntime.InvokeAsync<bool>("confirm",
             "Are you sure you want to reset all game data? This cannot be undone."))
         {
             await LocalStorage.Clear();
@@ -148,10 +100,10 @@
         margin-bottom: 2rem;
     }
 
-    .settings-header h1 {
-        color: #2196F3;
-        margin: 0;
-    }
+        .settings-header h1 {
+            color: #2196F3;
+            margin: 0;
+        }
 
     .btn-back {
         padding: 0.5rem 1rem;
@@ -165,9 +117,9 @@
         font-size: 1rem;
     }
 
-    .btn-back:hover {
-        color: #1976D2;
-    }
+        .btn-back:hover {
+            color: #1976D2;
+        }
 
     .settings-section {
         background: white;
@@ -177,11 +129,11 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .settings-section h2 {
-        color: #2196F3;
-        margin: 0 0 1.5rem 0;
-        font-size: 1.5rem;
-    }
+        .settings-section h2 {
+            color: #2196F3;
+            margin: 0 0 1.5rem 0;
+            font-size: 1.5rem;
+        }
 
     .setting-item {
         display: flex;
@@ -204,11 +156,11 @@
         height: 34px;
     }
 
-    .switch input {
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
 
     .slider {
         position: absolute;
@@ -222,25 +174,25 @@
         border-radius: 34px;
     }
 
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 26px;
-        width: 26px;
-        left: 4px;
-        bottom: 4px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-    }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 26px;
+            width: 26px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
 
     input:checked + .slider {
         background-color: #2196F3;
     }
 
-    input:checked + .slider:before {
-        transform: translateX(26px);
-    }
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
 
     select {
         padding: 0.5rem;
