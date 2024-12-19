@@ -180,6 +180,8 @@
             _ => string.Empty
         };
 
+        await PlaySoundEffect(_currentState.Status == GameStatus.Draw ? "draw" : "win");
+
         var playAgain = await JSRuntime.InvokeAsync<bool>("confirm", $"{message}\n\nPlay again?");
         if (playAgain)
         {
@@ -313,6 +315,12 @@
         {
             NavigationManager.NavigateTo("/");
         }
+    }
+
+    private async Task PlaySoundEffect(string sound)
+    {
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/gameBoard.js");
+        await module.InvokeVoidAsync("playSoundEffect", sound);
     }
 }
 

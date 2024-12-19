@@ -95,6 +95,7 @@
         {
             await AnimatePieceDrop(column);
             await OnColumnClicked.InvokeAsync(column);
+            await PlaySoundEffect("pieceDrop");
         }
     }
 
@@ -134,6 +135,7 @@
             {
                 await AnimatePieceDrop(column);
                 await OnColumnClicked.InvokeAsync(column);
+                await PlaySoundEffect("pieceDrop");
             }
         }
         _isDragging = false;
@@ -165,6 +167,12 @@
         await Task.Delay(_animationDuration);
         _isAnimating = false;
         StateHasChanged();
+    }
+
+    private async Task PlaySoundEffect(string sound)
+    {
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/gameBoard.js");
+        await module.InvokeVoidAsync("playSoundEffect", sound);
     }
 
     private class DOMRect
