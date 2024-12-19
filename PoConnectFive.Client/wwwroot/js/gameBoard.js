@@ -119,3 +119,28 @@ function drawPreviewPiece(context, column, cellSize, pieceRadius) {
 export function getBoundingClientRect(element) {
     return element.getBoundingClientRect();
 }
+
+export function playSoundEffect(sound) {
+    const audio = new Audio(`./sounds/${sound}.mp3`);
+    audio.play();
+}
+
+export function animatePieceDrop(column, cellSize, pieceRadius, color) {
+    const animation = document.createElement('div');
+    animation.className = 'piece-animation';
+    animation.style.left = `${column * cellSize}px`;
+    animation.style.top = `-${cellSize}px`;
+    animation.style.width = `${cellSize}px`;
+    animation.style.height = `${cellSize}px`;
+    animation.style.backgroundColor = color;
+
+    document.body.appendChild(animation);
+
+    setTimeout(() => {
+        animation.style.top = `${(GameBoard.Rows - 1) * cellSize}px`;
+    }, 0);
+
+    setTimeout(() => {
+        document.body.removeChild(animation);
+    }, 300);
+}
