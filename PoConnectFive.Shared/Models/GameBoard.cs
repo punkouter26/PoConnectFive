@@ -69,6 +69,7 @@ namespace PoConnectFive.Shared.Models
         // Iterator Pattern: Traverses board in different directions to check for wins
         public bool CheckWin(int row, int column, int playerId)
         {
+            Console.WriteLine($"Checking win for player {playerId} at position ({row}, {column})");
             // Check horizontal
             if (CheckDirection(row, column, 0, 1, playerId) ||
                 // Check vertical
@@ -78,6 +79,7 @@ namespace PoConnectFive.Shared.Models
                 // Check diagonal (top-right to bottom-left)
                 CheckDirection(row, column, 1, -1, playerId))
             {
+                Console.WriteLine($"Win detected for player {playerId}!");
                 return true;
             }
 
@@ -90,12 +92,15 @@ namespace PoConnectFive.Shared.Models
             int count = 1;
             int r, c;
 
+            Console.WriteLine($"Checking direction ({rowDelta}, {colDelta}) from ({row}, {column})");
+
             // Check forward direction
             r = row + rowDelta;
             c = column + colDelta;
             while (IsValidPosition(r, c) && _board[r, c] == playerId)
             {
                 count++;
+                Console.WriteLine($"Found matching piece at ({r}, {c}), count = {count}");
                 r += rowDelta;
                 c += colDelta;
             }
@@ -106,10 +111,12 @@ namespace PoConnectFive.Shared.Models
             while (IsValidPosition(r, c) && _board[r, c] == playerId)
             {
                 count++;
+                Console.WriteLine($"Found matching piece at ({r}, {c}), count = {count}");
                 r -= rowDelta;
                 c -= colDelta;
             }
 
+            Console.WriteLine($"Final count in direction ({rowDelta}, {colDelta}): {count}");
             return count >= WinningLength;
         }
 

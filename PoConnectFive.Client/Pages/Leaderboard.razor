@@ -13,14 +13,6 @@
             <span>←</span> Back to Menu
         </button>
         <h1>Leaderboard</h1>
-        <div class="filter-controls">
-            <select @bind="SortCriteria" class="filter-select">
-                <option value="winrate">Win Rate</option>
-                <option value="wins">Total Wins</option>
-                <option value="games">Games Played</option>
-                <option value="streak">Best Streak</option>
-            </select>
-        </div>
     </div>
 
     @if (_loading)
@@ -70,20 +62,11 @@
 @code {
     private List<PlayerStats>? _players;
     private bool _loading = true;
-    private string SortCriteria { get; set; } = "winrate";
 
     protected override async Task OnInitializedAsync()
     {
         PlayerDataService.OnDataChanged += StateHasChanged;
         await LoadLeaderboard();
-    }
-
-    protected override async Task OnParametersSetAsync()
-    {
-        if (_players != null)
-        {
-            SortPlayers();
-        }
     }
 
     private async Task LoadLeaderboard()
@@ -92,7 +75,10 @@
         {
             _loading = true;
             _players = await PlayerDataService.GetTopPlayers();
-            SortPlayers();
+            _players = _players.OrderByDescending(p => p.WinRate)
+                             .ThenByDescending(p => p.Wins)
+                             .ThenByDescending(p => p.GamesPlayed)
+                             .ToList();
         }
         catch (Exception ex)
         {
@@ -103,20 +89,6 @@
         {
             _loading = false;
         }
-    }
-
-    private void SortPlayers()
-    {
-        if (_players == null) return;
-
-        _players = SortCriteria switch
-        {
-            "winrate" => _players.OrderByDescending(p => p.WinRate).ToList(),
-            "wins" => _players.OrderByDescending(p => p.Wins).ToList(),
-            "games" => _players.OrderByDescending(p => p.GamesPlayed).ToList(),
-            "streak" => _players.OrderByDescending(p => p.BestWinStreak).ToList(),
-            _ => _players
-        };
     }
 
     private void NavigateToMenu()
@@ -163,20 +135,6 @@
 
     .btn-back:hover {
         color: #1976D2;
-    }
-
-    .filter-controls {
-        display: flex;
-        gap: 1rem;
-        align-items: center;
-    }
-
-    .filter-select {
-        padding: 0.5rem;
-        border-radius: 4px;
-        border: 1px solid #ddd;
-        background: white;
-        color: #333;
     }
 
     .leaderboard-table {
@@ -280,5 +238,10 @@
 
     .no-data .btn-primary:hover {
         background: #1976D2;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>
