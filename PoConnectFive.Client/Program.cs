@@ -6,6 +6,7 @@ using PoConnectFive.Shared.Services;
 using PoConnectFive.Shared.Interfaces;
 using PoConnectFive.Shared.Services.AI;
 using PoConnectFive.Shared.Models;
+using Radzen; // Add Radzen namespace
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -25,5 +26,8 @@ builder.Services.AddScoped<IAIPlayer>(sp =>
     // Default to medium difficulty, but this will be overridden when starting a new game
     return AIPlayerFactory.CreateAIPlayer(AIDifficulty.Medium);
 });
+
+// Add Radzen component services
+builder.Services.AddRadzenComponents();
 
 await builder.Build().RunAsync();

@@ -11,49 +11,55 @@
 
 <PageTitle>Connect Five - Game</PageTitle>
 
-<div class="game-container">
-    <header class="game-header">
-        <button class="btn-back" @onclick="NavigateToMenu">
-            <span>←</span> Back to Menu
-        </button>
+<RadzenStack AlignItems="AlignItems.Center" Gap="2rem" Class="rz-p-4">
+    
+    @* Header Section *@
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%; max-width: 800px;">
+        <RadzenButton Click="NavigateToMenu" Text="Back to Menu" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" /> @* Changed ButtonStyle *@
         
         @if (_currentState != null)
         {
-            <div class="game-status @(_currentState.Status.ToString().ToLower())">
-                <div class="player-info">
-                    <div class="player @(IsCurrentPlayer(_currentState.Player1) ? "active" : "")">
-                        <span class="player-name">@_currentState.Player1.Name</span>
-                        <span class="player-piece red"></span>
-                    </div>
-                    <div class="vs">VS</div>
-                    <div class="player @(IsCurrentPlayer(_currentState.Player2) ? "active" : "")">
-                        <span class="player-name">@_currentState.Player2.Name</span>
-                        <span class="player-piece yellow"></span>
-                    </div>
-                </div>
-                <div class="status-message">
-                    <h2>@GetStatusMessage()</h2>
-                    <p>@GetGameMessage()</p>
-                </div>
-            </div>
+            <RadzenCard class="@GetStatusCardClass()" Style="flex-grow: 1; margin: 0 1rem;"> @* Used helper method for class *@
+                 <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center" AlignItems="AlignItems.Center" Gap="1rem">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="@(IsCurrentPlayer(_currentState.Player1) ? "player-active" : "")">
+                            <RadzenText TextStyle="TextStyle.Subtitle1" Style="font-weight: bold;">@_currentState.Player1.Name</RadzenText>
+                            <span class="player-piece-icon red"></span>
+                        </RadzenStack>
+                        <RadzenText Text="VS" Style="font-weight: bold; color: var(--rz-text-disabled-color);" />
+                         <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.5rem" Class="@(IsCurrentPlayer(_currentState.Player2) ? "player-active" : "")">
+                            <span class="player-piece-icon yellow"></span>
+                            <RadzenText TextStyle="TextStyle.Subtitle1" Style="font-weight: bold;">@_currentState.Player2.Name</RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.H6" TagName="TagName.H2">@GetStatusMessage()</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Body2" TagName="TagName.P">@GetGameMessage()</RadzenText>
+                    </RadzenStack>
+                 </RadzenStack>
+            </RadzenCard>
         }
-    </header>
+        <div style="width: 130px;"></div> @* Spacer to balance the back button *@
+    </RadzenStack>
 
+    @* Game Board *@
     @if (_currentState != null)
     {
-        <div class="game-board-wrapper">
-            <GameBoardComponent @ref="gameBoardRef" 
-                              Board="@_currentState.Board" 
-                              CurrentState="@_currentState"
-                              OnColumnClicked="OnColumnClicked" />
-        </div>
+        <RadzenStack JustifyContent="JustifyContent.Center">
+             <GameBoardComponent @ref="gameBoardRef" 
+                               Board="@_currentState.Board" 
+                               CurrentState="@_currentState"
+                               OnColumnClicked="OnColumnClicked" />
+        </RadzenStack>
     }
 
-    <div class="game-controls">
-        <button class="btn-primary" @onclick="OnNewGameClick">New Game</button>
-        <button class="btn-secondary" @onclick="OnResetClick">Reset</button>
-    </div>
-</div>
+    @* Game Controls *@
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.Center">
+        <RadzenButton Click="OnNewGameClick" Text="New Game" ButtonStyle="ButtonStyle.Primary" />
+        <RadzenButton Click="OnResetClick" Text="Reset" ButtonStyle="ButtonStyle.Secondary" />
+    </RadzenStack>
+
+</RadzenStack>
 
 @code {
     private GameState? _currentState;
@@ -322,160 +328,52 @@
         var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/gameBoard.js");
         await module.InvokeVoidAsync("playSoundEffect", sound);
     }
+
+    // Helper method for RZ9986 fix
+    private string GetStatusCardClass()
+    {
+        return $"game-status-card {(_currentState?.Status.ToString().ToLower() ?? "")}";
+    }
 }
 
 <style>
-    .game-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 2rem;
-        padding: 2rem;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .game-header {
-        width: 100%;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        margin-bottom: 1rem;
-    }
-
-    .btn-back {
-        padding: 0.5rem 1rem;
-        background: transparent;
-        border: none;
-        color: #2196F3;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1rem;
-    }
-
-    .btn-back:hover {
-        color: #1976D2;
-    }
-
-    .game-status {
-        flex-grow: 1;
-        text-align: center;
-        padding: 1rem;
-        border-radius: 8px;
-        background: white;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        margin: 0 1rem;
-    }
-
-    .player-info {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 2rem;
-        margin-bottom: 1rem;
-    }
-
-    .player {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
-        border-radius: 4px;
-        transition: all 0.3s ease;
-    }
-
-    .player.active {
-        background: #e3f2fd;
-    }
-
-    .player-name {
-        font-weight: bold;
-    }
-
-    .player-piece {
+    /* Style for player piece icons */
+    .player-piece-icon {
+        display: inline-block;
         width: 20px;
         height: 20px;
         border-radius: 50%;
+        vertical-align: middle;
     }
 
-    .player-piece.red {
-        background: #FF0000;
+    .player-piece-icon.red {
+        background: #FF0000; /* Consider using Radzen theme colors if desired */
     }
 
-    .player-piece.yellow {
-        background: #FFFF00;
+    .player-piece-icon.yellow {
+        background: #FFFF00; /* Consider using Radzen theme colors if desired */
     }
 
-    .vs {
-        font-weight: bold;
-        color: #666;
+    /* Highlight active player */
+    .player-active {
+        /* Example: Add a subtle background or border */
+         background-color: rgba(var(--rz-primary-rgb), 0.1);
+         padding: 0.25rem 0.5rem;
+         border-radius: var(--rz-border-radius);
     }
 
-    .status-message h2 {
-        margin: 0;
-        font-size: 1.5rem;
-        margin-bottom: 0.5rem;
+    /* Optional: Style the status card based on game outcome */
+    .game-status-card.player1won {
+        /* background: var(--rz-success-lighter); */
+        border-left: 4px solid var(--rz-success);
+    }
+    .game-status-card.player2won {
+        /* background: var(--rz-info-lighter); */
+         border-left: 4px solid var(--rz-info);
+    }
+     .game-status-card.draw {
+        /* background: var(--rz-warning-lighter); */
+         border-left: 4px solid var(--rz-warning);
     }
 
-    .status-message p {
-        margin: 0;
-        color: #666;
-    }
-
-    .game-status.player1won {
-        background: #e8f5e9;
-        color: #2e7d32;
-    }
-
-    .game-status.player2won {
-        background: #e3f2fd;
-        color: #1565c0;
-    }
-
-    .game-status.draw {
-        background: #fff3e0;
-        color: #ef6c00;
-    }
-
-    .game-board-wrapper {
-        position: relative;
-    }
-
-    .game-controls {
-        display: flex;
-        gap: 1rem;
-        margin-top: 1rem;
-    }
-
-    .btn-primary, .btn-secondary {
-        padding: 0.75rem 1.5rem;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 1rem;
-        transition: all 0.2s;
-    }
-
-    .btn-primary {
-        background: #2196F3;
-        color: white;
-        border: none;
-    }
-
-    .btn-secondary {
-        background: transparent;
-        color: #2196F3;
-        border: 2px solid #2196F3;
-    }
-
-    .btn-primary:hover {
-        background: #1976D2;
-    }
-
-    .btn-secondary:hover {
-        background: #2196F3;
-        color: white;
-    }
 </style>

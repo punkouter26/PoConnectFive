@@ -31,31 +31,38 @@
     }
     else
     {
-        <div class="leaderboard-table">
-            <div class="table-header">
-                <div class="rank">#</div>
-                <div class="player">Player</div>
-                <div class="stat">Win Rate</div>
-                <div class="stat">Wins</div>
-                <div class="stat">Games</div>
-                <div class="stat">Best Streak</div>
-            </div>
-
-            @foreach (var (player, index) in _players.Select((p, i) => (p, i)))
-            {
-                <div class="table-row @(index < 3 ? $"top-{index + 1}" : "")">
-                    <div class="rank">@(index + 1)</div>
-                    <div class="player">
-                        <span class="player-name">@player.PlayerName</span>
-                        <span class="last-played">Last played: @player.LastPlayed.ToString("MMM dd, yyyy")</span>
-                    </div>
-                    <div class="stat">@($"{player.WinRate:F1}%")</div>
-                    <div class="stat">@player.Wins</div>
-                    <div class="stat">@player.GamesPlayed</div>
-                    <div class="stat">@player.BestWinStreak</div>
+        <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Simple" AllowSorting="true" PageSize="10" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
+                        Data="@_players" TItem="PlayerStats" ColumnWidth="200px" LogicalFilterOperator="LogicalFilterOperator.Or" IsLoading=@_loading EmptyText="No player data available yet.">
+            <Columns>
+                <RadzenDataGridColumn TItem="PlayerStats" Title="#" Sortable="false" Filterable="false" Width="60px" TextAlign="TextAlign.Center">
+                    <Template Context="data">
+                        @(_players!.IndexOf(data) + 1) 
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="PlayerStats" Property="PlayerName" Title="Player" Frozen="true" Width="200px">
+                     <Template Context="data">
+                        <RadzenStack Orientation="Orientation.Vertical" Gap="0">
+                            <RadzenText TextStyle="TextStyle.Subtitle2">@data.PlayerName</RadzenText>
+                            <RadzenText TextStyle="TextStyle.Caption">Last played: @data.LastPlayed.ToString("MMM dd, yyyy")</RadzenText>
+                        </RadzenStack>
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="PlayerStats" Property="WinRate" Title="Win Rate" Width="120px" TextAlign="TextAlign.Center">
+                    <Template Context="data">
+                        @($"{data.WinRate:F1}%")
+                    </Template>
+                </RadzenDataGridColumn>
+                <RadzenDataGridColumn TItem="PlayerStats" Property="Wins" Title="Wins" Width="100px" TextAlign="TextAlign.Center" />
+                <RadzenDataGridColumn TItem="PlayerStats" Property="GamesPlayed" Title="Games" Width="100px" TextAlign="TextAlign.Center" />
+                <RadzenDataGridColumn TItem="PlayerStats" Property="BestWinStreak" Title="Best Streak" Width="120px" TextAlign="TextAlign.Center" />
+            </Columns>
+             <EmptyTemplate>
+                 <div class="no-data rz-p-4">
+                    <p>No player data available yet. Start playing to appear on the leaderboard!</p>
+                    <RadzenButton Click="NavigateToMenu" Text="Start Playing" ButtonStyle="ButtonStyle.Primary" />
                 </div>
-            }
-        </div>
+            </EmptyTemplate>
+        </RadzenDataGrid>
     }
 </div>
 
@@ -137,72 +144,7 @@
         color: #1976D2;
     }
 
-    .leaderboard-table {
-        background: white;
-        border-radius: 8px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        overflow: hidden;
-    }
-
-    .table-header {
-        display: grid;
-        grid-template-columns: 60px 2fr repeat(4, 1fr);
-        padding: 1rem;
-        background: #2196F3;
-        color: white;
-        font-weight: bold;
-    }
-
-    .table-row {
-        display: grid;
-        grid-template-columns: 60px 2fr repeat(4, 1fr);
-        padding: 1rem;
-        border-bottom: 1px solid #eee;
-        transition: background-color 0.2s;
-    }
-
-    .table-row:hover {
-        background-color: #f5f5f5;
-    }
-
-    .top-1 {
-        background-color: #fff9c4;
-    }
-
-    .top-2 {
-        background-color: #f5f5f5;
-    }
-
-    .top-3 {
-        background-color: #ffecb3;
-    }
-
-    .rank {
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .player {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .player-name {
-        font-weight: bold;
-    }
-
-    .last-played {
-        font-size: 0.8rem;
-        color: #666;
-    }
-
-    .stat {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+    /* Removed custom table styles as RadzenDataGrid handles styling */
 
     .loading-spinner {
         text-align: center;
@@ -238,10 +180,5 @@
 
     .no-data .btn-primary:hover {
         background: #1976D2;
-    }
-
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
     }
 </style>

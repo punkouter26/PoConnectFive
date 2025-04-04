@@ -66,6 +66,26 @@ namespace PoConnectFive.Shared.Models
             return _board[0, column] == 0;
         }
 
+        /// <summary>
+        /// Finds the lowest available row index for a piece in the specified column.
+        /// </summary>
+        /// <param name="column">The column index.</param>
+        /// <returns>The row index where the piece will land, or -1 if the column is full.</returns>
+        public int GetTargetRow(int column)
+        {
+            if (column < 0 || column >= Columns)
+                return -1; // Invalid column
+
+            for (int row = Rows - 1; row >= 0; row--)
+            {
+                if (_board[row, column] == 0)
+                {
+                    return row;
+                }
+            }
+            return -1; // Column is full
+        }
+
         // Iterator Pattern: Traverses board in different directions to check for wins
         public bool CheckWin(int row, int column, int playerId)
         {

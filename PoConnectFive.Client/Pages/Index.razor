@@ -5,117 +5,76 @@
 
 <PageTitle>Connect Five - Welcome</PageTitle>
 
-<div class="welcome-container">
-    <div class="welcome-header">
-        <h1>Connect Five</h1>
-        <p class="subtitle">A strategic game of alignment and tactics</p>
-    </div>
+<RadzenStack AlignItems="AlignItems.Center" Gap="3rem" Class="rz-p-4">
+    <RadzenStack AlignItems="AlignItems.Center" Gap="0">
+        <RadzenText Text="Connect Five" TextStyle="TextStyle.H1" TagName="TagName.H1" Style="color: var(--rz-primary);" />
+        <RadzenText Text="A strategic game of alignment and tactics" TextStyle="TextStyle.Subtitle1" TagName="TagName.P" />
+    </RadzenStack>
 
-    <div class="game-modes">
-        <div class="mode-card" @onclick="() => ShowDifficultyOptions()">
-            <div class="mode-icon">🤖</div>
-            <h2>Single Player</h2>
-            <p>Challenge our adaptive AI with multiple difficulty levels</p>
-            @if (_showDifficulties)
-            {
-                <div class="difficulty-options">
-                    @foreach (var difficulty in Enum.GetValues<AIDifficulty>())
-                    {
-                        var difficultyName = difficulty.ToString();
-                        <button class="difficulty-btn @difficulty.ToString().ToLower()" 
-                                @onclick="() => StartGameWithDifficulty(difficulty)"
-                                @onclick:stopPropagation="true">
-                            <span class="difficulty-icon">
-                                @(difficulty switch {
-                                    AIDifficulty.Easy => "😊",
-                                    AIDifficulty.Medium => "🤔",
-                                    AIDifficulty.Hard => "🤯",
-                                    _ => "🤖"
-                                })
-                            </span>
-                            <div class="difficulty-info">
-                                <span class="difficulty-name">@difficultyName Mode</span>
-                                <span class="difficulty-desc">
-                                    @(difficulty switch {
-                                        AIDifficulty.Easy => "Perfect for beginners",
-                                        AIDifficulty.Medium => "For experienced players",
-                                        AIDifficulty.Hard => "Test your mastery",
-                                        _ => ""
-                                    })
-                                </span>
-                            </div>
-                        </button>
-                    }
-                </div>
-            }
-        </div>
+    <RadzenRow Gap="2rem" JustifyContent="JustifyContent.Center">
+        <RadzenColumn Size="12" SizeMD="5">
+            <RadzenCard Style="height: 100%;">
+                <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+                    <RadzenText Text="🤖" Style="font-size: 3rem;" />
+                    <RadzenText Text="Single Player" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+                    <RadzenText Text="Challenge our adaptive AI" TextStyle="TextStyle.Body1" TagName="TagName.P" TextAlign="TextAlign.Center" />
+                    
+                    <RadzenStack Orientation="Orientation.Vertical" Gap="0.5rem" AlignItems="AlignItems.Stretch" Style="width: 100%;">
+                        @foreach (var difficulty in Enum.GetValues<AIDifficulty>())
+                        {
+                            var difficultyName = difficulty.ToString();
+                            <RadzenButton Click="() => StartGameWithDifficulty(difficulty)" 
+                                          Text="@difficultyName" 
+                                          Style="width: 100%;"
+                                          ButtonStyle="ButtonStyle.Secondary" 
+                                          Shade="Shade.Lighter">
+                                <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="1rem">
+                                     <RadzenText Text="@(difficulty switch {
+                                            AIDifficulty.Easy => "😊",
+                                            AIDifficulty.Medium => "🤔",
+                                            AIDifficulty.Hard => "🤯",
+                                            _ => "🤖"
+                                        })" Style="font-size: 1.5rem;" />
+                                    <RadzenStack Gap="0">
+                                        <RadzenText Text="@difficultyName" />
+                                        <RadzenText Text="@(difficulty switch {
+                                                AIDifficulty.Easy => "Perfect for beginners",
+                                                AIDifficulty.Medium => "For experienced players",
+                                                AIDifficulty.Hard => "Test your mastery",
+                                                _ => ""
+                                            })" TextStyle="TextStyle.Caption" />
+                                    </RadzenStack>
+                                </RadzenStack>
+                            </RadzenButton>
+                        }
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
 
-        <div class="mode-card" @onclick="StartTwoPlayer">
-            <div class="mode-icon">👥</div>
-            <h2>Two Players</h2>
-            <p>Play against a friend on the same device</p>
-        </div>
-    </div>
+        <RadzenColumn Size="12" SizeMD="5">
+             <RadzenCard Style="height: 100%; cursor: pointer;" Click="@StartTwoPlayer"> @* Added click handler *@
+                 <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
+                    <RadzenText Text="👥" Style="font-size: 3rem;" />
+                    <RadzenText Text="Two Players" TextStyle="TextStyle.H5" TagName="TagName.H2" />
+                    <RadzenText Text="Play against a friend on the same device" TextStyle="TextStyle.Body1" TagName="TagName.P" TextAlign="TextAlign.Center" />
+                 </RadzenStack>
+            </RadzenCard>
+        </RadzenColumn>
+    </RadzenRow>
 
-    <div class="additional-options">
-        <button class="btn-secondary" @onclick="ViewLeaderboard">
-            <span class="btn-icon">🏆</span>
-            <span>Leaderboard</span>
-        </button>
-        <button class="btn-secondary" @onclick="OpenSettings">
-            <span class="btn-icon">⚙️</span>
-            <span>Settings</span>
-        </button>
-    </div>
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.Center">
+        <RadzenButton Click="ViewLeaderboard" Text="Leaderboard" Icon="leaderboard" ButtonStyle="ButtonStyle.Secondary" />
+        @* Settings button removed previously *@
+    </RadzenStack>
+</RadzenStack>
 
-    @if (_showTutorial)
-    {
-        <div class="tutorial-overlay" @onclick="CloseTutorial">
-            <div class="tutorial-content" @onclick:stopPropagation="true">
-                <h2>How to Play</h2>
-                <div class="tutorial-steps">
-                    <div class="tutorial-step">
-                        <div class="step-number">1</div>
-                        <p>Take turns dropping pieces into any column</p>
-                    </div>
-                    <div class="tutorial-step">
-                        <div class="step-number">2</div>
-                        <p>Pieces fall to the lowest available position</p>
-                    </div>
-                    <div class="tutorial-step">
-                        <div class="step-number">3</div>
-                        <p>Connect 5 pieces horizontally, vertically, or diagonally to win!</p>
-                    </div>
-                </div>
-                <button class="btn-primary" @onclick="CloseTutorial">Got it!</button>
-            </div>
-        </div>
-    }
-</div>
 
 @code {
-    private bool _showDifficulties;
-    private bool _showTutorial = true;
+    // Removed _showDifficulties as buttons are always visible now
+    // Removed duplicate ShowDifficultyOptions method
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            var hasPlayedString = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "hasPlayedBefore");
-            _showTutorial = string.IsNullOrEmpty(hasPlayedString) || !bool.Parse(hasPlayedString);
-        }
-        catch
-        {
-            _showTutorial = true; // Default to showing tutorial if there's any error
-        }
-    }
-
-    private void ShowDifficultyOptions()
-    {
-        _showDifficulties = true;
-    }
-
-    private async Task StartGameWithDifficulty(AIDifficulty difficulty)
+    private void StartGameWithDifficulty(AIDifficulty difficulty) // Changed to void
     {
         var queryParams = System.Web.HttpUtility.ParseQueryString(string.Empty);
         queryParams["mode"] = "single";
@@ -133,17 +92,6 @@
     private void ViewLeaderboard()
     {
         NavigationManager.NavigateTo("/leaderboard");
-    }
-
-    private void OpenSettings()
-    {
-        NavigationManager.NavigateTo("/settings");
-    }
-
-    private async Task CloseTutorial()
-    {
-        _showTutorial = false;
-        await JSRuntime.InvokeVoidAsync("localStorage.setItem", "hasPlayedBefore", "true");
     }
 }
 

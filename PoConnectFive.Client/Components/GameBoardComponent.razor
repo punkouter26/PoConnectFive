@@ -26,11 +26,12 @@
 
         @if (_isAnimating)
         {
-            <div class="piece-animation"
-                 style="left: @(_animationColumn * CellSize)px;
-                        top: @(_animationStartRow * CellSize)px;
-                        animation-duration: @(_animationDuration)ms;
-                        color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00")">
+             <div class="piece-animation"
+                  style="left: @(_animationColumn * CellSize)px;
+                         top: @(_animationStartRow * CellSize)px;
+                         animation-duration: @(_animationDuration)ms;
+                         color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00");
+                         --target-row-offset: @(_animationTargetRow * CellSize)px;">
             </div>
         }
     </div>
@@ -45,6 +46,7 @@
     private bool _isAnimating;
     private int _animationColumn;
     private int _animationStartRow;
+    private int _animationTargetRow; // Added to store the calculated target row
     private const int _animationDuration = 300; // ms
 
     [Parameter]
@@ -159,9 +161,12 @@
 
     public async Task AnimatePieceDrop(int column)
     {
+        _animationTargetRow = Board.GetTargetRow(column);
+        if (_animationTargetRow == -1) return; // Column is full, don't animate
+
         _isAnimating = true;
         _animationColumn = column;
-        _animationStartRow = 0;
+        _animationStartRow = 0; // Animation always starts from the top visually
         StateHasChanged();
 
         await Task.Delay(_animationDuration);
@@ -251,14 +256,17 @@
         0% {
             transform: translateY(0);
         }
-        70% {
-            transform: translateY(@(CellSize * (GameBoard.Rows - 1))px);
+        /* Animate slightly past the target row for a small bounce effect */
+        70% { 
+            transform: translateY(calc(var(--target-row-offset) + @(CellSize * 0.2)px)); 
         }
-        85% {
-            transform: translateY(@(CellSize * (GameBoard.Rows - 1.2))px);
+        /* Bounce back up slightly */
+        85% { 
+            transform: translateY(calc(var(--target-row-offset) - @(CellSize * 0.1)px)); 
         }
+        /* Settle at the final target row */
         100% {
-            transform: translateY(@(CellSize * (GameBoard.Rows - 1))px);
+            transform: translateY(var(--target-row-offset));
         }
     }
 </style>
