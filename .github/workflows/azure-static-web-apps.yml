@@ -20,28 +20,39 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '8.0.x' # Ensure this matches the project target frameworks if updated
           
-      - name: Build
-        run: dotnet build PoConnectFive.sln
+      - name: Build solution
+        run: dotnet build PoConnectFive.sln --configuration Release
         
-      - name: Test
-        run: dotnet test PoConnectFive.Tests/PoConnectFive.Tests.csproj
+      - name: Test solution
+        run: dotnet test PoConnectFive.Tests/PoConnectFive.Tests.csproj --configuration Release --no-build
         
-      - name: Publish
-        run: dotnet publish PoConnectFive.Client/PoConnectFive.Client.csproj -c Release -o publish
+      - name: Publish API project
+        run: dotnet publish PoConnectFive.Server/PoConnectFive.Server.csproj --configuration Release --output ./publish-api
         
-      - name: Build And Deploy
-        id: builddeploy
+      - name: Deploy API to Azure App Service
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'poconnectfive' # Name of the App Service created
+          package: './publish-api'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }} # Requires secret configuration in GitHub
+
+      # Deploy Client to Static Web App (API is now external)
+      - name: Build And Deploy Client
+        id: builddeployclient
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SWA }} # Use a distinct secret for SWA
+          repo_token: ${{ secrets.GITHUB_TOKEN }} 
           action: "upload"
-          app_location: "publish/wwwroot"
-          output_location: ""
-          skip_app_build: true
-          skip_deploy_on_missing_secrets: true
+          ###### Repository/Build Configurations ######
+          app_location: "PoConnectFive.Client" # App source code path
+          # api_location: "" # API is deployed separately to App Service
+          # output_location: "wwwroot" # Let SWA handle the build output location
+          ###### End of Repository/Build Configurations ######
+          # Note: SWA needs configuration (Azure Portal or staticwebapp.config.json) 
+          # to proxy /api requests to the App Service URL: https://poconnectfive.azurewebsites.net
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
@@ -52,5 +63,6 @@ jobs:
         id: closepullrequest
         uses: Azure/static-web-apps-deploy@v1
         with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_SWA }} # Use a distinct secret for SWA
           action: "close"
+          app_location: "PoConnectFive.Client" # Added required app_location for close action (satisfies linter)

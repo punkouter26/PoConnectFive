@@ -19,8 +19,9 @@ builder.Services.AddCors(options =>
     options.AddPolicy(name: MyAllowSpecificOrigins,
                       policy  =>
                       {
-                          // Allow the client origin shown in the error message
-                          policy.WithOrigins("https://localhost:7050") 
+                          // Allow the local dev client and the production SWA client
+                          policy.WithOrigins("https://localhost:7050", 
+                                             "https://calm-mud-028ba520f.4.azurestaticapps.net") 
                                 .AllowAnyHeader()
                                 .AllowAnyMethod();
                       });

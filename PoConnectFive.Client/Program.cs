@@ -12,9 +12,17 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+// Read configuration from wwwroot/appsettings.json
+var apiUrl = builder.Configuration["ApiBaseUrl"];
+if (string.IsNullOrEmpty(apiUrl))
+{
+    // Fallback or throw error if not configured
+    apiUrl = builder.HostEnvironment.BaseAddress; // Default to base address if not found
+    Console.WriteLine("Warning: ApiBaseUrl not found in configuration. Falling back to host base address.");
+}
+
 // Configure HttpClient for backend API communication
-// Use the HTTPS address from launchSettings.json
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7033") }); // Use HTTPS
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiUrl) }); 
 
 // Register services
 // builder.Services.AddScoped<ILocalStorageService, BrowserStorageService>(); // Removed
