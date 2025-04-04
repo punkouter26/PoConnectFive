@@ -120,10 +120,7 @@ export function getBoundingClientRect(element) {
     return element.getBoundingClientRect();
 }
 
-export function playSoundEffect(sound) {
-    const audio = new Audio(`./sounds/${sound}.mp3`);
-    audio.play();
-}
+// Removed playSoundEffect function
 
 export function animatePieceDrop(column, cellSize, pieceRadius, color) {
     const animation = document.createElement('div');

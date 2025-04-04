@@ -12,13 +12,18 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
+// Configure HttpClient for backend API communication
+// Use the HTTPS address from launchSettings.json
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://localhost:7033") }); // Use HTTPS
+
 // Register services
-builder.Services.AddScoped<ILocalStorageService, BrowserStorageService>();
-builder.Services.AddScoped<IPlayerDataService, PlayerDataService>();
-builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+// builder.Services.AddScoped<ILocalStorageService, BrowserStorageService>(); // Removed
+// builder.Services.AddScoped<IPlayerDataService, PlayerDataService>(); // Removed
+builder.Services.AddScoped<IPlayerDataService, ApiPlayerDataService>(); // Use new API service
+builder.Services.AddScoped<ILeaderboardService, LeaderboardService>(); // Keep this if still used elsewhere, otherwise remove
 
 // Register game service
-builder.Services.AddScoped<IGameService>(sp => new GameService());
+builder.Services.AddScoped<IGameService>(sp => new GameService()); 
 
 // Register AI players
 builder.Services.AddScoped<IAIPlayer>(sp =>

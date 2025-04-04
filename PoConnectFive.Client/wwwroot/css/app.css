@@ -188,3 +188,81 @@ html, body {
     border-radius: 50%;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+
+/* Diagnostic Modal Styles */
+.diagnostic-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1050; /* Ensure it's above other content */
+}
+
+.diagnostic-modal {
+    background-color: white;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    min-width: 400px;
+    max-width: 600px;
+}
+
+.diagnostic-modal h4 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: #333;
+}
+
+.diagnostic-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+}
+
+.diagnostic-table th,
+.diagnostic-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+}
+
+.diagnostic-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+.diagnostic-table td:nth-child(2) { /* Status column */
+    text-align: center;
+    font-size: 1.2rem;
+}
+.diagnostic-table td:nth-child(3) { /* Details column */
+   font-size: 0.9rem;
+   color: #666;
+}
+
+
+.status-indicator.success {
+    color: green;
+}
+
+.status-indicator.failure {
+    color: red;
+}
+.status-indicator.loading {
+    color: orange;
+    animation: spin 1.5s linear infinite; /* Reuse existing spin animation */
+    display: inline-block; /* Needed for animation */
+}
+
+.error-message {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 1rem;
+}

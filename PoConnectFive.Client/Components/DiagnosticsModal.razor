@@ -1,0 +1,167 @@
+@using System.Net.NetworkInformation
+@inject HttpClient Http
+@inject ILogger<DiagnosticsModal> Logger
+
+@if (_showModal)
+{
+    <div class="diagnostic-overlay">
+        <div class="diagnostic-modal">
+            <h4>System Diagnostics</h4>
+            <table class="diagnostic-table">
+                <thead>
+                    <tr>
+                        <th>Check</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var check in _diagnostics)
+                    {
+                        <tr>
+                            <td>@check.Name</td>
+                            <td>
+                                <span class="status-indicator @(check.Success ? "success" : (check.IsLoading ? "loading" : "failure"))">
+                                    @(check.IsLoading ? "⏳" : (check.Success ? "✔️" : "❌"))
+                                </span>
+                            </td>
+                            <td class="details">@check.Message</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (_allChecksComplete && !_allSuccess)
+            {
+                <p class="error-message">One or more checks failed. Please check connections and refresh.</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private bool _showModal = true;
+    private bool _allChecksComplete = false;
+    private bool _allSuccess = true;
+    private List<DiagnosticCheck> _diagnostics = new List<DiagnosticCheck>();
+
+    private class DiagnosticCheck
+    {
+        public string Name { get; set; } = "";
+        public bool Success { get; set; }
+        public string Message { get; set; } = "Running...";
+        public bool IsLoading { get; set; } = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        InitializeChecks();
+        await RunDiagnosticsAsync();
+    }
+
+    private void InitializeChecks()
+    {
+        _diagnostics = new List<DiagnosticCheck>
+        {
+            new DiagnosticCheck { Name = "Internet Connection" },
+            new DiagnosticCheck { Name = "Backend API Health" },
+            new DiagnosticCheck { Name = "Azure Table Storage (Simulated)" } 
+            // Add more checks as needed (e.g., Authentication)
+        };
+    }
+
+    private async Task RunDiagnosticsAsync()
+    {
+        var tasks = new List<Task>
+        {
+            CheckInternetConnectionAsync(),
+            CheckApiHealthAsync(),
+            CheckTableStorageAsync() 
+        };
+
+        await Task.WhenAll(tasks);
+
+        _allChecksComplete = true;
+        _allSuccess = _diagnostics.All(d => d.Success);
+        StateHasChanged(); // Update UI after all checks
+
+        // Automatically close if all successful after a short delay
+        if (_allSuccess)
+        {
+            await Task.Delay(1500); // Show success state briefly
+            _showModal = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task CheckInternetConnectionAsync()
+    {
+        var check = _diagnostics.First(d => d.Name == "Internet Connection");
+        try
+        {
+            // Ping a reliable external host
+            using var ping = new Ping();
+            // Use a known reliable DNS server IP like Google's or Cloudflare's
+            var reply = await ping.SendPingAsync("8.8.8.8", 2000); // 2-second timeout
+            check.Success = reply.Status == IPStatus.Success;
+            check.Message = check.Success ? "Connected" : $"Failed ({reply.Status})";
+            Logger.LogInformation("Diagnostic - Internet Check: {Status} - {Message}", check.Success, check.Message);
+        }
+        catch (Exception ex)
+        {
+            check.Success = false;
+            check.Message = $"Error: {ex.Message}";
+             Logger.LogError(ex, "Diagnostic - Internet Check Failed");
+        }
+        finally
+        {
+            check.IsLoading = false;
+        }
+    }
+
+     private async Task CheckApiHealthAsync()
+    {
+        var check = _diagnostics.First(d => d.Name == "Backend API Health");
+        try
+        {
+            // Make a simple request to a known endpoint (e.g., the base address or a dedicated health check endpoint if available)
+            // We expect the GET leaderboard endpoint to exist, even if it returns empty data initially.
+            var response = await Http.GetAsync("api/leaderboard/Easy"); // Check Easy leaderboard endpoint
+            check.Success = response.IsSuccessStatusCode;
+            check.Message = check.Success ? $"OK ({response.StatusCode})" : $"Failed ({response.StatusCode})";
+             Logger.LogInformation("Diagnostic - API Health Check: {Status} - {Message}", check.Success, check.Message);
+        }
+        catch (Exception ex)
+        {
+            check.Success = false;
+            check.Message = $"Error: {ex.Message}";
+             Logger.LogError(ex, "Diagnostic - API Health Check Failed");
+        }
+         finally
+        {
+            check.IsLoading = false;
+        }
+    }
+
+     private async Task CheckTableStorageAsync()
+    {
+        // NOTE: Direct check from Blazor WASM is not feasible/secure.
+        // This simulates a check. A real check would involve the API confirming its connection.
+        // For now, we assume if the API is healthy, it *can* connect to storage.
+         var check = _diagnostics.First(d => d.Name == "Azure Table Storage (Simulated)");
+         await Task.Delay(100); // Simulate check time
+
+         var apiCheck = _diagnostics.FirstOrDefault(d => d.Name == "Backend API Health");
+         
+         // If API check hasn't run or failed, we can't assume storage connection is ok.
+         if (apiCheck == null || apiCheck.IsLoading || !apiCheck.Success) {
+             check.Success = false;
+             check.Message = "Cannot verify (API Unreachable)";
+         } else {
+             // Assume success if API is reachable (API constructor checks connection string)
+             check.Success = true;
+             check.Message = "Connection likely OK (via API)";
+         }
+         check.IsLoading = false;
+         Logger.LogInformation("Diagnostic - Table Storage Check (Simulated): {Status} - {Message}", check.Success, check.Message);
+    }
+}

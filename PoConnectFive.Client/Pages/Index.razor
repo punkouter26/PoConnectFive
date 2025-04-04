@@ -53,7 +53,7 @@
         </RadzenColumn>
 
         <RadzenColumn Size="12" SizeMD="5">
-             <RadzenCard Style="height: 100%; cursor: pointer;" Click="@StartTwoPlayer"> @* Added click handler *@
+             <RadzenCard Style="height: 100%; cursor: pointer;" Click="() => StartTwoPlayer()"> @* Corrected click handler syntax *@
                  <RadzenStack AlignItems="AlignItems.Center" Gap="1rem">
                     <RadzenText Text="👥" Style="font-size: 3rem;" />
                     <RadzenText Text="Two Players" TextStyle="TextStyle.H5" TagName="TagName.H2" />

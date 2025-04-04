@@ -3,34 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using PoConnectFive.Shared.Models;
+using PoConnectFive.Shared.Interfaces; // Add reference to new interface location
 
 namespace PoConnectFive.Client.Services
 {
-    /// <summary>
-    /// Manages player data persistence and leaderboard calculations
-    /// 
-    /// SOLID Principles:
-    /// - Single Responsibility: Handles only player data management
-    /// - Open/Closed: New data operations can be added without modifying existing code
-    /// - Liskov Substitution: Can be replaced with cloud implementation
-    /// - Interface Segregation: Implements focused data management interface
-    /// - Dependency Inversion: Depends on storage service abstraction
-    /// 
-    /// Design Patterns:
-    /// - Repository Pattern: Abstracts player data operations
-    /// - Observer Pattern: Notifies subscribers of data changes
-    /// - Strategy Pattern: Different storage implementations can be used
-    /// </summary>
-    public interface IPlayerDataService
-    {
-        Task<PlayerStats?> GetPlayerStats(string playerId);
-        Task<List<PlayerStats>> GetTopPlayers(int count = 10);
-        Task UpdatePlayerStats(string playerId, GameResult result, TimeSpan gameTime);
-        Task<PlayerStats> CreatePlayer(string playerName);
-        event Action? OnDataChanged;
-    }
+    // Interface moved to PoConnectFive.Shared.Interfaces
 
-    public class PlayerDataService : IPlayerDataService
+    /// <summary>
+    /// OBSOLETE: Manages player data using local storage. Replaced by ApiPlayerDataService.
+    /// </summary>
+    public class PlayerDataService // Removed ": IPlayerDataService"
     {
         private const string PLAYERS_KEY = "players";
         private readonly ILocalStorageService _storage;

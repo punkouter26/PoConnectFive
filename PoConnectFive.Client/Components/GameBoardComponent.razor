@@ -93,14 +93,14 @@
     private async Task HandleClick(MouseEventArgs e)
     {
         var column = GetColumnFromX(e.OffsetX);
-        if (column >= 0 && column < GameBoard.Columns && Board.IsValidMove(column))
-        {
-            await AnimatePieceDrop(column);
-            await OnColumnClicked.InvokeAsync(column);
-            await PlaySoundEffect("pieceDrop");
-        }
-    }
-
+         if (column >= 0 && column < GameBoard.Columns && Board.IsValidMove(column))
+         {
+             await AnimatePieceDrop(column);
+             await OnColumnClicked.InvokeAsync(column);
+             // await PlaySoundEffect("pieceDrop"); // Removed sound call
+         }
+     }
+ 
     private void HandleMouseMove(MouseEventArgs e)
     {
         _currentColumn = GetColumnFromX(e.OffsetX);
@@ -133,14 +133,14 @@
         if (_isDragging && _currentColumn.HasValue)
         {
             var column = _currentColumn.Value;
-            if (Board.IsValidMove(column))
-            {
-                await AnimatePieceDrop(column);
-                await OnColumnClicked.InvokeAsync(column);
-                await PlaySoundEffect("pieceDrop");
-            }
-        }
-        _isDragging = false;
+             if (Board.IsValidMove(column))
+             {
+                 await AnimatePieceDrop(column);
+                 await OnColumnClicked.InvokeAsync(column);
+                 // await PlaySoundEffect("pieceDrop"); // Removed sound call
+             }
+         }
+         _isDragging = false;
         _currentColumn = null;
         StateHasChanged();
     }
@@ -171,18 +171,14 @@
 
         await Task.Delay(_animationDuration);
         _isAnimating = false;
-        StateHasChanged();
-    }
-
-    private async Task PlaySoundEffect(string sound)
-    {
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/gameBoard.js");
-        await module.InvokeVoidAsync("playSoundEffect", sound);
-    }
-
-    private class DOMRect
-    {
-        public double Left { get; set; }
+         StateHasChanged();
+     }
+ 
+     // Removed PlaySoundEffect method
+ 
+     private class DOMRect
+     {
+         public double Left { get; set; }
         public double Top { get; set; }
         public double Width { get; set; }
         public double Height { get; set; }

@@ -12,89 +12,135 @@
         <button class="btn-back" @onclick="NavigateToMenu">
             <span>←</span> Back to Menu
         </button>
-        <h1>Leaderboard</h1>
+        <h1>Leaderboards</h1> @* Changed Title *@
     </div>
 
-    @if (_loading)
-    {
-        <div class="loading-spinner">
-            <div class="spinner"></div>
-            <p>Loading rankings...</p>
-        </div>
-    }
-    else if (_players == null || !_players.Any())
-    {
-        <div class="no-data">
-            <p>No player data available yet. Start playing to appear on the leaderboard!</p>
-            <button class="btn-primary" @onclick="NavigateToMenu">Start Playing</button>
-        </div>
-    }
-    else
-    {
-        <RadzenDataGrid AllowFiltering="true" AllowColumnResize="true" AllowAlternatingRows="false" FilterMode="FilterMode.Simple" AllowSorting="true" PageSize="10" AllowPaging="true" PagerHorizontalAlign="HorizontalAlign.Left" ShowPagingSummary="true"
-                        Data="@_players" TItem="PlayerStats" ColumnWidth="200px" LogicalFilterOperator="LogicalFilterOperator.Or" IsLoading=@_loading EmptyText="No player data available yet.">
-            <Columns>
-                <RadzenDataGridColumn TItem="PlayerStats" Title="#" Sortable="false" Filterable="false" Width="60px" TextAlign="TextAlign.Center">
-                    <Template Context="data">
-                        @(_players!.IndexOf(data) + 1) 
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="PlayerStats" Property="PlayerName" Title="Player" Frozen="true" Width="200px">
-                     <Template Context="data">
-                        <RadzenStack Orientation="Orientation.Vertical" Gap="0">
-                            <RadzenText TextStyle="TextStyle.Subtitle2">@data.PlayerName</RadzenText>
-                            <RadzenText TextStyle="TextStyle.Caption">Last played: @data.LastPlayed.ToString("MMM dd, yyyy")</RadzenText>
-                        </RadzenStack>
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="PlayerStats" Property="WinRate" Title="Win Rate" Width="120px" TextAlign="TextAlign.Center">
-                    <Template Context="data">
-                        @($"{data.WinRate:F1}%")
-                    </Template>
-                </RadzenDataGridColumn>
-                <RadzenDataGridColumn TItem="PlayerStats" Property="Wins" Title="Wins" Width="100px" TextAlign="TextAlign.Center" />
-                <RadzenDataGridColumn TItem="PlayerStats" Property="GamesPlayed" Title="Games" Width="100px" TextAlign="TextAlign.Center" />
-                <RadzenDataGridColumn TItem="PlayerStats" Property="BestWinStreak" Title="Best Streak" Width="120px" TextAlign="TextAlign.Center" />
-            </Columns>
-             <EmptyTemplate>
-                 <div class="no-data rz-p-4">
-                    <p>No player data available yet. Start playing to appear on the leaderboard!</p>
-                    <RadzenButton Click="NavigateToMenu" Text="Start Playing" ButtonStyle="ButtonStyle.Primary" />
-                </div>
-            </EmptyTemplate>
-        </RadzenDataGrid>
-    }
+    <RadzenRow Gap="2rem">
+        @* Easy Leaderboard *@
+        <RadzenColumn Size="12" SizeLG="4">
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center rz-mb-4">😊 Easy</RadzenText>
+            <RadzenDataGrid AllowFiltering="false" AllowColumnResize="true" AllowAlternatingRows="false" AllowSorting="false" AllowPaging="false" 
+                            Data="@_easyTopPlayers" TItem="PlayerStats" IsLoading=@_loadingEasy EmptyText="No Easy leaderboard data yet." Style="height: 350px;">
+                <Columns>
+                    <RadzenDataGridColumn TItem="PlayerStats" Title="#" Width="50px" TextAlign="TextAlign.Center">
+                        <Template Context="data">@(_easyTopPlayers!.IndexOf(data) + 1)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="PlayerName" Title="Player" Width="150px" />
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="WinRate" Title="Win %" Width="80px" TextAlign="TextAlign.Center">
+                        <Template Context="data">@($"{data.WinRate:F1}%")</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="Wins" Title="Wins" Width="70px" TextAlign="TextAlign.Center" />
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="GamesPlayed" Title="Games" Width="70px" TextAlign="TextAlign.Center" />
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenColumn>
+
+        @* Medium Leaderboard *@
+         <RadzenColumn Size="12" SizeLG="4">
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center rz-mb-4">🤔 Medium</RadzenText>
+            <RadzenDataGrid AllowFiltering="false" AllowColumnResize="true" AllowAlternatingRows="false" AllowSorting="false" AllowPaging="false" 
+                            Data="@_mediumTopPlayers" TItem="PlayerStats" IsLoading=@_loadingMedium EmptyText="No Medium leaderboard data yet." Style="height: 350px;">
+                <Columns>
+                    <RadzenDataGridColumn TItem="PlayerStats" Title="#" Width="50px" TextAlign="TextAlign.Center">
+                        <Template Context="data">@(_mediumTopPlayers!.IndexOf(data) + 1)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="PlayerName" Title="Player" Width="150px" />
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="WinRate" Title="Win %" Width="80px" TextAlign="TextAlign.Center">
+                        <Template Context="data">@($"{data.WinRate:F1}%")</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="Wins" Title="Wins" Width="70px" TextAlign="TextAlign.Center" />
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="GamesPlayed" Title="Games" Width="70px" TextAlign="TextAlign.Center" />
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenColumn>
+
+         @* Hard Leaderboard *@
+         <RadzenColumn Size="12" SizeLG="4">
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center rz-mb-4">🤯 Hard</RadzenText>
+            <RadzenDataGrid AllowFiltering="false" AllowColumnResize="true" AllowAlternatingRows="false" AllowSorting="false" AllowPaging="false" 
+                            Data="@_hardTopPlayers" TItem="PlayerStats" IsLoading=@_loadingHard EmptyText="No Hard leaderboard data yet." Style="height: 350px;">
+                 <Columns>
+                    <RadzenDataGridColumn TItem="PlayerStats" Title="#" Width="50px" TextAlign="TextAlign.Center">
+                        <Template Context="data">@(_hardTopPlayers!.IndexOf(data) + 1)</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="PlayerName" Title="Player" Width="150px" />
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="WinRate" Title="Win %" Width="80px" TextAlign="TextAlign.Center">
+                        <Template Context="data">@($"{data.WinRate:F1}%")</Template>
+                    </RadzenDataGridColumn>
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="Wins" Title="Wins" Width="70px" TextAlign="TextAlign.Center" />
+                    <RadzenDataGridColumn TItem="PlayerStats" Property="GamesPlayed" Title="Games" Width="70px" TextAlign="TextAlign.Center" />
+                </Columns>
+            </RadzenDataGrid>
+        </RadzenColumn>
+    </RadzenRow>
 </div>
 
 @code {
-    private List<PlayerStats>? _players;
-    private bool _loading = true;
+    // Lists and loading flags for each difficulty
+    private List<PlayerStats>? _easyTopPlayers;
+    private List<PlayerStats>? _mediumTopPlayers;
+    private List<PlayerStats>? _hardTopPlayers;
+    private bool _loadingEasy = true;
+    private bool _loadingMedium = true;
+    private bool _loadingHard = true;
 
     protected override async Task OnInitializedAsync()
     {
-        PlayerDataService.OnDataChanged += StateHasChanged;
-        await LoadLeaderboard();
+        // Subscribe to data changes if needed for live updates (optional)
+        // PlayerDataService.OnDataChanged += LoadAllLeaderboardsAsync; 
+        await LoadAllLeaderboardsAsync();
     }
 
-    private async Task LoadLeaderboard()
+    private async Task LoadAllLeaderboardsAsync()
     {
+        var easyTask = LoadLeaderboardAsync(AIDifficulty.Easy);
+        var mediumTask = LoadLeaderboardAsync(AIDifficulty.Medium);
+        var hardTask = LoadLeaderboardAsync(AIDifficulty.Hard);
+
+        await Task.WhenAll(easyTask, mediumTask, hardTask);
+        
+        // Optional: Single StateHasChanged() after all loads complete
+        StateHasChanged(); 
+    }
+
+    private async Task LoadLeaderboardAsync(AIDifficulty difficulty)
+    {
+        List<PlayerStats>? players = null;
         try
         {
-            _loading = true;
-            _players = await PlayerDataService.GetTopPlayers();
-            _players = _players.OrderByDescending(p => p.WinRate)
-                             .ThenByDescending(p => p.Wins)
-                             .ThenByDescending(p => p.GamesPlayed)
-                             .ToList();
+            switch(difficulty)
+            {
+                case AIDifficulty.Easy: _loadingEasy = true; break;
+                case AIDifficulty.Medium: _loadingMedium = true; break;
+                case AIDifficulty.Hard: _loadingHard = true; break;
+            }
+            // StateHasChanged(); // Optional: Update UI to show loading spinner immediately
+
+            players = await PlayerDataService.GetTopPlayers(difficulty, 5); // Fetch top 5
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading leaderboard: {ex.Message}");
-            _players = new List<PlayerStats>();
+            Console.WriteLine($"Error loading {difficulty} leaderboard: {ex.Message}");
+            players = new List<PlayerStats>(); // Ensure list is not null on error
         }
         finally
         {
-            _loading = false;
+             switch(difficulty)
+            {
+                case AIDifficulty.Easy: 
+                    _easyTopPlayers = players;
+                    _loadingEasy = false; 
+                    break;
+                case AIDifficulty.Medium: 
+                    _mediumTopPlayers = players;
+                    _loadingMedium = false; 
+                    break;
+                case AIDifficulty.Hard: 
+                    _hardTopPlayers = players;
+                    _loadingHard = false; 
+                    break;
+            }
+            // StateHasChanged(); // Update UI after this specific load completes
         }
     }
 

@@ -64,8 +64,10 @@
 @code {
     private GameState? _currentState;
     private DateTime _gameStartTime;
-    private string? _player1Id;
-    private string? _player2Id;
+    // Removed player IDs, using names and difficulty now for API calls
+    private string? _player1Name; 
+    private string? _player2Name; 
+    private AIDifficulty? _aiDifficulty; // Store AI difficulty for stat updates
     private GameBoardComponent? gameBoardRef;
 
     protected override async Task OnInitializedAsync()
@@ -151,30 +153,24 @@
     {
         var gameTime = DateTime.UtcNow - _gameStartTime;
 
-        // Update player statistics
-        if (_player1Id != null)
-        {
-            var result = _currentState!.Status switch
-            {
-                GameStatus.Player1Won => GameResult.Win,
-                GameStatus.Player2Won => GameResult.Loss,
-                GameStatus.Draw => GameResult.Draw,
-                _ => throw new InvalidOperationException("Invalid game status")
-            };
-            await PlayerDataService.UpdatePlayerStats(_player1Id, result, gameTime);
-        }
-
-        if (_player2Id != null && _currentState!.Player2.Type == PlayerType.Human)
+        // Update player statistics via API only for games against AI
+        if (_currentState?.Player2.Type == PlayerType.AI && _player1Name != null && _aiDifficulty.HasValue)
         {
             var result = _currentState.Status switch
             {
-                GameStatus.Player2Won => GameResult.Win,
-                GameStatus.Player1Won => GameResult.Loss,
+                GameStatus.Player1Won => GameResult.Win,
+                GameStatus.Player2Won => GameResult.Loss, // Human (Player 1) lost
                 GameStatus.Draw => GameResult.Draw,
-                _ => throw new InvalidOperationException("Invalid game status")
+                _ => (GameResult?)null // Should not happen if game ended
             };
-            await PlayerDataService.UpdatePlayerStats(_player2Id, result, gameTime);
+
+            if (result.HasValue)
+            {
+                // Call the new UpdatePlayerStats overload
+                await PlayerDataService.UpdatePlayerStats(_player1Name, _aiDifficulty.Value, result.Value, gameTime);
+            }
         }
+        // Note: Stats for Player 2 (AI or Human) in local games are not sent to the API currently.
 
         // Show game end dialog after a short delay to allow animation to complete
         await Task.Delay(500);
@@ -183,14 +179,14 @@
             GameStatus.Player1Won => $"🎉 {_currentState.Player1.Name} Wins! 🎉",
             GameStatus.Player2Won => $"🎉 {_currentState.Player2.Name} Wins! 🎉",
             GameStatus.Draw => "🤝 Game Draw! 🤝",
-            _ => string.Empty
-        };
-
-        await PlaySoundEffect(_currentState.Status == GameStatus.Draw ? "draw" : "win");
-
-        var playAgain = await JSRuntime.InvokeAsync<bool>("confirm", $"{message}\n\nPlay again?");
-        if (playAgain)
-        {
+             _ => string.Empty
+         };
+ 
+         // await PlaySoundEffect(_currentState.Status == GameStatus.Draw ? "draw" : "win"); // Removed sound call
+ 
+         var playAgain = await JSRuntime.InvokeAsync<bool>("confirm", $"{message}\n\nPlay again?");
+         if (playAgain)
+         {
             await OnResetClick();
         }
     }
@@ -225,40 +221,36 @@
 
     private async Task StartNewGameWithAI(AIDifficulty difficulty)
     {
-        string player1Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter your name:", "Player 1");
-        if (string.IsNullOrEmpty(player1Name)) return;
+        _player1Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter your name:", "Player 1");
+        if (string.IsNullOrEmpty(_player1Name)) return;
 
-        // Create or get player stats
-        var player1Stats = await PlayerDataService.CreatePlayer(player1Name);
-        _player1Id = player1Stats.PlayerId;
-        _player2Id = null;
+        // Store player name and AI difficulty, remove direct interaction with PlayerDataService here
+        _player2Name = $"AI ({difficulty})"; 
+        _aiDifficulty = difficulty; 
 
         _gameStartTime = DateTime.UtcNow;
         _currentState = await GameService.StartNewGame(
-            player1Name,
-            $"AI ({difficulty})",
+            _player1Name,
+            _player2Name, // Use stored AI name
             true,
-            difficulty
+            difficulty // Removed duplicate parameters
         );
         StateHasChanged();
     }
 
     private async Task StartNewGameTwoPlayer()
     {
-        string player1Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter name for Player 1:", "Player 1");
-        if (string.IsNullOrEmpty(player1Name)) return;
+        _player1Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter name for Player 1:", "Player 1");
+        if (string.IsNullOrEmpty(_player1Name)) return;
 
-        string player2Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter name for Player 2:", "Player 2");
-        if (string.IsNullOrEmpty(player2Name)) return;
+        _player2Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter name for Player 2:", "Player 2");
+        if (string.IsNullOrEmpty(_player2Name)) return;
 
-        // Create or get player stats
-        var player1Stats = await PlayerDataService.CreatePlayer(player1Name);
-        var player2Stats = await PlayerDataService.CreatePlayer(player2Name);
-        _player1Id = player1Stats.PlayerId;
-        _player2Id = player2Stats.PlayerId;
+        // Store names, clear AI difficulty, remove direct interaction with PlayerDataService here
+        _aiDifficulty = null; 
 
         _gameStartTime = DateTime.UtcNow;
-        _currentState = await GameService.StartNewGame(player1Name, player2Name);
+        _currentState = await GameService.StartNewGame(_player1Name, _player2Name);
         StateHasChanged();
     }
 
@@ -320,18 +312,14 @@
         else
         {
             NavigationManager.NavigateTo("/");
-        }
-    }
-
-    private async Task PlaySoundEffect(string sound)
-    {
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/gameBoard.js");
-        await module.InvokeVoidAsync("playSoundEffect", sound);
-    }
-
-    // Helper method for RZ9986 fix
-    private string GetStatusCardClass()
-    {
+         }
+     }
+ 
+     // Removed PlaySoundEffect method
+ 
+     // Helper method for RZ9986 fix
+     private string GetStatusCardClass()
+     {
         return $"game-status-card {(_currentState?.Status.ToString().ToLower() ?? "")}";
     }
 }
