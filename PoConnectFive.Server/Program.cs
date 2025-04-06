@@ -6,9 +6,11 @@ var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
-builder.Services.AddOpenApi();
 builder.Services.AddControllers(); // Add controllers for API endpoints
+
+// Add Swagger/OpenAPI services using Swashbuckle
+builder.Services.AddEndpointsApiExplorer(); // Needed for API Explorer
+builder.Services.AddSwaggerGen(); 
 
 // Register custom services
 builder.Services.AddSingleton<ITableStorageService, TableStorageService>(); // Register Table Storage Service
@@ -32,7 +34,9 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // Use Swashbuckle middleware
+    app.UseSwagger();
+    app.UseSwaggerUI(); 
 }
 
 app.UseHttpsRedirection();

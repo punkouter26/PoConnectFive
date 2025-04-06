@@ -15,15 +15,15 @@
         <h1>Leaderboards</h1> @* Changed Title *@
     </div>
 
-    <RadzenRow Gap="2rem">
+    <RadzenStack Gap="2rem"> @* Changed from RadzenRow to RadzenStack *@
         @* Easy Leaderboard *@
-        <RadzenColumn Size="12" SizeLG="4">
-            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center rz-mb-4">😊 Easy</RadzenText>
+        <RadzenStack Gap="1rem"> @* Wrap title and grid in a stack *@
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center">😊 Easy</RadzenText>
             <RadzenDataGrid AllowFiltering="false" AllowColumnResize="true" AllowAlternatingRows="false" AllowSorting="false" AllowPaging="false" 
-                            Data="@_easyTopPlayers" TItem="PlayerStats" IsLoading=@_loadingEasy EmptyText="No Easy leaderboard data yet." Style="height: 350px;">
+                            Data="@_easyTopPlayers" TItem="PlayerStats" IsLoading=@_loadingEasy EmptyText="No Easy leaderboard data yet." > @* Removed fixed height *@
                 <Columns>
                     <RadzenDataGridColumn TItem="PlayerStats" Title="#" Width="50px" TextAlign="TextAlign.Center">
-                        <Template Context="data">@(_easyTopPlayers!.IndexOf(data) + 1)</Template>
+                        <Template Context="data">@(_easyTopPlayers?.IndexOf(data) + 1)</Template> @* Added null check *@
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="PlayerStats" Property="PlayerName" Title="Player" Width="150px" />
                     <RadzenDataGridColumn TItem="PlayerStats" Property="WinRate" Title="Win %" Width="80px" TextAlign="TextAlign.Center">
@@ -33,16 +33,16 @@
                     <RadzenDataGridColumn TItem="PlayerStats" Property="GamesPlayed" Title="Games" Width="70px" TextAlign="TextAlign.Center" />
                 </Columns>
             </RadzenDataGrid>
-        </RadzenColumn>
+        </RadzenStack>
 
         @* Medium Leaderboard *@
-         <RadzenColumn Size="12" SizeLG="4">
-            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center rz-mb-4">🤔 Medium</RadzenText>
+         <RadzenStack Gap="1rem"> @* Wrap title and grid in a stack *@
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center">🤔 Medium</RadzenText>
             <RadzenDataGrid AllowFiltering="false" AllowColumnResize="true" AllowAlternatingRows="false" AllowSorting="false" AllowPaging="false" 
-                            Data="@_mediumTopPlayers" TItem="PlayerStats" IsLoading=@_loadingMedium EmptyText="No Medium leaderboard data yet." Style="height: 350px;">
+                            Data="@_mediumTopPlayers" TItem="PlayerStats" IsLoading=@_loadingMedium EmptyText="No Medium leaderboard data yet." > @* Removed fixed height *@
                 <Columns>
                     <RadzenDataGridColumn TItem="PlayerStats" Title="#" Width="50px" TextAlign="TextAlign.Center">
-                        <Template Context="data">@(_mediumTopPlayers!.IndexOf(data) + 1)</Template>
+                        <Template Context="data">@(_mediumTopPlayers?.IndexOf(data) + 1)</Template> @* Added null check *@
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="PlayerStats" Property="PlayerName" Title="Player" Width="150px" />
                     <RadzenDataGridColumn TItem="PlayerStats" Property="WinRate" Title="Win %" Width="80px" TextAlign="TextAlign.Center">
@@ -52,16 +52,16 @@
                     <RadzenDataGridColumn TItem="PlayerStats" Property="GamesPlayed" Title="Games" Width="70px" TextAlign="TextAlign.Center" />
                 </Columns>
             </RadzenDataGrid>
-        </RadzenColumn>
+        </RadzenStack>
 
          @* Hard Leaderboard *@
-         <RadzenColumn Size="12" SizeLG="4">
-            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center rz-mb-4">🤯 Hard</RadzenText>
+         <RadzenStack Gap="1rem"> @* Wrap title and grid in a stack *@
+            <RadzenText TextStyle="TextStyle.H5" TagName="TagName.H2" class="rz-text-align-center">🤯 Hard</RadzenText>
             <RadzenDataGrid AllowFiltering="false" AllowColumnResize="true" AllowAlternatingRows="false" AllowSorting="false" AllowPaging="false" 
-                            Data="@_hardTopPlayers" TItem="PlayerStats" IsLoading=@_loadingHard EmptyText="No Hard leaderboard data yet." Style="height: 350px;">
+                            Data="@_hardTopPlayers" TItem="PlayerStats" IsLoading=@_loadingHard EmptyText="No Hard leaderboard data yet." > @* Removed fixed height *@
                  <Columns>
                     <RadzenDataGridColumn TItem="PlayerStats" Title="#" Width="50px" TextAlign="TextAlign.Center">
-                        <Template Context="data">@(_hardTopPlayers!.IndexOf(data) + 1)</Template>
+                        <Template Context="data">@(_hardTopPlayers?.IndexOf(data) + 1)</Template> @* Added null check *@
                     </RadzenDataGridColumn>
                     <RadzenDataGridColumn TItem="PlayerStats" Property="PlayerName" Title="Player" Width="150px" />
                     <RadzenDataGridColumn TItem="PlayerStats" Property="WinRate" Title="Win %" Width="80px" TextAlign="TextAlign.Center">
@@ -71,8 +71,8 @@
                     <RadzenDataGridColumn TItem="PlayerStats" Property="GamesPlayed" Title="Games" Width="70px" TextAlign="TextAlign.Center" />
                 </Columns>
             </RadzenDataGrid>
-        </RadzenColumn>
-    </RadzenRow>
+        </RadzenStack>
+    </RadzenStack> @* End of main vertical stack *@
 </div>
 
 @code {

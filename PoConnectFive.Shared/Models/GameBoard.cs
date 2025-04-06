@@ -117,25 +117,43 @@ namespace PoConnectFive.Shared.Models
             // Check forward direction
             r = row + rowDelta;
             c = column + colDelta;
-            while (IsValidPosition(r, c) && _board[r, c] == playerId)
+            while (IsValidPosition(r, c)) 
             {
-                count++;
-                Console.WriteLine($"Found matching piece at ({r}, {c}), count = {count}");
-                r += rowDelta;
-                c += colDelta;
+                int cellValue = _board[r, c];
+                Console.WriteLine($"Checking forward at ({r}, {c}): Value={cellValue}, PlayerId={playerId}");
+                if (cellValue == playerId)
+                {
+                    count++;
+                    Console.WriteLine($"Found matching piece at ({r}, {c}), count = {count}");
+                    r += rowDelta;
+                    c += colDelta;
+                }
+                else
+                {
+                    break; // Stop checking in this direction if piece doesn't match
+                }
             }
 
             // Check backward direction
             r = row - rowDelta;
             c = column - colDelta;
-            while (IsValidPosition(r, c) && _board[r, c] == playerId)
+            while (IsValidPosition(r, c))
             {
-                count++;
-                Console.WriteLine($"Found matching piece at ({r}, {c}), count = {count}");
-                r -= rowDelta;
-                c -= colDelta;
+                 int cellValue = _board[r, c];
+                 Console.WriteLine($"Checking backward at ({r}, {c}): Value={cellValue}, PlayerId={playerId}");
+                 if (cellValue == playerId)
+                 {
+                    count++;
+                    Console.WriteLine($"Found matching piece at ({r}, {c}), count = {count}");
+                    r -= rowDelta;
+                    c -= colDelta;
+                 }
+                 else
+                 {
+                    break; // Stop checking in this direction if piece doesn't match
+                 }
             }
-
+            // Missing closing brace added back here
             Console.WriteLine($"Final count in direction ({rowDelta}, {colDelta}): {count}");
             return count >= WinningLength;
         }
