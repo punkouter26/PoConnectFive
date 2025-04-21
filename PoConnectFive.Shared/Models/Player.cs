@@ -2,6 +2,9 @@ namespace PoConnectFive.Shared.Models
 {
     public class Player
     {
+        public static readonly Player Red = new Player(1, "Red", PlayerType.Human);
+        public static readonly Player Yellow = new Player(2, "Yellow", PlayerType.Human);
+
         public int Id { get; }
         public string Name { get; }
         public PlayerType Type { get; }

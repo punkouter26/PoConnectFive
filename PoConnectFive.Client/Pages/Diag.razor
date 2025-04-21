@@ -1,0 +1,159 @@
+@page "/diag"
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject ILogger<Diag> Logger
+
+<PageTitle>PoConnectFive - Diagnostics</PageTitle>
+
+<div class="container mt-4">
+    <h1>System Diagnostics</h1>
+    
+    <div class="alert alert-info" role="alert">
+        Running system diagnostics... @if(isRunning) { <span class="spinner-border spinner-border-sm" role="status"></span> }
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Component</th>
+                        <th>Status</th>
+                        <th>Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var check in diagnosticResults)
+                    {
+                        <tr>
+                            <td>@check.Component</td>
+                            <td>
+                                @if (check.IsHealthy)
+                                {
+                                    <span class="badge bg-success">Healthy</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Unhealthy</span>
+                                }
+                            </td>
+                            <td>
+                                @if (!check.IsHealthy && !string.IsNullOrEmpty(check.Error))
+                                {
+                                    <span class="text-danger">@check.Error</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (errorMessage != null)
+    {
+        <div class="alert alert-danger" role="alert">
+            @errorMessage
+        </div>
+    }
+
+    <div class="mt-4">
+        <button class="btn btn-primary me-2" @onclick="RunDiagnostics" disabled="@isRunning">
+            @if (isRunning)
+            {
+                <span class="spinner-border spinner-border-sm" role="status"></span>
+                <span>Running...</span>
+            }
+            else
+            {
+                <span>Run Diagnostics</span>
+            }
+        </button>
+        <a href="/" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+
+@code {
+    private List<DiagnosticResult> diagnosticResults = new();
+    private bool isRunning;
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RunDiagnostics();
+    }
+
+    private async Task RunDiagnostics()
+    {
+        try
+        {
+            isRunning = true;
+            errorMessage = null;
+            diagnosticResults.Clear();
+            StateHasChanged();
+
+            // Basic API Health
+            await CheckEndpoint("API Health", "health");
+
+            // Storage Health
+            await CheckEndpoint("Storage", "health/storage");
+
+            // Internet Connectivity
+            await CheckEndpoint("Internet", "health/internet");
+
+            // Log results to server
+            await Http.PostAsJsonAsync("health/log", new { Results = diagnosticResults });
+            Logger.LogInformation("Diagnostics completed with {HealthyCount} healthy and {UnhealthyCount} unhealthy results",
+                diagnosticResults.Count(r => r.IsHealthy),
+                diagnosticResults.Count(r => !r.IsHealthy));
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error running diagnostics");
+            errorMessage = $"Error running diagnostics: {ex.Message}";
+        }
+        finally
+        {
+            isRunning = false;
+        }
+    }
+
+    private async Task CheckEndpoint(string component, string endpoint)
+    {
+        try
+        {
+            var response = await Http.GetAsync(endpoint);
+            var result = new DiagnosticResult
+            {
+                Component = component,
+                IsHealthy = response.IsSuccessStatusCode
+            };
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadFromJsonAsync<Dictionary<string, string>>();
+                result.Error = error?.GetValueOrDefault("error") ?? $"HTTP {response.StatusCode}";
+            }
+
+            diagnosticResults.Add(result);
+            Logger.LogInformation("{Component} check completed: {IsHealthy}", component, result.IsHealthy);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error checking {Component}", component);
+            diagnosticResults.Add(new DiagnosticResult
+            {
+                Component = component,
+                IsHealthy = false,
+                Error = ex.Message
+            });
+        }
+    }
+
+    private class DiagnosticResult
+    {
+        public string Component { get; set; } = "";
+        public bool IsHealthy { get; set; }
+        public string? Error { get; set; }
+    }
+} 

@@ -30,8 +30,10 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiUrl) 
 builder.Services.AddScoped<IPlayerDataService, ApiPlayerDataService>(); // Use new API service
 builder.Services.AddScoped<ILeaderboardService, LeaderboardService>(); // Keep this if still used elsewhere, otherwise remove
 
-// Register game service
-builder.Services.AddScoped<IGameService>(sp => new GameService()); 
+// Register game services
+builder.Services.AddScoped<IGameService>(sp => new GameService());
+builder.Services.AddScoped<GameStateService>();
+builder.Services.AddScoped<WinProbabilityService>();
 
 // Register AI players
 builder.Services.AddScoped<IAIPlayer>(sp =>

@@ -1,0 +1,114 @@
+@using System.Text.Json
+@inject IJSRuntime JSRuntime
+
+<div class="win-probability-chart">
+    <canvas @ref="chartCanvas"></canvas>
+</div>
+
+@code {
+    private ElementReference chartCanvas;
+    private IJSObjectReference? chartModule;
+    private IJSObjectReference? chartInstance;
+
+    [Parameter]
+    public List<(int column, double probability)> Probabilities { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            chartModule = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/chart.js");
+        }
+
+        if (chartModule != null)
+        {
+            await UpdateChart();
+        }
+    }
+
+    private async Task UpdateChart()
+    {
+        if (chartInstance != null)
+        {
+            await chartInstance.InvokeVoidAsync("destroy");
+        }
+
+        var data = new
+        {
+            labels = Probabilities.Select(p => $"Column {p.column + 1}").ToArray(),
+            datasets = new[]
+            {
+                new
+                {
+                    label = "Win Probability (%)",
+                    data = Probabilities.Select(p => p.probability).ToArray(),
+                    backgroundColor = "rgba(33, 150, 243, 0.5)",
+                    borderColor = "rgb(33, 150, 243)",
+                    borderWidth = 1
+                }
+            }
+        };
+
+        var options = new
+        {
+            responsive = true,
+            maintainAspectRatio = false,
+            scales = new
+            {
+                y = new
+                {
+                    beginAtZero = true,
+                    max = 100,
+                    title = new
+                    {
+                        display = true,
+                        text = "Win Probability (%)"
+                    }
+                }
+            },
+            plugins = new
+            {
+                legend = new
+                {
+                    display = false
+                },
+                tooltip = new
+                {
+                    callbacks = new
+                    {
+                        label = "function(context) { return context.raw.toFixed(1) + '%'; }"
+                    }
+                }
+            }
+        };
+
+        chartInstance = await chartModule!.InvokeAsync<IJSObjectReference>(
+            "createChart",
+            chartCanvas,
+            "bar",
+            data,
+            options
+        );
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (chartInstance != null)
+        {
+            await chartInstance.InvokeVoidAsync("destroy");
+            await chartInstance.DisposeAsync();
+        }
+
+        if (chartModule != null)
+        {
+            await chartModule.DisposeAsync();
+        }
+    }
+}
+
+<style>
+    .win-probability-chart {
+        height: 200px;
+        margin: 1rem 0;
+    }
+</style> 

@@ -1,51 +1,62 @@
 using PoConnectFive.Server.Services; // Add this using
 
-// Define CORS policy name
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers(); // Add controllers for API endpoints
+builder.Services.AddControllersWithViews();
+builder.Services.AddRazorPages();
 
-// Add Swagger/OpenAPI services using Swashbuckle
-builder.Services.AddEndpointsApiExplorer(); // Needed for API Explorer
-builder.Services.AddSwaggerGen(); 
+// Add CORS services with specific origins
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:5245",
+                "https://localhost:5245",
+                "http://localhost:7033",
+                "https://localhost:7033")
+              .AllowAnyMethod()
+              .AllowAnyHeader()
+              .AllowCredentials();
+    });
+});
+
+// Add Swagger/OpenAPI services
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Register custom services
 builder.Services.AddSingleton<ITableStorageService, TableStorageService>(); // Register Table Storage Service
-
-// Add CORS services
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-                      policy  =>
-                      {
-                          // Allow the local dev client and the production SWA client
-                          policy.WithOrigins("https://localhost:7050", 
-                                             "https://calm-mud-028ba520f.4.azurestaticapps.net") 
-                                .AllowAnyHeader()
-                                .AllowAnyMethod();
-                      });
-});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // Use Swashbuckle middleware
+    app.UseWebAssemblyDebugging();
     app.UseSwagger();
-    app.UseSwaggerUI(); 
+    app.UseSwaggerUI();
+}
+else
+{
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+app.UseBlazorFrameworkFiles();
+app.UseStaticFiles();
 
-// Enable CORS middleware *before* UseAuthorization and MapControllers
-app.UseCors(MyAllowSpecificOrigins);
+app.UseRouting();
 
-// Map controller endpoints instead of default weather forecast
-app.MapControllers(); 
+// Use CORS before authorization
+app.UseCors();
+app.UseAuthorization();
+
+app.MapRazorPages();
+app.MapControllers();
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

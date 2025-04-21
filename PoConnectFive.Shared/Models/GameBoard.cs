@@ -36,6 +36,8 @@ namespace PoConnectFive.Shared.Models
             _board = (int[,])board.Clone();
         }
 
+        public int GetLength(int dimension) => dimension == 0 ? Rows : Columns;
+
         // Value Object Pattern: Returns new instance instead of modifying state
         public GameBoard PlacePiece(int column, int playerId)
         {
@@ -64,6 +66,19 @@ namespace PoConnectFive.Shared.Models
 
             // Check if the top cell in the column is empty
             return _board[0, column] == 0;
+        }
+
+        public bool HasValidMoves()
+        {
+            // Check if any column has a valid move
+            for (int col = 0; col < Columns; col++)
+            {
+                if (IsValidMove(col))
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
         /// <summary>

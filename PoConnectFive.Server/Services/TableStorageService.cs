@@ -2,38 +2,102 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure;
 using Azure.Data.Tables;
 using Microsoft.Extensions.Configuration;
-// using PoConnectFive.Server.Models; // Removed
-using PoConnectFive.Shared.Models; // Now contains PlayerStatEntity, AIDifficulty, GameResult
+using PoConnectFive.Shared.Models;
 
 namespace PoConnectFive.Server.Services
 {
-    public interface ITableStorageService
-    {
-        Task<List<PlayerStatEntity>> GetTopPlayersByDifficultyAsync(AIDifficulty difficulty, int count = 5);
-        Task UpsertPlayerStatAsync(string playerName, AIDifficulty difficulty, GameResult result, TimeSpan gameTime);
-    }
-
     public class TableStorageService : ITableStorageService
     {
-        private const string TableName = "PlayerStats"; // Match the table created in Azure
+        private const string TableName = "PlayerStats";
         private readonly TableServiceClient _tableServiceClient;
         private readonly TableClient _tableClient;
         private readonly ILogger<TableStorageService> _logger;
+        private const string TestTableName = "connectivediagnostics";
 
         public TableStorageService(IConfiguration configuration, ILogger<TableStorageService> logger)
         {
-            // Ensure connection string is configured (e.g., in appsettings.json or User Secrets)
-            var connectionString = configuration.GetConnectionString("StorageConnectionString");
+            _logger = logger;
+            var connectionString = configuration["AzureTableStorage:ConnectionString"];
+            
             if (string.IsNullOrEmpty(connectionString))
             {
-                throw new InvalidOperationException("Azure Storage Connection String 'StorageConnectionString' not configured.");
+                _logger.LogError("Azure Table Storage connection string is not configured");
+                throw new InvalidOperationException("Azure Table Storage connection string is not configured");
             }
-            _tableServiceClient = new TableServiceClient(connectionString);
-            _tableClient = _tableServiceClient.GetTableClient(TableName);
-            _tableClient.CreateIfNotExists(); // Ensure table exists
-             _logger = logger;
+
+            try
+            {
+                _tableServiceClient = new TableServiceClient(connectionString);
+                _tableClient = _tableServiceClient.GetTableClient(TableName);
+                _tableClient.CreateIfNotExists();
+                _logger.LogInformation("Table Storage Service initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to initialize Table Storage Service: {Message}", ex.Message);
+                throw;
+            }
+        }
+
+        public async Task<Result<bool>> CheckConnection()
+        {
+            try
+            {
+                _logger.LogInformation("Starting Table Storage connection check");
+
+                // First check if we can list tables
+                _logger.LogInformation("Attempting to list tables...");
+                await foreach (var table in _tableServiceClient.QueryAsync())
+                {
+                    _logger.LogInformation("Found table: {TableName}", table.Name);
+                }
+
+                // Try to create a test table
+                _logger.LogInformation("Attempting to create test table {TableName}...", TestTableName);
+                var tableClient = _tableServiceClient.GetTableClient(TestTableName);
+                await tableClient.CreateIfNotExistsAsync();
+
+                // Try to insert a test entity
+                var testEntity = new TableEntity("test", Guid.NewGuid().ToString())
+                {
+                    { "TestProperty", "TestValue" }
+                };
+
+                _logger.LogInformation("Attempting to insert test entity...");
+                await tableClient.AddEntityAsync(testEntity);
+
+                // Try to retrieve the test entity
+                _logger.LogInformation("Attempting to retrieve test entity...");
+                var retrievedEntity = await tableClient.GetEntityAsync<TableEntity>(
+                    testEntity.PartitionKey, 
+                    testEntity.RowKey
+                );
+
+                // Clean up
+                _logger.LogInformation("Cleaning up test entity...");
+                await tableClient.DeleteEntityAsync(
+                    testEntity.PartitionKey, 
+                    testEntity.RowKey
+                );
+
+                _logger.LogInformation("Table Storage connection check completed successfully");
+                return Result<bool>.Success(true);
+            }
+            catch (RequestFailedException ex)
+            {
+                _logger.LogError(ex, 
+                    "Table Storage connection check failed with status code {StatusCode}: {Message}", 
+                    ex.Status, ex.Message);
+                return Result<bool>.Failure($"Azure Table Storage request failed: {ex.Message} (Status: {ex.Status})");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Table Storage connection check failed: {Message}", ex.Message);
+                return Result<bool>.Failure($"Table Storage connection check failed: {ex.Message}");
+            }
         }
 
         public async Task<List<PlayerStatEntity>> GetTopPlayersByDifficultyAsync(AIDifficulty difficulty, int count = 5)
@@ -43,30 +107,24 @@ namespace PoConnectFive.Server.Services
 
             try
             {
-                 _logger.LogInformation("Querying top players for difficulty {Difficulty}", partitionKey);
-                // Query entities for the specific difficulty, order by WinRate descending, then take top 'count'
-                // Note: Table storage querying is limited. Efficient sorting/top N requires careful design or post-query processing.
-                // For simplicity here, we query all for the partition and sort in memory.
-                // For larger datasets, consider alternative indexing or pre-calculated leaderboards.
-                 var query = _tableClient.QueryAsync<PlayerStatEntity>(filter: $"PartitionKey eq '{partitionKey}'");
+                _logger.LogInformation("Querying top players for difficulty {Difficulty}", partitionKey);
+                var query = _tableClient.QueryAsync<PlayerStatEntity>(filter: $"PartitionKey eq '{partitionKey}'");
                 
                 await foreach (var player in query)
                 {
                     topPlayers.Add(player);
                 }
 
-                // Sort in memory
                 topPlayers = topPlayers
                     .OrderByDescending(p => p.WinRate)
-                    .ThenByDescending(p => p.Wins) // Secondary sort
+                    .ThenByDescending(p => p.Wins)
                     .Take(count)
                     .ToList();
-                 _logger.LogInformation("Found {Count} top players for difficulty {Difficulty}", topPlayers.Count, partitionKey);
+                _logger.LogInformation("Found {Count} top players for difficulty {Difficulty}", topPlayers.Count, partitionKey);
             }
             catch (Exception ex)
             {
-                 _logger.LogError(ex, "Error retrieving top players for difficulty {Difficulty}", partitionKey);
-                // Return empty list or rethrow depending on desired error handling
+                _logger.LogError(ex, "Error retrieving top players for difficulty {Difficulty}", partitionKey);
             }
 
             return topPlayers;
@@ -75,46 +133,58 @@ namespace PoConnectFive.Server.Services
         public async Task UpsertPlayerStatAsync(string playerName, AIDifficulty difficulty, GameResult result, TimeSpan gameTime)
         {
             var partitionKey = difficulty.ToString();
-            var rowKey = playerName.ToLowerInvariant(); // Use lowercase for consistent lookup
+            var rowKey = playerName.ToLowerInvariant();
 
             try
             {
-                 _logger.LogInformation("Upserting player stat for Player: {PlayerName}, Difficulty: {Difficulty}", playerName, difficulty);
+                _logger.LogInformation("Upserting player stat for Player: {PlayerName}, Difficulty: {Difficulty}", playerName, difficulty);
                 PlayerStatEntity? entity = null;
                 try
                 {
-                    // Attempt to retrieve the existing entity
                     var response = await _tableClient.GetEntityAsync<PlayerStatEntity>(partitionKey, rowKey);
                     entity = response.Value;
-                     _logger.LogInformation("Found existing entity for Player: {PlayerName}", playerName);
+                    _logger.LogInformation("Found existing entity for Player: {PlayerName}", playerName);
                 }
                 catch (Azure.RequestFailedException ex) when (ex.Status == 404)
                 {
-                     _logger.LogInformation("No existing entity found for Player: {PlayerName}. Creating new.", playerName);
-                    // Entity does not exist, create a new one
+                    _logger.LogInformation("No existing entity found for Player: {PlayerName}. Creating new.", playerName);
                     entity = new PlayerStatEntity(playerName, difficulty);
                 }
 
                 if (entity != null)
                 {
-                    // Update the stats
                     entity.UpdateStats(result, gameTime);
-
-                    // Upsert (Insert or Replace) the entity
                     await _tableClient.UpsertEntityAsync(entity, TableUpdateMode.Replace);
-                     _logger.LogInformation("Successfully upserted player stat for Player: {PlayerName}", playerName);
+                    _logger.LogInformation("Successfully upserted player stat for Player: {PlayerName}", playerName);
                 }
-                 else
+                else
                 {
                     _logger.LogWarning("Entity was unexpectedly null after get/create attempt for Player: {PlayerName}", playerName);
                 }
             }
             catch (Exception ex)
             {
-                 _logger.LogError(ex, "Error upserting player stat for Player: {PlayerName}, Difficulty: {Difficulty}", playerName, difficulty);
-                // Handle exception (e.g., log, retry, etc.)
-                throw; // Rethrow for controller to handle
+                _logger.LogError(ex, "Error upserting player stat for Player: {PlayerName}, Difficulty: {Difficulty}", playerName, difficulty);
+                throw;
             }
         }
     }
+
+    public class Result<T>
+    {
+        public bool IsSuccess { get; }
+        public T Value { get; }
+        public string Error { get; }
+
+        private Result(bool isSuccess, T value, string error)
+        {
+            IsSuccess = isSuccess;
+            Value = value;
+            Error = error;
+        }
+
+        public static Result<T> Success(T value) => new(true, value, string.Empty);
+        public static Result<T> Failure(string error) => new(false, default!, error);
+    }
 }
+

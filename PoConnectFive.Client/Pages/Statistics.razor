@@ -1,0 +1,159 @@
+@page "/statistics"
+@using PoConnectFive.Shared.Services
+@using PoConnectFive.Shared.Models
+@inject GameStatisticsService StatisticsService
+
+<PageTitle>PoConnectFive - Statistics</PageTitle>
+
+<div class="statistics-container">
+    <h1>Game Statistics</h1>
+
+    @if (_statistics == null)
+    {
+        <p>Loading statistics...</p>
+    }
+    else
+    {
+        <div class="statistics-grid">
+            <div class="stat-card">
+                <h3>Overall Statistics</h3>
+                <p>Total Games: @_statistics.TotalGames</p>
+                <p>Average Game Duration: @FormatDuration(_statistics.AverageGameDuration)</p>
+                <p>Average Moves per Game: @_statistics.AverageMovesPerGame.ToString("F1")</p>
+            </div>
+
+            <div class="stat-card">
+                <h3>Win Rates</h3>
+                @foreach (var (player, rate) in _statistics.WinRates)
+                {
+                    <div class="win-rate-bar">
+                        <span>@player</span>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: @(rate)%;"></div>
+                        </div>
+                        <span>@(rate.ToString("F1"))%</span>
+                    </div>
+                }
+            </div>
+
+            <div class="stat-card">
+                <h3>Recent Games</h3>
+                <div class="recent-games">
+                    @foreach (var game in _statistics.RecentGames)
+                    {
+                        <div class="recent-game">
+                            <span>@game.Timestamp.ToLocalTime().ToString("g")</span>
+                            <span>@game.Player1Name vs @game.Player2Name</span>
+                            <span class="winner">Winner: @game.Winner</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Winning Patterns</h3>
+                @foreach (var pattern in _statistics.MostCommonWinningPatterns)
+                {
+                    <div class="pattern-item">
+                        <span>@pattern.Pattern</span>
+                        <div class="progress-bar">
+                            <div class="progress" style="width: @(pattern.Percentage)%;"></div>
+                        </div>
+                        <span>@(pattern.Count) games (@(pattern.Percentage.ToString("F1"))%)</span>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private GameStatistics? _statistics;
+
+    protected override void OnInitialized()
+    {
+        _statistics = StatisticsService.GetStatistics();
+    }
+
+    private string FormatDuration(TimeSpan duration)
+    {
+        return duration.TotalMinutes < 1
+            ? $"{duration.Seconds} seconds"
+            : $"{duration.Minutes}m {duration.Seconds}s";
+    }
+}
+
+<style>
+    .statistics-container {
+        padding: 2rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .statistics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 8px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .stat-card h3 {
+        margin-top: 0;
+        color: #1976D2;
+        border-bottom: 2px solid #E3F2FD;
+        padding-bottom: 0.5rem;
+    }
+
+    .win-rate-bar, .pattern-item {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        margin: 0.5rem 0;
+    }
+
+    .progress-bar {
+        flex: 1;
+        height: 8px;
+        background: #E3F2FD;
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    .progress {
+        height: 100%;
+        background: #1976D2;
+        transition: width 0.3s ease;
+    }
+
+    .recent-games {
+        max-height: 300px;
+        overflow-y: auto;
+    }
+
+    .recent-game {
+        padding: 0.5rem;
+        border-bottom: 1px solid #E3F2FD;
+    }
+
+    .recent-game:last-child {
+        border-bottom: none;
+    }
+
+    .winner {
+        color: #1976D2;
+        font-weight: bold;
+    }
+
+    @@media (max-width: 768px) {
+        .statistics-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style> 

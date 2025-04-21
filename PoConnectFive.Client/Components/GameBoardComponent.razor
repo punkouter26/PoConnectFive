@@ -26,12 +26,19 @@
 
         @if (_isAnimating)
         {
-             <div class="piece-animation"
-                  style="left: @(_animationColumn * CellSize)px;
-                         top: @(_animationStartRow * CellSize)px;
-                         animation-duration: @(_animationDuration)ms;
-                         color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00");
-                         --target-row-offset: @(_animationTargetRow * CellSize)px;">
+            <div class="piece-animation"
+                 style="left: @(_animationColumn * CellSize)px;
+                        top: @(_animationStartRow * CellSize)px;
+                        animation-duration: @(_animationDuration)ms;
+                        color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00");
+                        --target-row-offset: @(_animationTargetRow * CellSize)px;">
+            </div>
+        }
+
+        @if (_isWinningAnimation)
+        {
+            <div class="winning-animation"
+                 style="--winning-pieces: @(_winningPiecesJson)">
             </div>
         }
     </div>
@@ -46,8 +53,10 @@
     private bool _isAnimating;
     private int _animationColumn;
     private int _animationStartRow;
-    private int _animationTargetRow; // Added to store the calculated target row
-    private const int _animationDuration = 300; // ms
+    private int _animationTargetRow;
+    private const int _animationDuration = 300;
+    private bool _isWinningAnimation;
+    private string _winningPiecesJson = string.Empty;
 
     [Parameter]
     public GameBoard Board { get; set; } = default!;
@@ -67,7 +76,6 @@
     {
         try
         {
-            // Convert the 2D array to a jagged array for proper serialization
             var rows = GameBoard.Rows;
             var cols = GameBoard.Columns;
             var boardState = new int[rows][];
@@ -90,17 +98,40 @@
         }
     }
 
+    public async Task AnimatePieceDrop(int column)
+    {
+        _animationColumn = column;
+        _animationStartRow = -1;
+        _animationTargetRow = Board.GetTargetRow(column);
+        _isAnimating = true;
+        StateHasChanged();
+
+        await Task.Delay(_animationDuration);
+        _isAnimating = false;
+        StateHasChanged();
+    }
+
+    public async Task AnimateWin(List<(int row, int col)> winningPieces)
+    {
+        _winningPiecesJson = System.Text.Json.JsonSerializer.Serialize(winningPieces);
+        _isWinningAnimation = true;
+        StateHasChanged();
+
+        await Task.Delay(2000); // Duration of winning animation
+        _isWinningAnimation = false;
+        StateHasChanged();
+    }
+
     private async Task HandleClick(MouseEventArgs e)
     {
         var column = GetColumnFromX(e.OffsetX);
-         if (column >= 0 && column < GameBoard.Columns && Board.IsValidMove(column))
-         {
-             await AnimatePieceDrop(column);
-             await OnColumnClicked.InvokeAsync(column);
-             // await PlaySoundEffect("pieceDrop"); // Removed sound call
-         }
-     }
- 
+        if (column >= 0 && column < GameBoard.Columns && Board.IsValidMove(column))
+        {
+            await AnimatePieceDrop(column);
+            await OnColumnClicked.InvokeAsync(column);
+        }
+    }
+
     private void HandleMouseMove(MouseEventArgs e)
     {
         _currentColumn = GetColumnFromX(e.OffsetX);
@@ -114,71 +145,50 @@
         StateHasChanged();
     }
 
-    private void HandleTouchStart(TouchEventArgs e)
-    {
-        _isDragging = true;
-        UpdateTouchPosition(e);
-    }
-
-    private void HandleTouchMove(TouchEventArgs e)
-    {
-        if (_isDragging)
-        {
-            UpdateTouchPosition(e);
-        }
-    }
-
-    private async Task HandleTouchEnd(TouchEventArgs e)
-    {
-        if (_isDragging && _currentColumn.HasValue)
-        {
-            var column = _currentColumn.Value;
-             if (Board.IsValidMove(column))
-             {
-                 await AnimatePieceDrop(column);
-                 await OnColumnClicked.InvokeAsync(column);
-                 // await PlaySoundEffect("pieceDrop"); // Removed sound call
-             }
-         }
-         _isDragging = false;
-        _currentColumn = null;
-        StateHasChanged();
-    }
-
-    private async Task UpdateTouchPosition(TouchEventArgs e)
-    {
-        var touch = e.Touches[0];
-        var rect = await JSRuntime.InvokeAsync<DOMRect>("getBoundingClientRect", canvasReference);
-        var x = touch.ClientX - rect.Left;
-        _currentColumn = GetColumnFromX(x);
-        StateHasChanged();
-    }
-
     private int GetColumnFromX(double x)
     {
         return (int)(x / CellSize);
     }
 
-    public async Task AnimatePieceDrop(int column)
+    private void HandleTouchStart(TouchEventArgs e)
     {
-        _animationTargetRow = Board.GetTargetRow(column);
-        if (_animationTargetRow == -1) return; // Column is full, don't animate
+        _isDragging = true;
+        _ = HandleTouchMove(e);  // Fire and forget
+    }
 
-        _isAnimating = true;
-        _animationColumn = column;
-        _animationStartRow = 0; // Animation always starts from the top visually
+    private async Task HandleTouchMove(TouchEventArgs e)
+    {
+        if (!_isDragging) return;
+
+        var touch = e.Touches[0];
+        var rect = await GetBoundingClientRect();
+        var x = touch.ClientX - rect.Left;
+        _currentColumn = GetColumnFromX(x);
         StateHasChanged();
+    }
 
-        await Task.Delay(_animationDuration);
-        _isAnimating = false;
-         StateHasChanged();
-     }
- 
-     // Removed PlaySoundEffect method
- 
-     private class DOMRect
-     {
-         public double Left { get; set; }
+    private async Task HandleTouchEnd(TouchEventArgs e)
+    {
+        if (!_isDragging) return;
+
+        _isDragging = false;
+        if (_currentColumn.HasValue)
+        {
+            await HandleClick(new MouseEventArgs { OffsetX = _currentColumn.Value * CellSize });
+        }
+        _currentColumn = null;
+        StateHasChanged();
+    }
+
+    private async Task<DOMRect> GetBoundingClientRect()
+    {
+        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/gameBoard.js");
+        return await module.InvokeAsync<DOMRect>("getBoundingClientRect", canvasReference);
+    }
+
+    private class DOMRect
+    {
+        public double Left { get; set; }
         public double Top { get; set; }
         public double Width { get; set; }
         public double Height { get; set; }
@@ -191,7 +201,7 @@
         justify-content: center;
         align-items: center;
         margin: 20px;
-        touch-action: none; /* Prevent scrolling on touch devices */
+        touch-action: none;
     }
 
     .game-board {
@@ -200,6 +210,7 @@
         background-color: #2196F3;
         border-radius: 8px;
         overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     }
 
     canvas {
@@ -225,6 +236,7 @@
         height: @(PieceRadius * 2)px;
         background-color: rgba(255, 255, 255, 0.3);
         border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     }
 
     .piece-animation {
@@ -245,24 +257,37 @@
         height: @(PieceRadius * 2)px;
         background-color: currentColor;
         border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .winning-animation {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+        animation: pulseWinning 2s ease-in-out infinite;
     }
 
     @@keyframes dropPiece {
         0% {
             transform: translateY(0);
         }
-        /* Animate slightly past the target row for a small bounce effect */
-        70% { 
-            transform: translateY(calc(var(--target-row-offset) + @(CellSize * 0.2)px)); 
-        }
-        /* Bounce back up slightly */
-        85% { 
-            transform: translateY(calc(var(--target-row-offset) - @(CellSize * 0.1)px)); 
-        }
-        /* Settle at the final target row */
         100% {
             transform: translateY(var(--target-row-offset));
+        }
+    }
+
+    @@keyframes pulseWinning {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.4);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(255, 255, 0, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 255, 0, 0);
         }
     }
 </style>
