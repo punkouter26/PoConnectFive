@@ -38,13 +38,14 @@ if (string.IsNullOrEmpty(apiUrl))
 }
 
 // Configure HttpClient for backend API communication
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiUrl) }); 
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiUrl) });
 
 // Register services
 builder.Services.AddScoped<ILocalStorageService, BrowserStorageService>();
 builder.Services.AddScoped<IStorageService>(sp => sp.GetRequiredService<ILocalStorageService>() as IStorageService);
 builder.Services.AddScoped<IPlayerDataService, ApiPlayerDataService>();
 builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
+builder.Services.AddScoped<ErrorHandlingService>();
 
 // Register game services
 builder.Services.AddScoped<IGameService, GameService>();

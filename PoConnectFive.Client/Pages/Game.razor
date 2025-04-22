@@ -50,11 +50,13 @@
     @if (_currentState != null)
     {
         <RadzenStack JustifyContent="JustifyContent.Center">
-             <GameBoardComponent @ref="gameBoardRef" 
-                               Board="@_currentState.Board" 
-                               CurrentState="@_currentState"
-                               OnColumnClicked="OnColumnClicked"
-                               OnAnimationComplete="OnAnimationComplete" />
+            <div class="game-board-container @(_isInvalidMove ? "board-shake" : "")">
+                <GameBoardComponent @ref="gameBoardRef"
+                                Board="@_currentState.Board"
+                                CurrentState="@_currentState"
+                                OnColumnClicked="OnColumnClicked"
+                                OnAnimationComplete="OnAnimationComplete" />
+            </div>
         </RadzenStack>
     }
 
@@ -62,58 +64,8 @@
     <RadzenStack Orientation="Orientation.Horizontal" Gap="1rem" JustifyContent="JustifyContent.Center">
         <RadzenButton Click="OnNewGameClick" Text="New Game" ButtonStyle="ButtonStyle.Primary" />
         <RadzenButton Click="OnResetClick" Text="Reset" ButtonStyle="ButtonStyle.Secondary" />
+        <RadzenButton Click="ToggleMute" Icon="@(SoundService.IsMuted ? "volume_off" : "volume_up")" ButtonStyle="ButtonStyle.Light" />
     </RadzenStack>
-
-    <div class="game-container @(_isWinning ? "win-celebration" : "")">
-        <div class="game-header">
-            <h1>Connect Five</h1>
-            <div class="game-controls">
-                <button class="btn btn-secondary" @onclick="ToggleMute">
-                    <i class="@(SoundService.IsMuted ? "fas fa-volume-mute" : "fas fa-volume-up")"></i>
-                </button>
-                <button class="btn btn-primary" @onclick="OnNewGameClick">New Game</button>
-                <button class="btn btn-secondary" @onclick="OnResetClick">Reset</button>
-            </div>
-        </div>
-
-        <div class="game-status">
-            @if (_currentState?.Status == GameStatus.InProgress)
-            {
-                <div class="current-player">
-                    Current Player: <span class="player-color @(_currentState.CurrentPlayer.Id == 1 ? "player1" : "player2")">
-                        @(_currentState.CurrentPlayer.Name)
-                    </span>
-                </div>
-            }
-            else if (_currentState?.Status == GameStatus.Player1Won || _currentState?.Status == GameStatus.Player2Won)
-            {
-                <div class="winner-message">
-                    <span class="player-color @(_currentState.Status == GameStatus.Player1Won ? "player1" : "player2")">
-                        @(_currentState.Status == GameStatus.Player1Won ? _currentState.Player1.Name : _currentState.Player2.Name)
-                    </span>
-                    wins!
-                </div>
-            }
-            else if (_currentState?.Status == GameStatus.Draw)
-            {
-                <div class="draw-message">It's a draw!</div>
-            }
-        </div>
-
-        <div class="game-board-container @(_isInvalidMove ? "board-shake" : "")">
-            <GameBoardComponent 
-                Board="@_currentState?.Board" 
-                CurrentState="@_currentState"
-                OnColumnClicked="OnColumnClicked"
-                OnAnimationComplete="OnAnimationComplete" />
-        </div>
-
-        <div class="game-footer">
-            <button class="btn btn-link" @onclick="NavigateToStatistics">
-                <i class="fas fa-chart-bar"></i> View Statistics
-            </button>
-        </div>
-    </div>
 
 </RadzenStack>
 
@@ -223,8 +175,6 @@
             GameStatus.Draw => "🤝 Game Draw! 🤝",
              _ => string.Empty
          };
- 
-         // await PlaySoundEffect(_currentState.Status == GameStatus.Draw ? "draw" : "win"); // Removed sound call
  
          var playAgain = await JSRuntime.InvokeAsync<bool>("confirm", $"{message}\n\nPlay again?");
          if (playAgain)
@@ -357,9 +307,7 @@
          }
      }
  
-     // Removed PlaySoundEffect method
- 
-     // Helper method for RZ9986 fix
+     // Helper method for status card styling
      private string GetStatusCardClass()
      {
         return $"game-status-card {(_currentState?.Status.ToString().ToLower() ?? "")}";
@@ -423,33 +371,29 @@
     }
 
     .player-piece-icon.red {
-        background: #FF0000; /* Consider using Radzen theme colors if desired */
+        background: var(--color-player1, #FF0000);
     }
 
     .player-piece-icon.yellow {
-        background: #FFFF00; /* Consider using Radzen theme colors if desired */
+        background: var(--color-player2, #FFFF00);
     }
 
     /* Highlight active player */
     .player-active {
-        /* Example: Add a subtle background or border */
          background-color: rgba(var(--rz-primary-rgb), 0.1);
          padding: 0.25rem 0.5rem;
          border-radius: var(--rz-border-radius);
     }
 
-    /* Optional: Style the status card based on game outcome */
+    /* Status card styling based on game outcome */
     .game-status-card.player1won {
-        /* background: var(--rz-success-lighter); */
         border-left: 4px solid var(--rz-success);
     }
     .game-status-card.player2won {
-        /* background: var(--rz-info-lighter); */
-         border-left: 4px solid var(--rz-info);
+        border-left: 4px solid var(--rz-info);
     }
-     .game-status-card.draw {
-        /* background: var(--rz-warning-lighter); */
-         border-left: 4px solid var(--rz-warning);
+    .game-status-card.draw {
+        border-left: 4px solid var(--rz-warning);
     }
 
     .game-container {
@@ -505,5 +449,10 @@
 
     .game-info {
         text-align: center;
+    }
+
+    /* Board shake animation for invalid moves - animation defined in animations.css */
+    .board-shake {
+        animation: shake 0.3s ease-in-out;
     }
 </style>

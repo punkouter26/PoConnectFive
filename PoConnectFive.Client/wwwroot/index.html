@@ -7,19 +7,18 @@
     <title>Connect Five</title>
     <base href="/" />
     <link rel="icon" type="image/png" href="favicon.png" />
-    <link href="css/app.css" rel="stylesheet" />
-    <link href="PoConnectFive.Client.styles.css" rel="stylesheet" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard-base.css"> <!-- Radzen CSS -->
+    <link rel="stylesheet" href="css/variables.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="PoConnectFive.Client.styles.css" />
+    <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard-base.css">
 </head>
 
 <body>
     <div id="app">
-        <div class="loading">
-            <div class="loading-content">
-                <h1>Connect Five</h1>
-                <p>Loading...</p>
-                <div class="spinner"></div>
-            </div>
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <p>Loading Connect Five...</p>
         </div>
     </div>
 
@@ -28,9 +27,53 @@
         <a href="" class="reload">Reload</a>
         <a class="dismiss">🗙</a>
     </div>
+
     <script src="_framework/blazor.webassembly.js"></script>
-    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script> <!-- Radzen JS -->
+    <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
     <script src="js/gameBoard.js"></script>
+
+    <style>
+        /* Styles for loading spinner */
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: var(--font-family, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary-color, #3498db);
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        /* Error UI styles */
+        #blazor-error-ui {
+            background: #ffffe0;
+            bottom: 0;
+            box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+            display: none;
+            left: 0;
+            padding: 0.6rem 1.25rem;
+            position: fixed;
+            width: 100%;
+            z-index: 1000;
+            color: #333;
+        }
+
+        #blazor-error-ui .dismiss {
+            cursor: pointer;
+            position: absolute;
+            right: 0.75rem;
+            top: 0.5rem;
+        }
+    </style>
 </body>
 
 </html>

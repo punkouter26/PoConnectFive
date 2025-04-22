@@ -36,6 +36,17 @@
                 "${workspaceFolder}/PoConnectFive.Server/PoConnectFive.Server.csproj"
             ],
             "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "run",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/PoConnectFive.Server/PoConnectFive.Server.csproj"
+            ],
+            "problemMatcher": "$msCompile"
         }
     ]
-} 
+}

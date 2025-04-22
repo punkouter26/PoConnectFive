@@ -1,70 +1,18 @@
 @namespace PoConnectFive.Client.Components
 @using PoConnectFive.Shared.Models
-@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
 @inject IJSRuntime JSRuntime
 
-<div class="game-board-container">
-    <div class="game-board @(_isDragging ? "dragging" : "")"
-         @onmousemove="HandleMouseMove"
-         @onmouseleave="HandleMouseLeave"
-         @ontouchstart="HandleTouchStart"
-         @ontouchmove="HandleTouchMove"
-         @ontouchend="HandleTouchEnd">
-        
-        <canvas @ref="canvasReference" 
-                @onclick="HandleClick"
-                width="@(CellSize * GameBoard.Columns)" 
-                height="@(CellSize * GameBoard.Rows)">
-        </canvas>
-
-        @if (_currentColumn.HasValue)
-        {
-            <div class="preview-piece @(_isDragging ? "dragging" : "")"
-                 style="left: @(_currentColumn.Value * CellSize)px;
-                        background-color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00")">
-            </div>
-        }
-
-        @if (_isAnimating)
-        {
-            <div class="piece-animation"
-                 style="left: @(_animationColumn * CellSize)px;
-                        top: @(_animationStartRow * CellSize)px;
-                        animation-duration: @(_animationDuration)ms;
-                        background-color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00");
-                        --target-row-offset: @(_animationTargetRow * CellSize)px;">
-            </div>
-        }
-
-        @if (_isWinningAnimation)
-        {
-            <div class="winning-animation"
-                 style="--winning-pieces: @(_winningPiecesJson)">
-            </div>
-        }
-    </div>
+<div class="game-board" @ref="boardElementReference">
+    <canvas id="gameCanvas" @ref="canvasReference" width="@(_boardWidth)" height="@(_boardHeight)"></canvas>
 </div>
 
 @code {
-    private const int CellSize = 40;
-    private const int PieceRadius = 15;
-    private ElementReference canvasReference;
-    private int? _currentColumn;
-    private bool _isDragging = false;
-    private bool _isAnimating = false;
-    private bool _isWinningAnimation = false;
-    private int _animationColumn;
-    private int _animationStartRow;
-    private int _animationTargetRow;
-    private int _animationDuration = 500;
-    private string _winningPiecesJson = "[]";
-    private DotNetObjectReference<GameBoardComponent>? _dotNetHelper;
+    [Parameter]
+    public GameBoard? Board { get; set; }
 
     [Parameter]
-    public required GameBoard Board { get; set; }
-
-    [Parameter]
-    public required GameState CurrentState { get; set; }
+    public GameState? CurrentState { get; set; }
 
     [Parameter]
     public EventCallback<int> OnColumnClicked { get; set; }
@@ -72,186 +20,55 @@
     [Parameter]
     public EventCallback OnAnimationComplete { get; set; }
 
+    private ElementReference boardElementReference;
+    private ElementReference canvasReference;
+    private DotNetObjectReference<GameBoardComponent>? objRef;
+    private int _boardWidth = 700; // Width and height match what's in the JS
+    private int _boardHeight = 600;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
-            _dotNetHelper = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("initGameBoard", canvasReference, _dotNetHelper);
-            await DrawBoard();
+            objRef = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("gameBoardInterop.initialize", 
+                                        canvasReference, 
+                                        objRef, 
+                                        GameBoard.Rows, 
+                                        GameBoard.Columns);
         }
-    }
 
-    private async Task DrawBoard()
-    {
-        var canvas = await JSRuntime.InvokeAsync<IJSObjectReference>("getCanvas", canvasReference);
-        await canvas.InvokeVoidAsync("clearRect", 0, 0, CellSize * GameBoard.Columns, CellSize * GameBoard.Rows);
-
-        // Draw grid
-        await canvas.InvokeVoidAsync("drawGrid", CellSize, GameBoard.Columns, GameBoard.Rows);
-
-        // Draw pieces
-        for (int row = 0; row < GameBoard.Rows; row++)
+        if (Board != null && CurrentState != null)
         {
-            for (int col = 0; col < GameBoard.Columns; col++)
-            {
-                var cellValue = Board.GetCell(row, col);
-                if (cellValue != 0)
-                {
-                    var color = cellValue == 1 ? "#FF0000" : "#FFFF00";
-                    await canvas.InvokeVoidAsync("drawPiece", col * CellSize, row * CellSize, CellSize, color);
-                }
-            }
+            await JSRuntime.InvokeVoidAsync("gameBoardInterop.updateBoard", Board.GetBoard(), CurrentState.Status);
         }
-    }
-
-    private async Task HandleMouseMove(MouseEventArgs e)
-    {
-        var column = (int)(e.OffsetX / CellSize);
-        if (column >= 0 && column < GameBoard.Columns)
-        {
-            _currentColumn = column;
-            StateHasChanged();
-        }
-    }
-
-    private void HandleMouseLeave()
-    {
-        _currentColumn = null;
-        StateHasChanged();
-    }
-
-    private async Task HandleClick(MouseEventArgs e)
-    {
-        var column = (int)(e.OffsetX / CellSize);
-        if (column >= 0 && column < GameBoard.Columns)
-        {
-            await OnColumnClicked.InvokeAsync(column);
-        }
-    }
-
-    public async Task AnimatePieceDrop(int column)
-    {
-        _animationColumn = column;
-        _animationStartRow = 0;
-        _animationTargetRow = Board.GetTargetRow(column);
-        _isAnimating = true;
-        StateHasChanged();
-
-        await Task.Delay(_animationDuration);
-        _isAnimating = false;
-        await DrawBoard();
-        await OnAnimationComplete.InvokeAsync();
-    }
-
-    public async Task AnimateWin(List<(int row, int col)> winningPieces)
-    {
-        _winningPiecesJson = System.Text.Json.JsonSerializer.Serialize(winningPieces);
-        _isWinningAnimation = true;
-        StateHasChanged();
-
-        await Task.Delay(1000);
-        _isWinningAnimation = false;
-        StateHasChanged();
     }
 
     [JSInvokable]
-    public async Task HandleTouchCoordinates(double x, double y)
+    public async Task OnColumnClickedFromJS(int column)
     {
-        var column = (int)(x / CellSize);
-        if (column >= 0 && column < GameBoard.Columns)
+        await OnColumnClicked.InvokeAsync(column);
+    }
+
+    [JSInvokable]
+    public async Task OnAnimationCompleteFromJS()
+    {
+        await OnAnimationComplete.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
         {
-            _currentColumn = column;
-            StateHasChanged();
+            if (objRef != null)
+            {
+                objRef.Dispose();
+            }
+            await JSRuntime.InvokeVoidAsync("gameBoardInterop.dispose");
         }
-    }
-
-    private void HandleTouchStart(TouchEventArgs e)
-    {
-        _isDragging = true;
-    }
-
-    private void HandleTouchMove(TouchEventArgs e)
-    {
-        if (_isDragging)
+        catch (Exception ex)
         {
-            // Touch coordinates are handled by JS
+            Console.WriteLine($"Error during disposal: {ex.Message}");
         }
-    }
-
-    private async Task HandleTouchEnd(TouchEventArgs e)
-    {
-        if (_isDragging && _currentColumn.HasValue)
-        {
-            await OnColumnClicked.InvokeAsync(_currentColumn.Value);
-        }
-        _isDragging = false;
-        _currentColumn = null;
-        StateHasChanged();
-    }
-
-    public void Dispose()
-    {
-        _dotNetHelper?.Dispose();
     }
 }
-
-<style>
-    .game-board-container {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        margin: 20px;
-        touch-action: none;
-    }
-
-    .game-board {
-        position: relative;
-        border: 2px solid #333;
-        border-radius: 8px;
-        overflow: hidden;
-        background: #2196F3;
-    }
-
-    canvas {
-        display: block;
-    }
-
-    .preview-piece {
-        position: absolute;
-        top: -@(PieceRadius * 2)px;
-        width: @(PieceRadius * 2)px;
-        height: @(PieceRadius * 2)px;
-        border-radius: 50%;
-        transform: translateX(@(PieceRadius)px);
-        transition: left 0.2s ease;
-        opacity: 0.7;
-    }
-
-    .piece-animation {
-        position: absolute;
-        width: @(PieceRadius * 2)px;
-        height: @(PieceRadius * 2)px;
-        border-radius: 50%;
-        transform: translateX(@(PieceRadius)px);
-        animation: dropPiece linear forwards;
-    }
-
-    ::deep .dropPiece {
-        from { transform: translateY(0) translateX(@(PieceRadius)px); }
-        to { transform: translateY(var(--target-row-offset)) translateX(@(PieceRadius)px); }
-    }
-
-    .winning-animation {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-    }
-
-    .dragging {
-        cursor: grabbing;
-    }
-</style>
