@@ -1,0 +1,26 @@
+{
+    "dotnet.defaultSolution": "PoConnectFive.sln",
+    "omnisharp.useModernNet": true,
+    "omnisharp.monoPath": null,
+    "omnisharp.useGlobalMono": "never",
+    "omnisharp.path": "latest",
+    "omnisharp.loggingLevel": "information",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.rulers": [120],
+    "editor.tabSize": 4,
+    "editor.insertSpaces": true,
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/bin": true,
+        "**/obj": true
+    },
+    "files.associations": {
+        "*.razor": "aspnetcorerazor"
+    }
+} 

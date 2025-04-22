@@ -1,0 +1,12 @@
+{
+    "recommendations": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.blazorwasm-companion",
+        "ms-dotnettools.dotnet-interactive-vscode",
+        "ms-azuretools.vscode-azureappservice",
+        "ms-azuretools.vscode-azurestorage",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-azuretools.vscode-azureresourcegroups",
+        "ms-azuretools.vscode-azuretable"
+    ]
+}

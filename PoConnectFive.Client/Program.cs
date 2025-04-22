@@ -7,10 +7,26 @@ using PoConnectFive.Shared.Interfaces;
 using PoConnectFive.Shared.Services.AI;
 using PoConnectFive.Shared.Models;
 using Radzen; // Add Radzen namespace
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Extensions.Logging;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .WriteTo.Console()
+    .CreateLogger();
+
+// Add logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddSerilog(Log.Logger);
+    logging.SetMinimumLevel(LogLevel.Debug);
+});
 
 // Read configuration from wwwroot/appsettings.json
 var apiUrl = builder.Configuration["ApiBaseUrl"];
@@ -25,15 +41,17 @@ if (string.IsNullOrEmpty(apiUrl))
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiUrl) }); 
 
 // Register services
-// builder.Services.AddScoped<ILocalStorageService, BrowserStorageService>(); // Removed
-// builder.Services.AddScoped<IPlayerDataService, PlayerDataService>(); // Removed
-builder.Services.AddScoped<IPlayerDataService, ApiPlayerDataService>(); // Use new API service
-builder.Services.AddScoped<ILeaderboardService, LeaderboardService>(); // Keep this if still used elsewhere, otherwise remove
+builder.Services.AddScoped<ILocalStorageService, BrowserStorageService>();
+builder.Services.AddScoped<IStorageService>(sp => sp.GetRequiredService<ILocalStorageService>() as IStorageService);
+builder.Services.AddScoped<IPlayerDataService, ApiPlayerDataService>();
+builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
 
 // Register game services
-builder.Services.AddScoped<IGameService>(sp => new GameService());
+builder.Services.AddScoped<IGameService, GameService>();
 builder.Services.AddScoped<GameStateService>();
 builder.Services.AddScoped<WinProbabilityService>();
+builder.Services.AddScoped<SoundService>();
+builder.Services.AddScoped<GameStatisticsService>();
 
 // Register AI players
 builder.Services.AddScoped<IAIPlayer>(sp =>

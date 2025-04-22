@@ -3,6 +3,7 @@ using PoConnectFive.Shared.Models;
 using PoConnectFive.Shared.Services.AI;
 using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 
 namespace PoConnectFive.Shared.Services
 {
@@ -24,7 +25,13 @@ namespace PoConnectFive.Shared.Services
     /// </summary>
     public class GameService : IGameService
     {
+        private readonly ILogger<GameBoard> _logger;
         private IAIPlayer? _aiPlayer;
+
+        public GameService(ILogger<GameBoard> logger)
+        {
+            _logger = logger;
+        }
 
         public Task<GameState> StartNewGame(string player1Name, string player2Name, bool isAIOpponent = false, AIDifficulty? aiDifficulty = null)
         {
@@ -46,7 +53,7 @@ namespace PoConnectFive.Shared.Services
             }
 
             // Factory pattern: Creating initial game state
-            return Task.FromResult(GameState.CreateNew(player1, player2));
+            return Task.FromResult(GameState.CreateNew(player1, player2, _logger));
         }
 
         public Task<GameState> MakeMove(GameState currentState, int column)

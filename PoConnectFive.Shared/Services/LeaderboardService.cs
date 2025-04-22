@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using PoConnectFive.Shared.Models;
+using Microsoft.Extensions.Logging;
 
 namespace PoConnectFive.Shared.Services
 {
@@ -31,23 +32,30 @@ namespace PoConnectFive.Shared.Services
 
     public class LeaderboardService : ILeaderboardService
     {
-        // Strategy pattern: Storage mechanism can be changed
         private readonly IStorageService _storageService;
+        private readonly ILogger<LeaderboardService> _logger;
         private const string STORAGE_KEY = "playerStats";
 
-        public LeaderboardService(IStorageService storageService)
+        public LeaderboardService(IStorageService storageService, ILogger<LeaderboardService> logger)
         {
             _storageService = storageService;
+            _logger = logger;
         }
 
         public async Task<List<PlayerStats>> GetTopPlayers(int count = 10)
         {
-            var allStats = await GetAllPlayerStats();
-            // Observer pattern: Rankings automatically update when stats change
-            return allStats
+            var sessions = await _storageService.GetAllAsync<GameSession>("GameSessions");
+            var playerStats = new Dictionary<string, PlayerStats>();
+
+            foreach (var session in sessions)
+            {
+                UpdatePlayerStats(playerStats, session.Player1, session.Winner);
+                UpdatePlayerStats(playerStats, session.Player2, session.Winner);
+            }
+
+            return playerStats.Values
                 .OrderByDescending(p => p.WinRate)
-                .ThenByDescending(p => p.Wins)
-                .ThenBy(p => p.GamesPlayed)
+                .ThenByDescending(p => p.GamesPlayed)
                 .Take(count)
                 .ToList();
         }
@@ -104,6 +112,21 @@ namespace PoConnectFive.Shared.Services
         {
             return _storageService.SetItem(STORAGE_KEY, stats);
         }
+
+        private void UpdatePlayerStats(Dictionary<string, PlayerStats> playerStats, Player player, Player? winner)
+        {
+            if (!playerStats.ContainsKey(player.Name))
+            {
+                playerStats[player.Name] = PlayerStats.CreateNew(player.Id.ToString(), player.Name);
+            }
+
+            var stats = playerStats[player.Name];
+            stats.GamesPlayed++;
+            if (winner?.Id == player.Id)
+            {
+                stats.Wins++;
+            }
+        }
     }
 
     /// <summary>
@@ -116,5 +139,6 @@ namespace PoConnectFive.Shared.Services
         Task<T?> GetItem<T>(string key);
         Task SetItem<T>(string key, T value);
         Task RemoveItem(string key);
+        Task<List<T>> GetAllAsync<T>(string collectionName);
     }
 }

@@ -1,61 +1,84 @@
+using Microsoft.Extensions.Logging;
 using PoConnectFive.Shared.Models;
+using Serilog;
 
 namespace PoConnectFive.Shared.Services
 {
     public class GameStateService
     {
-        public GameBoard Board { get; private set; }
-        public Player CurrentPlayer { get; private set; }
-        public GameStatus Status { get; private set; }
-        public Player Player1 { get; private set; }
-        public Player Player2 { get; private set; }
+        private readonly ILogger<GameBoard> _logger;
+        private GameState _currentState;
 
-        public GameStateService()
+        public GameStateService(ILogger<GameBoard> logger)
         {
-            Board = new GameBoard();
-            Player1 = new Player(1, "Player 1", PlayerType.Human);
-            Player2 = new Player(2, "Player 2", PlayerType.Human);
-            CurrentPlayer = Player1;
-            Status = GameStatus.InProgress;
+            _logger = logger;
+            _currentState = CreateNewGame();
+            _logger.LogInformation("GameStateService initialized with new game");
         }
 
-        public bool MakeMove(int column)
+        public GameState CreateNewGame()
         {
-            if (Status != GameStatus.InProgress || !Board.IsValidMove(column))
-                return false;
-
-            int row = Board.GetTargetRow(column);
-            Board = Board.PlacePiece(column, CurrentPlayer.Id);
-
-            // Check for win
-            if (Board.CheckWin(row, column, CurrentPlayer.Id))
-            {
-                Status = CurrentPlayer == Player1 ? GameStatus.Player1Won : GameStatus.Player2Won;
-                return true;
-            }
-
-            // Check for draw
-            if (!Board.HasValidMoves())
-            {
-                Status = GameStatus.Draw;
-                return true;
-            }
-
-            // Switch players
-            CurrentPlayer = CurrentPlayer == Player1 ? Player2 : Player1;
-            return true;
+            var board = new GameBoard(_logger);
+            var player1 = Player.Red;
+            var player2 = Player.Yellow;
+            
+            _logger.LogInformation("Creating new game with players: {Player1} vs {Player2}", player1.Name, player2.Name);
+            
+            return new GameState(
+                board,
+                player1,
+                player2,
+                player1, // Player 1 starts
+                GameStatus.InProgress
+            );
         }
 
-        public GameState GetGameState()
+        public GameState GetCurrentState() => _currentState;
+
+        public GameState MakeMove(int column)
         {
-            return new GameState(Board, Player1, Player2, CurrentPlayer, Status);
+            if (_currentState.Status != GameStatus.InProgress)
+            {
+                _logger.LogWarning("Attempted move in completed game. Status: {Status}", _currentState.Status);
+                throw new InvalidOperationException("Game is already over");
+            }
+
+            if (!_currentState.Board.IsValidMove(column))
+            {
+                _logger.LogWarning("Invalid move attempted in column {Column}", column);
+                throw new InvalidOperationException("Invalid move");
+            }
+
+            _logger.LogInformation("Player {PlayerId} making move in column {Column}", _currentState.CurrentPlayer.Id, column);
+
+            var newBoard = _currentState.Board.PlacePiece(column, _currentState.CurrentPlayer.Id);
+            var targetRow = _currentState.Board.GetTargetRow(column);
+            
+            var hasWon = newBoard.CheckWin(targetRow, column, _currentState.CurrentPlayer.Id);
+            var nextPlayer = _currentState.CurrentPlayer.Id == 1 ? _currentState.Player2 : _currentState.Player1;
+            var status = hasWon ? 
+                (_currentState.CurrentPlayer.Id == 1 ? GameStatus.Player1Won : GameStatus.Player2Won) :
+                (!newBoard.HasValidMoves() ? GameStatus.Draw : GameStatus.InProgress);
+
+            _logger.LogInformation("Move result - Win: {HasWon}, Next Player: {NextPlayer}, Status: {Status}", 
+                hasWon, nextPlayer.Name, status);
+
+            _currentState = new GameState(
+                newBoard,
+                _currentState.Player1,
+                _currentState.Player2,
+                nextPlayer,
+                status,
+                hasWon ? column : null
+            );
+
+            return _currentState;
         }
 
         public void Reset()
         {
-            Board = new GameBoard();
-            CurrentPlayer = Player1;
-            Status = GameStatus.InProgress;
+            _logger.LogInformation("Resetting game state");
+            _currentState = CreateNewGame();
         }
     }
 } 

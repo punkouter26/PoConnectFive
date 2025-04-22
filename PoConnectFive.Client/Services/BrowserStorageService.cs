@@ -2,6 +2,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.JSInterop;
 using System.Text.Json;
+using PoConnectFive.Shared.Services;
+using System.Collections.Generic;
 
 namespace PoConnectFive.Client.Services
 {
@@ -32,7 +34,7 @@ namespace PoConnectFive.Client.Services
     /// - Strategy Pattern: One of multiple possible storage implementations
     /// - Adapter Pattern: Adapts browser localStorage to .NET interface
     /// </summary>
-    public class BrowserStorageService : ILocalStorageService
+    public class BrowserStorageService : ILocalStorageService, IStorageService
     {
         private readonly IJSRuntime _jsRuntime;
         private readonly JsonSerializerOptions _jsonOptions;
@@ -102,6 +104,25 @@ namespace PoConnectFive.Client.Services
                 Console.Error.WriteLine($"Error clearing local storage: {ex.Message}");
                 throw;
             }
+        }
+
+        // IStorageService implementation
+        public async Task<List<T>> GetAllAsync<T>(string collectionName)
+        {
+            var result = await GetItem<List<T>>(collectionName);
+            return result ?? new List<T>();
+        }
+
+        public async Task SaveAsync<T>(string collectionName, T item)
+        {
+            var items = await GetAllAsync<T>(collectionName);
+            items.Add(item);
+            await SetItem(collectionName, items);
+        }
+
+        public async Task SaveAllAsync<T>(string collectionName, IEnumerable<T> items)
+        {
+            await SetItem(collectionName, items);
         }
     }
 }

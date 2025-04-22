@@ -19,8 +19,9 @@
 
         @if (_currentColumn.HasValue)
         {
-            <div class="preview-piece"
-                 style="left: @(_currentColumn.Value * CellSize)px">
+            <div class="preview-piece @(_isDragging ? "dragging" : "")"
+                 style="left: @(_currentColumn.Value * CellSize)px;
+                        background-color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00")">
             </div>
         }
 
@@ -30,7 +31,7 @@
                  style="left: @(_animationColumn * CellSize)px;
                         top: @(_animationStartRow * CellSize)px;
                         animation-duration: @(_animationDuration)ms;
-                        color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00");
+                        background-color: @(CurrentState?.CurrentPlayer.Id == 1 ? "#FF0000" : "#FFFF00");
                         --target-row-offset: @(_animationTargetRow * CellSize)px;">
             </div>
         }
@@ -45,70 +46,102 @@
 </div>
 
 @code {
-    private ElementReference canvasReference;
     private const int CellSize = 40;
     private const int PieceRadius = 15;
+    private ElementReference canvasReference;
     private int? _currentColumn;
-    private bool _isDragging;
-    private bool _isAnimating;
+    private bool _isDragging = false;
+    private bool _isAnimating = false;
+    private bool _isWinningAnimation = false;
     private int _animationColumn;
     private int _animationStartRow;
     private int _animationTargetRow;
-    private const int _animationDuration = 300;
-    private bool _isWinningAnimation;
-    private string _winningPiecesJson = string.Empty;
+    private int _animationDuration = 500;
+    private string _winningPiecesJson = "[]";
+    private DotNetObjectReference<GameBoardComponent>? _dotNetHelper;
 
     [Parameter]
-    public GameBoard Board { get; set; } = default!;
+    public required GameBoard Board { get; set; }
+
+    [Parameter]
+    public required GameState CurrentState { get; set; }
 
     [Parameter]
     public EventCallback<int> OnColumnClicked { get; set; }
 
     [Parameter]
-    public GameState? CurrentState { get; set; }
+    public EventCallback OnAnimationComplete { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await DrawBoardAsync();
+        if (firstRender)
+        {
+            _dotNetHelper = DotNetObjectReference.Create(this);
+            await JSRuntime.InvokeVoidAsync("initGameBoard", canvasReference, _dotNetHelper);
+            await DrawBoard();
+        }
     }
 
-    private async Task DrawBoardAsync()
+    private async Task DrawBoard()
     {
-        try
+        var canvas = await JSRuntime.InvokeAsync<IJSObjectReference>("getCanvas", canvasReference);
+        await canvas.InvokeVoidAsync("clearRect", 0, 0, CellSize * GameBoard.Columns, CellSize * GameBoard.Rows);
+
+        // Draw grid
+        await canvas.InvokeVoidAsync("drawGrid", CellSize, GameBoard.Columns, GameBoard.Rows);
+
+        // Draw pieces
+        for (int row = 0; row < GameBoard.Rows; row++)
         {
-            var rows = GameBoard.Rows;
-            var cols = GameBoard.Columns;
-            var boardState = new int[rows][];
-            
-            for (int i = 0; i < rows; i++)
+            for (int col = 0; col < GameBoard.Columns; col++)
             {
-                boardState[i] = new int[cols];
-                for (int j = 0; j < cols; j++)
+                var cellValue = Board.GetCell(row, col);
+                if (cellValue != 0)
                 {
-                    boardState[i][j] = Board.GetCell(i, j);
+                    var color = cellValue == 1 ? "#FF0000" : "#FFFF00";
+                    await canvas.InvokeVoidAsync("drawPiece", col * CellSize, row * CellSize, CellSize, color);
                 }
             }
-
-            var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/gameBoard.js");
-            await module.InvokeVoidAsync("drawBoard", canvasReference, new { cells = boardState }, CellSize, PieceRadius, _currentColumn);
         }
-        catch (Exception ex)
+    }
+
+    private async Task HandleMouseMove(MouseEventArgs e)
+    {
+        var column = (int)(e.OffsetX / CellSize);
+        if (column >= 0 && column < GameBoard.Columns)
         {
-            Console.WriteLine($"Error loading JS module: {ex.Message}");
+            _currentColumn = column;
+            StateHasChanged();
+        }
+    }
+
+    private void HandleMouseLeave()
+    {
+        _currentColumn = null;
+        StateHasChanged();
+    }
+
+    private async Task HandleClick(MouseEventArgs e)
+    {
+        var column = (int)(e.OffsetX / CellSize);
+        if (column >= 0 && column < GameBoard.Columns)
+        {
+            await OnColumnClicked.InvokeAsync(column);
         }
     }
 
     public async Task AnimatePieceDrop(int column)
     {
         _animationColumn = column;
-        _animationStartRow = -1;
+        _animationStartRow = 0;
         _animationTargetRow = Board.GetTargetRow(column);
         _isAnimating = true;
         StateHasChanged();
 
         await Task.Delay(_animationDuration);
         _isAnimating = false;
-        StateHasChanged();
+        await DrawBoard();
+        await OnAnimationComplete.InvokeAsync();
     }
 
     public async Task AnimateWin(List<(int row, int col)> winningPieces)
@@ -117,81 +150,49 @@
         _isWinningAnimation = true;
         StateHasChanged();
 
-        await Task.Delay(2000); // Duration of winning animation
+        await Task.Delay(1000);
         _isWinningAnimation = false;
         StateHasChanged();
     }
 
-    private async Task HandleClick(MouseEventArgs e)
+    [JSInvokable]
+    public async Task HandleTouchCoordinates(double x, double y)
     {
-        var column = GetColumnFromX(e.OffsetX);
-        if (column >= 0 && column < GameBoard.Columns && Board.IsValidMove(column))
+        var column = (int)(x / CellSize);
+        if (column >= 0 && column < GameBoard.Columns)
         {
-            await AnimatePieceDrop(column);
-            await OnColumnClicked.InvokeAsync(column);
+            _currentColumn = column;
+            StateHasChanged();
         }
-    }
-
-    private void HandleMouseMove(MouseEventArgs e)
-    {
-        _currentColumn = GetColumnFromX(e.OffsetX);
-        StateHasChanged();
-    }
-
-    private void HandleMouseLeave()
-    {
-        _currentColumn = null;
-        _isDragging = false;
-        StateHasChanged();
-    }
-
-    private int GetColumnFromX(double x)
-    {
-        return (int)(x / CellSize);
     }
 
     private void HandleTouchStart(TouchEventArgs e)
     {
         _isDragging = true;
-        _ = HandleTouchMove(e);  // Fire and forget
     }
 
-    private async Task HandleTouchMove(TouchEventArgs e)
+    private void HandleTouchMove(TouchEventArgs e)
     {
-        if (!_isDragging) return;
-
-        var touch = e.Touches[0];
-        var rect = await GetBoundingClientRect();
-        var x = touch.ClientX - rect.Left;
-        _currentColumn = GetColumnFromX(x);
-        StateHasChanged();
+        if (_isDragging)
+        {
+            // Touch coordinates are handled by JS
+        }
     }
 
     private async Task HandleTouchEnd(TouchEventArgs e)
     {
-        if (!_isDragging) return;
-
-        _isDragging = false;
-        if (_currentColumn.HasValue)
+        if (_isDragging && _currentColumn.HasValue)
         {
-            await HandleClick(new MouseEventArgs { OffsetX = _currentColumn.Value * CellSize });
+            await OnColumnClicked.InvokeAsync(_currentColumn.Value);
         }
+        _isDragging = false;
         _currentColumn = null;
         StateHasChanged();
     }
 
-    private async Task<DOMRect> GetBoundingClientRect()
+    public void Dispose()
     {
-        var module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./js/gameBoard.js");
-        return await module.InvokeAsync<DOMRect>("getBoundingClientRect", canvasReference);
-    }
-
-    private class DOMRect
-    {
-        public double Left { get; set; }
-        public double Top { get; set; }
-        public double Width { get; set; }
-        public double Height { get; set; }
+        _dotNetHelper?.Dispose();
     }
 }
 
@@ -207,10 +208,9 @@
     .game-board {
         position: relative;
         border: 2px solid #333;
-        background-color: #2196F3;
         border-radius: 8px;
         overflow: hidden;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        background: #2196F3;
     }
 
     canvas {
@@ -219,45 +219,27 @@
 
     .preview-piece {
         position: absolute;
-        top: -@(CellSize)px;
-        width: @(CellSize)px;
-        height: @(CellSize)px;
-        pointer-events: none;
-        transition: left 0.1s ease;
-    }
-
-    .preview-piece::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        top: -@(PieceRadius * 2)px;
         width: @(PieceRadius * 2)px;
         height: @(PieceRadius * 2)px;
-        background-color: rgba(255, 255, 255, 0.3);
         border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transform: translateX(@(PieceRadius)px);
+        transition: left 0.2s ease;
+        opacity: 0.7;
     }
 
     .piece-animation {
         position: absolute;
-        width: @(CellSize)px;
-        height: @(CellSize)px;
-        pointer-events: none;
-        animation: dropPiece @(_animationDuration)ms cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
-    }
-
-    .piece-animation::after {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
         width: @(PieceRadius * 2)px;
         height: @(PieceRadius * 2)px;
-        background-color: currentColor;
         border-radius: 50%;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        transform: translateX(@(PieceRadius)px);
+        animation: dropPiece linear forwards;
+    }
+
+    ::deep .dropPiece {
+        from { transform: translateY(0) translateX(@(PieceRadius)px); }
+        to { transform: translateY(var(--target-row-offset)) translateX(@(PieceRadius)px); }
     }
 
     .winning-animation {
@@ -267,27 +249,9 @@
         width: 100%;
         height: 100%;
         pointer-events: none;
-        animation: pulseWinning 2s ease-in-out infinite;
     }
 
-    @@keyframes dropPiece {
-        0% {
-            transform: translateY(0);
-        }
-        100% {
-            transform: translateY(var(--target-row-offset));
-        }
-    }
-
-    @@keyframes pulseWinning {
-        0% {
-            box-shadow: 0 0 0 0 rgba(255, 255, 0, 0.4);
-        }
-        70% {
-            box-shadow: 0 0 0 10px rgba(255, 255, 0, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(255, 255, 0, 0);
-        }
+    .dragging {
+        cursor: grabbing;
     }
 </style>

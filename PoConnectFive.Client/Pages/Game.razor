@@ -10,6 +10,8 @@
 @inject NavigationManager NavigationManager
 @inject WinProbabilityService WinProbabilityService
 @inject GameStateService GameStateService
+@inject GameStatisticsService StatisticsService
+@inject SoundService SoundService
 
 <PageTitle>Connect Five - Game</PageTitle>
 
@@ -51,7 +53,8 @@
              <GameBoardComponent @ref="gameBoardRef" 
                                Board="@_currentState.Board" 
                                CurrentState="@_currentState"
-                               OnColumnClicked="OnColumnClicked" />
+                               OnColumnClicked="OnColumnClicked"
+                               OnAnimationComplete="OnAnimationComplete" />
         </RadzenStack>
     }
 
@@ -61,24 +64,54 @@
         <RadzenButton Click="OnResetClick" Text="Reset" ButtonStyle="ButtonStyle.Secondary" />
     </RadzenStack>
 
-    <div class="game-container">
-        <div class="game-board">
-            @for (int row = 0; row < GameStateService.Board.GetLength(0); row++)
+    <div class="game-container @(_isWinning ? "win-celebration" : "")">
+        <div class="game-header">
+            <h1>Connect Five</h1>
+            <div class="game-controls">
+                <button class="btn btn-secondary" @onclick="ToggleMute">
+                    <i class="@(SoundService.IsMuted ? "fas fa-volume-mute" : "fas fa-volume-up")"></i>
+                </button>
+                <button class="btn btn-primary" @onclick="OnNewGameClick">New Game</button>
+                <button class="btn btn-secondary" @onclick="OnResetClick">Reset</button>
+            </div>
+        </div>
+
+        <div class="game-status">
+            @if (_currentState?.Status == GameStatus.InProgress)
             {
-                <div class="board-row">
-                    @for (int col = 0; col < GameStateService.Board.GetLength(1); col++)
-                    {
-                        <div class="board-cell" @onclick="() => MakeMove(col)">
-                            <div class="cell-content @GetCellClass(GameStateService.Board.GetCell(row, col))"></div>
-                        </div>
-                    }
+                <div class="current-player">
+                    Current Player: <span class="player-color @(_currentState.CurrentPlayer.Id == 1 ? "player1" : "player2")">
+                        @(_currentState.CurrentPlayer.Name)
+                    </span>
                 </div>
+            }
+            else if (_currentState?.Status == GameStatus.Player1Won || _currentState?.Status == GameStatus.Player2Won)
+            {
+                <div class="winner-message">
+                    <span class="player-color @(_currentState.Status == GameStatus.Player1Won ? "player1" : "player2")">
+                        @(_currentState.Status == GameStatus.Player1Won ? _currentState.Player1.Name : _currentState.Player2.Name)
+                    </span>
+                    wins!
+                </div>
+            }
+            else if (_currentState?.Status == GameStatus.Draw)
+            {
+                <div class="draw-message">It's a draw!</div>
             }
         </div>
 
-        <div class="game-info">
-            <h3>Current Player: @(GameStateService.CurrentPlayer.Id == 1 ? "Red" : "Yellow")</h3>
-            <WinProbabilityChart Probabilities="winProbabilities" />
+        <div class="game-board-container @(_isInvalidMove ? "board-shake" : "")">
+            <GameBoardComponent 
+                Board="@_currentState?.Board" 
+                CurrentState="@_currentState"
+                OnColumnClicked="OnColumnClicked"
+                OnAnimationComplete="OnAnimationComplete" />
+        </div>
+
+        <div class="game-footer">
+            <button class="btn btn-link" @onclick="NavigateToStatistics">
+                <i class="fas fa-chart-bar"></i> View Statistics
+            </button>
         </div>
     </div>
 
@@ -93,6 +126,8 @@
     private AIDifficulty? _aiDifficulty; // Store AI difficulty for stat updates
     private GameBoardComponent? gameBoardRef;
     private List<(int column, double probability)> winProbabilities = new();
+    private bool _isWinning = false;
+    private bool _isInvalidMove = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -131,47 +166,28 @@
             {
                 var previousState = _currentState;
                 _currentState = await GameService.MakeMove(_currentState, column);
-                StateHasChanged();
+                
+                await SoundService.PlayPieceDrop();
 
-                // Check if game ended
-                if (_currentState.Status != GameStatus.InProgress && 
-                    previousState.Status == GameStatus.InProgress)
+                if (_currentState.Status != GameStatus.InProgress)
                 {
+                    _isWinning = true;
+                    await SoundService.PlayWin();
                     await HandleGameEnd();
                 }
-                // Handle AI move if it's AI's turn
-                else if (_currentState.Status == GameStatus.InProgress && 
-                         _currentState.CurrentPlayer.Type == PlayerType.AI)
-                {
-                    try
-                    {
-                        int aiMove = await GameService.GetAIMove(_currentState);
-                        if (await GameService.IsValidMove(_currentState, aiMove))
-                        {
-                            // Get reference to GameBoard component
-                            if (gameBoardRef != null)
-                            {
-                                await gameBoardRef.AnimatePieceDrop(aiMove);
-                            }
-                            _currentState = await GameService.MakeMove(_currentState, aiMove);
-                            StateHasChanged();
-
-                            if (_currentState.Status != GameStatus.InProgress)
-                            {
-                                await HandleGameEnd();
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        await JSRuntime.InvokeVoidAsync("alert", $"AI Error: {ex.Message}");
-                    }
-                }
+            }
+            else
+            {
+                _isInvalidMove = true;
+                await SoundService.PlayError();
+                StateHasChanged();
+                await Task.Delay(300);
+                _isInvalidMove = false;
             }
         }
         catch (Exception ex)
         {
-            await JSRuntime.InvokeVoidAsync("alert", ex.Message);
+            Console.WriteLine($"Error making move: {ex.Message}");
         }
     }
 
@@ -351,15 +367,21 @@
 
     private async Task MakeMove(int column)
     {
-        if (GameStateService.MakeMove(column))
+        try
         {
+            _currentState = GameStateService.MakeMove(column);
             await UpdateWinProbabilities();
+        }
+        catch (InvalidOperationException ex)
+        {
+            // Handle invalid move
+            Console.WriteLine($"Invalid move: {ex.Message}");
         }
     }
 
     private async Task UpdateWinProbabilities()
     {
-        winProbabilities = await WinProbabilityService.CalculateWinProbabilities(GameStateService.GetGameState(), 1000);
+        winProbabilities = await WinProbabilityService.CalculateWinProbabilities(GameStateService.GetCurrentState(), 1000);
         StateHasChanged();
     }
 
@@ -371,6 +393,22 @@
             2 => "yellow",
             _ => "empty"
         };
+    }
+
+    private void ToggleMute()
+    {
+        SoundService.ToggleMute();
+    }
+
+    private void NavigateToStatistics()
+    {
+        NavigationManager.NavigateTo("/statistics");
+    }
+
+    private void OnAnimationComplete()
+    {
+        _isWinning = false;
+        StateHasChanged();
     }
 }
 

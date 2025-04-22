@@ -3,151 +3,185 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using PoConnectFive.Shared.Models;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace PoConnectFive.Shared.Services
 {
     public class GameStatisticsService
     {
         private readonly ILogger<GameStatisticsService> _logger;
-        private readonly List<GameRecord> _gameHistory;
+        private readonly IStorageService _storageService;
+        private readonly List<GameSession> _gameSessions = new();
+        private readonly Dictionary<string, PlayerStats> _playerStats = new();
 
-        public GameStatisticsService(ILogger<GameStatisticsService> logger)
+        public GameStatisticsService(ILogger<GameStatisticsService> logger, IStorageService storageService)
         {
             _logger = logger;
-            _gameHistory = new List<GameRecord>();
+            _storageService = storageService;
         }
 
-        public void RecordGame(GameState finalState, TimeSpan duration, string player1Name, string player2Name, AIDifficulty? aiDifficulty)
+        public async Task RecordGameSession(GameSession session)
         {
-            var record = new GameRecord
-            {
-                GameId = Guid.NewGuid(),
-                Timestamp = DateTime.UtcNow,
-                Duration = duration,
-                Player1Name = player1Name,
-                Player2Name = player2Name,
-                Winner = finalState.Status switch
-                {
-                    GameStatus.Player1Won => player1Name,
-                    GameStatus.Player2Won => player2Name,
-                    _ => "Draw"
-                },
-                AIDifficulty = aiDifficulty,
-                MoveCount = CalculateMoveCount(finalState.Board),
-                WinningPattern = GetWinningPattern(finalState)
-            };
-
-            _gameHistory.Add(record);
-            _logger.LogInformation("Recorded game statistics: {GameId}", record.GameId);
+            _gameSessions.Add(session);
+            UpdatePlayerStats(session);
         }
 
-        public GameStatistics GetStatistics()
+        public async Task<GameStatistics> GetStatistics()
         {
-            if (_gameHistory.Count == 0)
-                return new GameStatistics();
-
             return new GameStatistics
             {
-                TotalGames = _gameHistory.Count,
-                AverageGameDuration = TimeSpan.FromTicks((long)_gameHistory.Average(g => g.Duration.Ticks)),
-                WinRates = CalculateWinRates(),
-                AverageMovesPerGame = _gameHistory.Average(g => g.MoveCount),
-                MostCommonWinningPatterns = GetMostCommonWinningPatterns(),
-                RecentGames = _gameHistory.OrderByDescending(g => g.Timestamp).Take(10).ToList()
+                TotalGames = _gameSessions.Count,
+                AverageGameDuration = CalculateAverageGameDuration(),
+                WinDistribution = CalculateWinDistribution(),
+                MostCommonWinningPositions = CalculateWinningPositions(),
+                PlayerStats = _playerStats
             };
         }
 
-        private Dictionary<string, double> CalculateWinRates()
+        public async Task<GameStatistics> GetStatisticsAsync()
         {
-            var winRates = new Dictionary<string, double>();
-            var totalGames = _gameHistory.Count;
-
-            foreach (var game in _gameHistory)
+            var sessions = await _storageService.GetAllAsync<GameSession>("GameSessions");
+            var statistics = new GameStatistics();
+            
+            if (!sessions.Any())
             {
-                if (game.Winner != "Draw")
+                return statistics;
+            }
+
+            statistics.TotalGames = sessions.Count;
+            statistics.AverageGameDuration = TimeSpan.FromTicks(
+                (long)sessions.Average(s => s.Duration.Ticks)
+            );
+
+            foreach (var session in sessions)
+            {
+                if (session.Winner != null)
                 {
-                    if (!winRates.ContainsKey(game.Winner))
-                        winRates[game.Winner] = 0;
-                    winRates[game.Winner]++;
+                    if (!statistics.WinDistribution.ContainsKey(session.Winner.Name))
+                    {
+                        statistics.WinDistribution[session.Winner.Name] = 0;
+                    }
+                    statistics.WinDistribution[session.Winner.Name]++;
+
+                    if (session.WinningMove.HasValue)
+                    {
+                        statistics.MostCommonWinningPositions.Add(session.WinningMove.Value);
+                    }
+                }
+
+                UpdatePlayerStats(statistics, session.Player1, session.Winner);
+                UpdatePlayerStats(statistics, session.Player2, session.Winner);
+            }
+
+            return statistics;
+        }
+
+        private void UpdatePlayerStats(GameSession session)
+        {
+            var winner = session.Winner;
+            if (winner != null)
+            {
+                if (!_playerStats.ContainsKey(winner.Name))
+                {
+                    _playerStats[winner.Name] = PlayerStats.CreateNew(winner.Id.ToString(), winner.Name);
+                }
+                _playerStats[winner.Name].Wins++;
+                _playerStats[winner.Name].GamesPlayed++;
+            }
+
+            // Update stats for both players
+            foreach (var player in new[] { session.Player1, session.Player2 })
+            {
+                if (!_playerStats.ContainsKey(player.Name))
+                {
+                    _playerStats[player.Name] = PlayerStats.CreateNew(player.Id.ToString(), player.Name);
+                }
+                _playerStats[player.Name].GamesPlayed++;
+            }
+        }
+
+        private void UpdatePlayerStats(GameStatistics statistics, Player player, Player? winner)
+        {
+            if (!statistics.PlayerStats.ContainsKey(player.Name))
+            {
+                statistics.PlayerStats[player.Name] = PlayerStats.CreateNew(player.Id.ToString(), player.Name);
+            }
+
+            var stats = statistics.PlayerStats[player.Name];
+            stats.GamesPlayed++;
+            if (winner?.Id == player.Id)
+            {
+                stats.Wins++;
+            }
+        }
+
+        private TimeSpan CalculateAverageGameDuration()
+        {
+            if (_gameSessions.Count == 0) return TimeSpan.Zero;
+            
+            var totalDuration = TimeSpan.Zero;
+            foreach (var session in _gameSessions)
+            {
+                totalDuration += session.Duration;
+            }
+            return TimeSpan.FromTicks(totalDuration.Ticks / _gameSessions.Count);
+        }
+
+        private Dictionary<string, int> CalculateWinDistribution()
+        {
+            var distribution = new Dictionary<string, int>();
+            foreach (var session in _gameSessions)
+            {
+                if (session.Winner != null)
+                {
+                    if (!distribution.ContainsKey(session.Winner.Name))
+                    {
+                        distribution[session.Winner.Name] = 0;
+                    }
+                    distribution[session.Winner.Name]++;
                 }
             }
-
-            foreach (var player in winRates.Keys.ToList())
-            {
-                winRates[player] = (winRates[player] / totalGames) * 100;
-            }
-
-            return winRates;
+            return distribution;
         }
 
-        private List<WinningPattern> GetMostCommonWinningPatterns()
+        private List<(int row, int col)> CalculateWinningPositions()
         {
-            return _gameHistory
-                .Where(g => g.WinningPattern != null)
-                .GroupBy(g => g.WinningPattern)
-                .Select(g => new WinningPattern
-                {
-                    Pattern = g.Key,
-                    Count = g.Count(),
-                    Percentage = (double)g.Count() / _gameHistory.Count * 100
-                })
-                .OrderByDescending(p => p.Count)
-                .Take(5)
-                .ToList();
-        }
-
-        private int CalculateMoveCount(GameBoard board)
-        {
-            int count = 0;
-            for (int row = 0; row < GameBoard.Rows; row++)
+            var positions = new Dictionary<(int row, int col), int>();
+            foreach (var session in _gameSessions)
             {
-                for (int col = 0; col < GameBoard.Columns; col++)
+                if (session.WinningMove.HasValue)
                 {
-                    if (board.GetCell(row, col) != 0)
-                        count++;
+                    var pos = (session.WinningMove.Value.row, session.WinningMove.Value.col);
+                    if (!positions.ContainsKey(pos))
+                    {
+                        positions[pos] = 0;
+                    }
+                    positions[pos]++;
                 }
             }
-            return count;
-        }
-
-        private string? GetWinningPattern(GameState finalState)
-        {
-            if (finalState.WinningMove == null)
-                return null;
-
-            // This is a simplified version - in reality, you'd want to analyze the board
-            // to determine the exact winning pattern (horizontal, vertical, diagonal)
-            return "Pattern"; // TODO: Implement actual pattern detection
+            return positions.OrderByDescending(p => p.Value)
+                          .Select(p => (p.Key.row, p.Key.col))
+                          .ToList();
         }
     }
 
-    public class GameRecord
+    public class GameSession
     {
-        public Guid GameId { get; set; }
-        public DateTime Timestamp { get; set; }
+        public Player Player1 { get; set; } = new Player(1, "Player 1", PlayerType.Human, null);
+        public Player Player2 { get; set; } = new Player(2, "Player 2", PlayerType.Human, null);
+        public Player? Winner { get; set; }
         public TimeSpan Duration { get; set; }
-        public string Player1Name { get; set; } = string.Empty;
-        public string Player2Name { get; set; } = string.Empty;
-        public string Winner { get; set; } = string.Empty;
-        public AIDifficulty? AIDifficulty { get; set; }
-        public int MoveCount { get; set; }
-        public string? WinningPattern { get; set; }
+        public (int row, int col)? WinningMove { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
     }
 
     public class GameStatistics
     {
         public int TotalGames { get; set; }
         public TimeSpan AverageGameDuration { get; set; }
-        public Dictionary<string, double> WinRates { get; set; } = new();
-        public double AverageMovesPerGame { get; set; }
-        public List<WinningPattern> MostCommonWinningPatterns { get; set; } = new();
-        public List<GameRecord> RecentGames { get; set; } = new();
-    }
-
-    public class WinningPattern
-    {
-        public string Pattern { get; set; } = string.Empty;
-        public int Count { get; set; }
-        public double Percentage { get; set; }
+        public Dictionary<string, int> WinDistribution { get; set; } = new();
+        public List<(int row, int col)> MostCommonWinningPositions { get; set; } = new();
+        public Dictionary<string, PlayerStats> PlayerStats { get; set; } = new();
     }
 } 

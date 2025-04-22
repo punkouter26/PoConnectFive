@@ -1,4 +1,11 @@
-export function drawBoard(canvas, board, cellSize, pieceRadius, previewColumn) {
+// Constants
+const BOARD = {
+    ROWS: 6,
+    COLS: 7
+};
+
+// Drawing functions
+window.drawBoard = function (canvas, board, cellSize, pieceRadius, previewColumn) {
     const context = canvas.getContext('2d');
     context.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -87,9 +94,9 @@ function drawPiece(context, col, row, cellSize, pieceRadius, color) {
 
     // Draw main piece with gradient
     const gradient = context.createRadialGradient(
-        centerX - pieceRadius/3,
-        centerY - pieceRadius/3,
-        pieceRadius/10,
+        centerX - pieceRadius / 3,
+        centerY - pieceRadius / 3,
+        pieceRadius / 10,
         centerX,
         centerY,
         pieceRadius
@@ -110,9 +117,9 @@ function drawPiece(context, col, row, cellSize, pieceRadius, color) {
 
     // Draw highlight
     const highlightGradient = context.createRadialGradient(
-        centerX - pieceRadius/3,
-        centerY - pieceRadius/3,
-        pieceRadius/10,
+        centerX - pieceRadius / 3,
+        centerY - pieceRadius / 3,
+        pieceRadius / 10,
         centerX,
         centerY,
         pieceRadius
@@ -153,26 +160,26 @@ function drawPreviewPiece(context, column, cellSize, pieceRadius) {
 
 // Helper function to darken or lighten a color
 function shadeColor(color, percent) {
-    let R = parseInt(color.substring(1,3),16);
-    let G = parseInt(color.substring(3,5),16);
-    let B = parseInt(color.substring(5,7),16);
+    let R = parseInt(color.substring(1, 3), 16);
+    let G = parseInt(color.substring(3, 5), 16);
+    let B = parseInt(color.substring(5, 7), 16);
 
     R = parseInt(R * (100 + percent) / 100);
     G = parseInt(G * (100 + percent) / 100);
     B = parseInt(B * (100 + percent) / 100);
 
-    R = (R<255)?R:255;  
-    G = (G<255)?G:255;  
-    B = (B<255)?B:255;  
+    R = (R < 255) ? R : 255;
+    G = (G < 255) ? G : 255;
+    B = (B < 255) ? B : 255;
 
-    R = Math.max(0,R).toString(16).padStart(2, '0');
-    G = Math.max(0,G).toString(16).padStart(2, '0');
-    B = Math.max(0,B).toString(16).padStart(2, '0');
+    R = Math.max(0, R).toString(16).padStart(2, '0');
+    G = Math.max(0, G).toString(16).padStart(2, '0');
+    B = Math.max(0, B).toString(16).padStart(2, '0');
 
     return `#${R}${G}${B}`;
 }
 
-export function getBoundingClientRect(element) {
+window.getBoundingClientRect = function (element) {
     const rect = element.getBoundingClientRect();
     return {
         left: rect.left,
@@ -182,9 +189,7 @@ export function getBoundingClientRect(element) {
     };
 }
 
-// Removed playSoundEffect function
-
-export function animatePieceDrop(column, cellSize, pieceRadius, color) {
+window.animatePieceDrop = function (column, cellSize, pieceRadius, color) {
     const animation = document.createElement('div');
     animation.className = 'piece-animation';
     animation.style.left = `${column * cellSize}px`;
@@ -196,10 +201,78 @@ export function animatePieceDrop(column, cellSize, pieceRadius, color) {
     document.body.appendChild(animation);
 
     setTimeout(() => {
-        animation.style.top = `${(GameBoard.Rows - 1) * cellSize}px`;
+        animation.style.top = `${(BOARD.ROWS - 1) * cellSize}px`;
     }, 0);
 
     setTimeout(() => {
         document.body.removeChild(animation);
     }, 300);
+}
+
+function initGameBoard(canvas, dotNetHelper) {
+    canvas.addEventListener('touchstart', handleTouch);
+    canvas.addEventListener('touchmove', handleTouch);
+
+    function handleTouch(event) {
+        event.preventDefault();
+        const touch = event.touches[0];
+        const rect = canvas.getBoundingClientRect();
+        const x = touch.clientX - rect.left;
+        const y = touch.clientY - rect.top;
+        dotNetHelper.invokeMethodAsync('HandleTouchCoordinates', x, y);
+    }
+}
+
+function getCanvas(canvas) {
+    const ctx = canvas.getContext('2d');
+    return {
+        clearRect: (x, y, width, height) => ctx.clearRect(x, y, width, height),
+        drawGrid: (cellSize, columns, rows) => {
+            ctx.strokeStyle = '#1976D2';
+            ctx.lineWidth = 2;
+
+            // Draw vertical lines
+            for (let i = 1; i < columns; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * cellSize, 0);
+                ctx.lineTo(i * cellSize, rows * cellSize);
+                ctx.stroke();
+            }
+
+            // Draw horizontal lines
+            for (let i = 1; i < rows; i++) {
+                ctx.beginPath();
+                ctx.moveTo(0, i * cellSize);
+                ctx.lineTo(columns * cellSize, i * cellSize);
+                ctx.stroke();
+            }
+        },
+        drawPiece: (x, y, cellSize, color) => {
+            const radius = cellSize * 0.4;
+            const centerX = x + cellSize / 2;
+            const centerY = y + cellSize / 2;
+
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fillStyle = color;
+            ctx.fill();
+
+            // Add a subtle shadow
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            // Add a subtle border
+            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Reset shadow
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+    };
 }

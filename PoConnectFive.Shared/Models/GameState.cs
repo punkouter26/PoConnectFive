@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 namespace PoConnectFive.Shared.Models
 {
     /// <summary>
@@ -24,10 +26,10 @@ namespace PoConnectFive.Shared.Models
         }
 
         // Factory method for creating initial game state
-        public static GameState CreateNew(Player player1, Player player2)
+        public static GameState CreateNew(Player player1, Player player2, ILogger<GameBoard> logger)
         {
             return new GameState(
-                new GameBoard(),
+                new GameBoard(logger),
                 player1,
                 player2,
                 player1, // Player 1 starts

@@ -1,0 +1,105 @@
+/* Piece drop animation */
+@keyframes pieceDrop {
+    0% {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.piece-animation {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    animation: pieceDrop 0.5s ease-out;
+}
+
+/* Winning line animation */
+@keyframes winningLine {
+    0% {
+        transform: scaleX(0);
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+    }
+    100% {
+        transform: scaleX(1);
+        opacity: 1;
+    }
+}
+
+.winning-line {
+    position: absolute;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.8);
+    transform-origin: left;
+    animation: winningLine 0.5s ease-out;
+}
+
+/* Board shake animation */
+@keyframes boardShake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    25% {
+        transform: translateX(-5px);
+    }
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+.board-shake {
+    animation: boardShake 0.3s ease-in-out;
+}
+
+/* Win celebration animation */
+@keyframes winCelebration {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.win-celebration {
+    animation: winCelebration 0.5s ease-in-out;
+}
+
+/* Hover effects */
+.cell-hover {
+    transition: transform 0.2s ease;
+}
+
+.cell-hover:hover {
+    transform: scale(1.1);
+    z-index: 1;
+}
+
+/* Fade in/out transitions */
+.fade-enter {
+    opacity: 0;
+}
+
+.fade-enter-active {
+    opacity: 1;
+    transition: opacity 0.3s ease-in;
+}
+
+.fade-exit {
+    opacity: 1;
+}
+
+.fade-exit-active {
+    opacity: 0;
+    transition: opacity 0.3s ease-out;
+} 

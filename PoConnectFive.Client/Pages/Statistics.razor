@@ -10,58 +10,85 @@
 
     @if (_statistics == null)
     {
-        <p>Loading statistics...</p>
+        <div class="loading">Loading statistics...</div>
     }
     else
     {
         <div class="statistics-grid">
             <div class="stat-card">
                 <h3>Overall Statistics</h3>
-                <p>Total Games: @_statistics.TotalGames</p>
-                <p>Average Game Duration: @FormatDuration(_statistics.AverageGameDuration)</p>
-                <p>Average Moves per Game: @_statistics.AverageMovesPerGame.ToString("F1")</p>
+                <div class="stat-item">
+                    <span class="label">Total Games:</span>
+                    <span class="value">@_statistics.TotalGames</span>
+                </div>
+                <div class="stat-item">
+                    <span class="label">Average Game Duration:</span>
+                    <span class="value">@FormatDuration(_statistics.AverageGameDuration)</span>
+                </div>
             </div>
 
             <div class="stat-card">
-                <h3>Win Rates</h3>
-                @foreach (var (player, rate) in _statistics.WinRates)
-                {
-                    <div class="win-rate-bar">
-                        <span>@player</span>
-                        <div class="progress-bar">
-                            <div class="progress" style="width: @(rate)%;"></div>
-                        </div>
-                        <span>@(rate.ToString("F1"))%</span>
-                    </div>
-                }
-            </div>
-
-            <div class="stat-card">
-                <h3>Recent Games</h3>
-                <div class="recent-games">
-                    @foreach (var game in _statistics.RecentGames)
+                <h3>Win Distribution</h3>
+                <div class="win-distribution">
+                    @foreach (var (player, wins) in _statistics.WinDistribution)
                     {
-                        <div class="recent-game">
-                            <span>@game.Timestamp.ToLocalTime().ToString("g")</span>
-                            <span>@game.Player1Name vs @game.Player2Name</span>
-                            <span class="winner">Winner: @game.Winner</span>
+                        <div class="distribution-item">
+                            <span class="player">@player</span>
+                            <div class="progress-bar">
+                                <div class="progress" style="width: @(wins * 100 / _statistics.TotalGames)%"></div>
+                            </div>
+                            <span class="wins">@wins wins</span>
                         </div>
                     }
                 </div>
             </div>
 
             <div class="stat-card">
-                <h3>Winning Patterns</h3>
-                @foreach (var pattern in _statistics.MostCommonWinningPatterns)
-                {
-                    <div class="pattern-item">
-                        <span>@pattern.Pattern</span>
-                        <div class="progress-bar">
-                            <div class="progress" style="width: @(pattern.Percentage)%;"></div>
+                <h3>Player Statistics</h3>
+                <div class="player-stats">
+                    @foreach (var (player, stats) in _statistics.PlayerStats)
+                    {
+                        <div class="player-stat-item">
+                            <span class="player-name">@player</span>
+                            <div class="stats-details">
+                                <div class="stat">
+                                    <span class="label">Wins:</span>
+                                    <span class="value">@stats.Wins</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="label">Win Rate:</span>
+                                    <span class="value">@stats.WinRate.ToString("F1")%</span>
+                                </div>
+                                <div class="stat">
+                                    <span class="label">Total Games:</span>
+                                    <span class="value">@stats.GamesPlayed</span>
+                                </div>
+                            </div>
                         </div>
-                        <span>@(pattern.Count) games (@(pattern.Percentage.ToString("F1"))%)</span>
+                    }
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <h3>Winning Positions Heatmap</h3>
+                <div class="heatmap-container">
+                    <div class="heatmap">
+                        @for (int row = 0; row < GameBoard.Rows; row++)
+                        {
+                            <div class="heatmap-row">
+                                @for (int col = 0; col < GameBoard.Columns; col++)
+                                {
+                                    var position = (row, col);
+                                    var count = _statistics.MostCommonWinningPositions.Count(p => p == position);
+                                    var intensity = count > 0 ? Math.Min(100, count * 20) : 0;
+                                    <div class="heatmap-cell" style="background-color: rgba(255, 0, 0, @(intensity / 100.0))"
+                                         title="Wins from this position: @count">
+                                    </div>
+                                }
+                            </div>
+                        }
                     </div>
-                }
+                </div>
             </div>
         </div>
     }
@@ -70,16 +97,19 @@
 @code {
     private GameStatistics? _statistics;
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        _statistics = StatisticsService.GetStatistics();
+        _statistics = await StatisticsService.GetStatisticsAsync();
     }
 
     private string FormatDuration(TimeSpan duration)
     {
-        return duration.TotalMinutes < 1
-            ? $"{duration.Seconds} seconds"
-            : $"{duration.Minutes}m {duration.Seconds}s";
+        if (duration.TotalMinutes < 1)
+            return $"{duration.Seconds} seconds";
+        else if (duration.TotalHours < 1)
+            return $"{duration.Minutes}m {duration.Seconds}s";
+        else
+            return $"{duration.Hours}h {duration.Minutes}m";
     }
 }
 

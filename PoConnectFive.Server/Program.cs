@@ -1,6 +1,20 @@
-using PoConnectFive.Server.Services; // Add this using
+using PoConnectFive.Server.Services;
+using PoConnectFive.Shared.Services;
+using Serilog;
+using Serilog.Events;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Serilog
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Debug()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -27,9 +41,13 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Register custom services
-builder.Services.AddSingleton<ITableStorageService, TableStorageService>(); // Register Table Storage Service
+builder.Services.AddSingleton<ITableStorageService, TableStorageService>();
+builder.Services.AddScoped<GameStateService>();
 
 var app = builder.Build();
+
+// Ensure logs directory exists
+Directory.CreateDirectory("logs");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -58,6 +76,18 @@ app.MapRazorPages();
 app.MapControllers();
 app.MapFallbackToFile("index.html");
 
-app.Run();
+try
+{
+    Log.Information("Starting web application");
+    app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 // Removed WeatherForecast record and endpoint mapping

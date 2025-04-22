@@ -1,4 +1,6 @@
 using System;
+using Microsoft.Extensions.Logging;
+using Serilog;
 
 namespace PoConnectFive.Shared.Models
 {
@@ -19,163 +21,128 @@ namespace PoConnectFive.Shared.Models
     /// </summary>
     public class GameBoard
     {
-        // Value Object Pattern: Private immutable state
+        private readonly ILogger<GameBoard> _logger;
         private readonly int[,] _board;
-        public const int Rows = 14;
-        public const int Columns = 14;
-        public const int WinningLength = 5;
+        public const int Rows = 9;
+        public const int Columns = 9;
+        public const int WinLength = 5;
 
-        public GameBoard()
+        public GameBoard(ILogger<GameBoard> logger)
         {
+            _logger = logger;
             _board = new int[Rows, Columns];
+            _logger.LogInformation("Created new game board with dimensions {Rows}x{Columns}", Rows, Columns);
         }
 
-        // Value Object Pattern: Private constructor for cloning
-        private GameBoard(int[,] board)
-        {
-            _board = (int[,])board.Clone();
-        }
-
-        public int GetLength(int dimension) => dimension == 0 ? Rows : Columns;
-
-        // Value Object Pattern: Returns new instance instead of modifying state
-        public GameBoard PlacePiece(int column, int playerId)
-        {
-            if (column < 0 || column >= Columns)
-                throw new ArgumentOutOfRangeException(nameof(column));
-
-            var newBoard = new GameBoard(_board);
-            
-            // Find the lowest empty row in the selected column
-            for (int row = Rows - 1; row >= 0; row--)
-            {
-                if (_board[row, column] == 0)
-                {
-                    newBoard._board[row, column] = playerId;
-                    return newBoard;
-                }
-            }
-
-            throw new InvalidOperationException("Column is full");
-        }
+        public int[,] GetBoard() => _board;
 
         public bool IsValidMove(int column)
         {
             if (column < 0 || column >= Columns)
-                return false;
-
-            // Check if the top cell in the column is empty
-            return _board[0, column] == 0;
-        }
-
-        public bool HasValidMoves()
-        {
-            // Check if any column has a valid move
-            for (int col = 0; col < Columns; col++)
             {
-                if (IsValidMove(col))
-                {
-                    return true;
-                }
+                _logger.LogWarning("Invalid column index: {Column}", column);
+                return false;
             }
-            return false;
+
+            var isValid = _board[0, column] == 0;
+            _logger.LogDebug("Move validation for column {Column}: {IsValid}", column, isValid);
+            return isValid;
         }
 
-        /// <summary>
-        /// Finds the lowest available row index for a piece in the specified column.
-        /// </summary>
-        /// <param name="column">The column index.</param>
-        /// <returns>The row index where the piece will land, or -1 if the column is full.</returns>
         public int GetTargetRow(int column)
         {
-            if (column < 0 || column >= Columns)
-                return -1; // Invalid column
-
             for (int row = Rows - 1; row >= 0; row--)
             {
                 if (_board[row, column] == 0)
                 {
+                    _logger.LogDebug("Target row for column {Column} is {Row}", column, row);
                     return row;
                 }
             }
-            return -1; // Column is full
+            _logger.LogWarning("No valid target row found for column {Column}", column);
+            return -1;
         }
 
-        // Iterator Pattern: Traverses board in different directions to check for wins
+        public GameBoard PlacePiece(int column, int playerId)
+        {
+            _logger.LogInformation("Placing piece for player {PlayerId} in column {Column}", playerId, column);
+            
+            var newBoard = new GameBoard(_logger);
+            Array.Copy(_board, newBoard._board, _board.Length);
+            
+            var targetRow = GetTargetRow(column);
+            if (targetRow == -1)
+            {
+                _logger.LogError("Failed to place piece - no valid target row");
+                throw new InvalidOperationException("No valid target row found");
+            }
+
+            newBoard._board[targetRow, column] = playerId;
+            _logger.LogDebug("Piece placed at position ({Row}, {Column})", targetRow, column);
+            
+            return newBoard;
+        }
+
         public bool CheckWin(int row, int column, int playerId)
         {
-            Console.WriteLine($"Checking win for player {playerId} at position ({row}, {column})");
-            // Check horizontal
-            if (CheckDirection(row, column, 0, 1, playerId) ||
-                // Check vertical
-                CheckDirection(row, column, 1, 0, playerId) ||
-                // Check diagonal (top-left to bottom-right)
-                CheckDirection(row, column, 1, 1, playerId) ||
-                // Check diagonal (top-right to bottom-left)
-                CheckDirection(row, column, 1, -1, playerId))
+            _logger.LogInformation("Checking win condition for player {PlayerId} at ({Row}, {Column})", 
+                playerId, row, column);
+
+            return CheckDirection(row, column, 1, 0, playerId) ||  // Horizontal
+                   CheckDirection(row, column, 0, 1, playerId) ||  // Vertical
+                   CheckDirection(row, column, 1, 1, playerId) ||  // Diagonal down-right
+                   CheckDirection(row, column, 1, -1, playerId);   // Diagonal down-left
+        }
+
+        private bool CheckDirection(int startRow, int startCol, int rowStep, int colStep, int playerId)
+        {
+            var count = 1;
+            _logger.LogDebug("Checking direction ({RowStep}, {ColStep}) from ({StartRow}, {StartCol})", 
+                rowStep, colStep, startRow, startCol);
+
+            // Check in positive direction
+            for (int i = 1; i < WinLength; i++)
             {
-                Console.WriteLine($"Win detected for player {playerId}!");
-                return true;
+                var row = startRow + i * rowStep;
+                var col = startCol + i * colStep;
+                
+                if (row < 0 || row >= Rows || col < 0 || col >= Columns || _board[row, col] != playerId)
+                {
+                    break;
+                }
+                count++;
             }
 
+            // Check in negative direction
+            for (int i = 1; i < WinLength; i++)
+            {
+                var row = startRow - i * rowStep;
+                var col = startCol - i * colStep;
+                
+                if (row < 0 || row >= Rows || col < 0 || col >= Columns || _board[row, col] != playerId)
+                {
+                    break;
+                }
+                count++;
+            }
+
+            var hasWon = count >= WinLength;
+            _logger.LogDebug("Direction check result: {Count} pieces in a row, Win: {HasWon}", count, hasWon);
+            return hasWon;
+        }
+
+        public bool HasValidMoves()
+        {
+            for (int col = 0; col < Columns; col++)
+            {
+                if (IsValidMove(col))
+                {
+                    _logger.LogDebug("Valid move found in column {Column}", col);
+                    return true;
+                }
+            }
+            _logger.LogInformation("No valid moves remaining");
             return false;
-        }
-
-        // Iterator Pattern: Directional traversal implementation
-        private bool CheckDirection(int row, int column, int rowDelta, int colDelta, int playerId)
-        {
-            int count = 1;
-            int r, c;
-
-            Console.WriteLine($"Checking direction ({rowDelta}, {colDelta}) from ({row}, {column})");
-
-            // Check forward direction
-            r = row + rowDelta;
-            c = column + colDelta;
-            while (IsValidPosition(r, c)) 
-            {
-                int cellValue = _board[r, c];
-                Console.WriteLine($"Checking forward at ({r}, {c}): Value={cellValue}, PlayerId={playerId}");
-                if (cellValue == playerId)
-                {
-                    count++;
-                    Console.WriteLine($"Found matching piece at ({r}, {c}), count = {count}");
-                    r += rowDelta;
-                    c += colDelta;
-                }
-                else
-                {
-                    break; // Stop checking in this direction if piece doesn't match
-                }
-            }
-
-            // Check backward direction
-            r = row - rowDelta;
-            c = column - colDelta;
-            while (IsValidPosition(r, c))
-            {
-                 int cellValue = _board[r, c];
-                 Console.WriteLine($"Checking backward at ({r}, {c}): Value={cellValue}, PlayerId={playerId}");
-                 if (cellValue == playerId)
-                 {
-                    count++;
-                    Console.WriteLine($"Found matching piece at ({r}, {c}), count = {count}");
-                    r -= rowDelta;
-                    c -= colDelta;
-                 }
-                 else
-                 {
-                    break; // Stop checking in this direction if piece doesn't match
-                 }
-            }
-            // Missing closing brace added back here
-            Console.WriteLine($"Final count in direction ({rowDelta}, {colDelta}): {count}");
-            return count >= WinningLength;
-        }
-
-        private bool IsValidPosition(int row, int column)
-        {
-            return row >= 0 && row < Rows && column >= 0 && column < Columns;
         }
 
         public int GetCell(int row, int column)
