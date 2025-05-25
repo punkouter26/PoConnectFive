@@ -1,0 +1,6 @@
+2025-05-25 11:05:57.475 -04:00 [INF] User profile is available. Using 'C:\Users\punko\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-05-25 11:05:57.545 -04:00 [INF] Starting web application
+2025-05-25 11:05:58.039 -04:00 [INF] Now listening on: http://localhost:5245
+2025-05-25 11:05:58.041 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-05-25 11:05:58.041 -04:00 [INF] Hosting environment: Development
+2025-05-25 11:05:58.042 -04:00 [INF] Content root path: C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Server

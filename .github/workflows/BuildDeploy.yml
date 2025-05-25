@@ -1,0 +1,50 @@
+name: Build and Deploy to Azure
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - main
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+          
+      - name: Restore dependencies
+        run: dotnet restore PoConnectFive.sln
+        
+      - name: Build solution
+        run: dotnet build PoConnectFive.sln --configuration Release --no-restore
+        
+      - name: Test solution
+        run: dotnet test PoConnectFive.Tests/PoConnectFive.Tests.csproj --configuration Release --no-build --verbosity normal
+        
+      - name: Publish Server project
+        run: dotnet publish PoConnectFive.Server/PoConnectFive.Server.csproj --configuration Release --output ./publish --no-build
+        
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'poconnectfive'
+          package: './publish'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        run: echo "Pull request closed"

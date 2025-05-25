@@ -2,16 +2,24 @@ using PoConnectFive.Server.Services;
 using PoConnectFive.Shared.Services;
 using Serilog;
 using Serilog.Events;
+using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Serilog
+// Add Application Insights
+builder.Services.AddApplicationInsightsTelemetry();
+
+// Configure Serilog with Application Insights
+var connectionString = builder.Configuration.GetConnectionString("APPLICATIONINSIGHTS_CONNECTION_STRING")
+    ?? builder.Configuration["APPLICATIONINSIGHTS_CONNECTION_STRING"];
+
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
     .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
     .Enrich.FromLogContext()
     .WriteTo.Console()
-    .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
+    .WriteTo.File("../log.txt", rollOnFileSizeLimit: true, fileSizeLimitBytes: 10485760)
+    .WriteTo.ApplicationInsights(connectionString, new TraceTelemetryConverter())
     .CreateLogger();
 
 builder.Host.UseSerilog();
@@ -46,8 +54,6 @@ builder.Services.AddScoped<GameStateService>();
 
 var app = builder.Build();
 
-// Ensure logs directory exists
-Directory.CreateDirectory("logs");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
