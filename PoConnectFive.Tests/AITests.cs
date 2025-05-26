@@ -48,7 +48,7 @@ namespace PoConnectFive.Tests
             // Arrange
             var board = new GameBoard(_logger);
             var player1 = new Player(1, "AI", PlayerType.AI);
-            var player2 = new Player(2, "Player 2", PlayerType.Human);            var gameState = GameState.CreateNew(player1, player2, _logger);
+            var player2 = new Player(2, "Player 2", PlayerType.Human); var gameState = GameState.CreateNew(player1, player2, _logger);
 
             // Place 4 pieces in a row for AI
             for (int i = 0; i < 4; i++)
@@ -69,7 +69,8 @@ namespace PoConnectFive.Tests
 
             // Assert
             Assert.Equal(4, move); // Should take the winning move
-        }        [Fact]
+        }
+        [Fact]
         public async Task HardAI_PrefersCenterColumns()
         {
             // Arrange
@@ -86,7 +87,8 @@ namespace PoConnectFive.Tests
             // Assert
             int centerColumn = GameBoard.Columns / 2;
             Assert.True(Math.Abs(move - centerColumn) <= 2); // Should be within 2 columns of center
-        }        [Fact]
+        }
+        [Fact]
         public async Task HardAI_BlocksPotentialThreats()
         {
             // Arrange
@@ -113,7 +115,8 @@ namespace PoConnectFive.Tests
 
             // Assert
             Assert.Equal(3, move); // Should block the potential threat
-        }        [Fact]
+        }
+        [Fact]
         public async Task HardAI_CreatesMultipleThreats()
         {
             // Arrange
@@ -141,7 +144,8 @@ namespace PoConnectFive.Tests
 
             // Assert
             Assert.True(move == 4 || move == 5); // Should create a new threat
-        }        [Fact]
+        }
+        [Fact]
         public async Task EasyAI_ValidMoveWhenNoThreats()
         {
             // Arrange
@@ -158,7 +162,8 @@ namespace PoConnectFive.Tests
             // Assert
             Assert.True(move >= 0 && move < GameBoard.Columns);
             Assert.True(gameState.Board.IsValidMove(move));
-        }        [Fact]
+        }
+        [Fact]
         public async Task MediumAI_BlocksMultipleThreats()
         {
             // Arrange
@@ -190,4 +195,4 @@ namespace PoConnectFive.Tests
             Assert.True(move == 3 || move == 9); // Should block one of the threats
         }
     }
-} 
+}
