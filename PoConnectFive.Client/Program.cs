@@ -15,9 +15,9 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Configure Serilog
+// Configure Serilog - Changed to Information level to reduce console spam
 Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Debug()
+    .MinimumLevel.Information()  // Changed from Debug to Information
     .WriteTo.Console()
     .CreateLogger();
 
@@ -25,10 +25,10 @@ Log.Logger = new LoggerConfiguration()
 builder.Services.AddLogging(logging =>
 {
     logging.AddSerilog(Log.Logger);
-    logging.SetMinimumLevel(LogLevel.Debug);
+    logging.SetMinimumLevel(LogLevel.Information);  // Changed from Debug to Information
 });
 
-// Read configuration from wwwroot/appsettings.json
+// Read configuration from wwwroot/appsettings.json.temp
 var apiUrl = builder.Configuration["ApiBaseUrl"];
 if (string.IsNullOrEmpty(apiUrl))
 {

@@ -1,6 +1,5 @@
 /* Import variables and animations */
 @import url('variables.css');
-@import url('animations.css');
 
 /* Animations */
 @keyframes spin {

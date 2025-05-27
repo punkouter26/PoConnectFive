@@ -1371,3 +1371,176 @@
 2025-05-25 11:11:27.999 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2 - null null
 2025-05-25 11:11:28.002 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\6.4.0\staticwebassets\fonts\SourceSans3VF-Upright.ttf.woff2'
 2025-05-25 11:11:28.002 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2 - 200 170188 font/woff2 2.9331ms
+2025-05-27 09:00:28.908 -04:00 [INF] User profile is available. Using 'C:\Users\punko\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-05-27 09:00:29.322 -04:00 [INF] Starting web application
+2025-05-27 09:00:29.694 -04:00 [INF] Now listening on: http://localhost:5245
+2025-05-27 09:00:29.696 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-05-27 09:00:29.696 -04:00 [INF] Hosting environment: Development
+2025-05-27 09:00:29.696 -04:00 [INF] Content root path: C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Server
+2025-05-27 09:00:29.816 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/ - null null
+2025-05-27 09:00:29.831 -04:00 [WRN] Failed to determine the https port for redirect.
+2025-05-27 09:00:29.842 -04:00 [INF] Executing endpoint 'Fallback {*path:nonfile}'
+2025-05-27 09:00:29.858 -04:00 [INF] Sending file. Request path: '/index.html'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\index.html'
+2025-05-27 09:00:29.858 -04:00 [INF] Executed endpoint 'Fallback {*path:nonfile}'
+2025-05-27 09:00:29.873 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/css/animations.css - null null
+2025-05-27 09:00:29.874 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/css/app.css - null null
+2025-05-27 09:00:29.868 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/index.html - 200 null text/html 53.2288ms
+2025-05-27 09:00:29.875 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/css/standard-base.css - null null
+2025-05-27 09:00:29.885 -04:00 [INF] Sending file. Request path: '/css/animations.css'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\css\animations.css'
+2025-05-27 09:00:29.886 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/css/animations.css - 200 3055 text/css 12.7606ms
+2025-05-27 09:00:29.895 -04:00 [INF] Sending file. Request path: '/css/app.css'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\css\app.css'
+2025-05-27 09:00:29.895 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/css/app.css - 200 5888 text/css 21.3135ms
+2025-05-27 09:00:29.896 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/PoConnectFive.Client.styles.css - null null
+2025-05-27 09:00:29.897 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/blazor.webassembly.js - null null
+2025-05-27 09:00:29.897 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/css/variables.css - null null
+2025-05-27 09:00:29.899 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/Radzen.Blazor.js - null null
+2025-05-27 09:00:29.900 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/js/gameBoard.js - null null
+2025-05-27 09:00:29.908 -04:00 [INF] Sending file. Request path: '/css/variables.css'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\css\variables.css'
+2025-05-27 09:00:29.909 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/css/variables.css - 200 1736 text/css 10.7209ms
+2025-05-27 09:00:29.910 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/aspnetcore-browser-refresh.js - null null
+2025-05-27 09:00:29.915 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/css/standard-base.css'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\6.4.0\staticwebassets\css\standard-base.css'
+2025-05-27 09:00:29.916 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/css/standard-base.css - 200 653536 text/css 40.8706ms
+2025-05-27 09:00:29.916 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/aspnetcore-browser-refresh.js - 200 16481 application/javascript; charset=utf-8 5.8127ms
+2025-05-27 09:00:29.921 -04:00 [INF] Sending file. Request path: '/PoConnectFive.Client.styles.css'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\scopedcss\bundle\PoConnectFive.Client.styles.css'
+2025-05-27 09:00:29.921 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/PoConnectFive.Client.styles.css - 200 2928 text/css 24.6644ms
+2025-05-27 09:00:29.928 -04:00 [INF] Sending file. Request path: '/js/gameBoard.js'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\js\gameBoard.js'
+2025-05-27 09:00:29.928 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/js/gameBoard.js - 200 9137 text/javascript 28.05ms
+2025-05-27 09:00:29.932 -04:00 [INF] Sending file. Request path: '/_framework/blazor.webassembly.js'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\blazor.webassembly.js'
+2025-05-27 09:00:29.932 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/blazor.webassembly.js - 200 57249 text/javascript 35.6336ms
+2025-05-27 09:00:29.939 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/Radzen.Blazor.js'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\6.4.0\staticwebassets\Radzen.Blazor.js'
+2025-05-27 09:00:29.939 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/Radzen.Blazor.js - 200 91280 text/javascript 39.8232ms
+2025-05-27 09:00:29.954 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js - null null
+2025-05-27 09:00:29.956 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2 - null null
+2025-05-27 09:00:29.973 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\6.4.0\staticwebassets\fonts\MaterialSymbolsOutlined.woff2'
+2025-05-27 09:00:29.973 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2 - 200 973704 font/woff2 16.7977ms
+2025-05-27 09:00:29.985 -04:00 [INF] Sending file. Request path: '/_framework/dotnet.js'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\dotnet.js'
+2025-05-27 09:00:29.985 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js - 200 40677 text/javascript 31.2289ms
+2025-05-27 09:00:30.017 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/blazor.boot.json - null null
+2025-05-27 09:00:30.031 -04:00 [INF] Sending file. Request path: '/_framework/blazor.boot.json'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\blazor.boot.json'
+2025-05-27 09:00:30.031 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/blazor.boot.json - 200 48002 application/json 13.7497ms
+2025-05-27 09:00:30.035 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.5nhp1wfg9b.js - null null
+2025-05-27 09:00:30.035 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.native.uhsveqo9bs.js - null null
+2025-05-27 09:00:30.048 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/appsettings.json - null null
+2025-05-27 09:00:30.061 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Shared.hxe59jw6g3.pdb - null null
+2025-05-27 09:00:30.065 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.3or5urr63b.pdb - null null
+2025-05-27 09:00:30.080 -04:00 [INF] Sending file. Request path: '/appsettings.json'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\appsettings.json'
+2025-05-27 09:00:30.081 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Shared.hxe59jw6g3.pdb'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Shared.hxe59jw6g3.pdb'
+2025-05-27 09:00:30.081 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Client.3or5urr63b.pdb'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Client.3or5urr63b.pdb'
+2025-05-27 09:00:30.081 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/appsettings.json - 200 49 application/json 32.993ms
+2025-05-27 09:00:30.081 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Shared.hxe59jw6g3.pdb - 200 27560 application/octet-stream 19.6631ms
+2025-05-27 09:00:30.081 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.3or5urr63b.pdb - 200 79248 application/octet-stream 15.8873ms
+2025-05-27 09:00:30.091 -04:00 [INF] Sending file. Request path: '/_framework/dotnet.runtime.5nhp1wfg9b.js'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\dotnet.runtime.5nhp1wfg9b.js'
+2025-05-27 09:00:30.091 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.5nhp1wfg9b.js - 200 194766 text/javascript 56.8482ms
+2025-05-27 09:00:30.103 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.94r76gm7bw.wasm - null null
+2025-05-27 09:00:30.104 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Shared.6s7n4gfx29.wasm - null null
+2025-05-27 09:00:30.113 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Shared.6s7n4gfx29.wasm'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Shared.6s7n4gfx29.wasm'
+2025-05-27 09:00:30.113 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Shared.6s7n4gfx29.wasm - 200 44821 application/wasm 10.2012ms
+2025-05-27 09:00:30.118 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Client.94r76gm7bw.wasm'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Client.94r76gm7bw.wasm'
+2025-05-27 09:00:30.118 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.94r76gm7bw.wasm - 200 166165 application/wasm 15.1958ms
+2025-05-27 09:00:30.148 -04:00 [INF] Sending file. Request path: '/_framework/dotnet.native.uhsveqo9bs.js'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\dotnet.native.uhsveqo9bs.js'
+2025-05-27 09:00:30.148 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.native.uhsveqo9bs.js - 200 145424 text/javascript 113.8356ms
+2025-05-27 09:00:30.476 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/blazor-hotreload.js - null null
+2025-05-27 09:00:30.477 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/blazor-hotreload.js - 200 799 application/javascript; charset=utf-8 0.5912ms
+2025-05-27 09:00:30.488 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/blazor-hotreload - null null
+2025-05-27 09:00:30.490 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/blazor-hotreload - 204 null null 1.3616ms
+2025-05-27 09:00:30.837 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2 - null null
+2025-05-27 09:00:30.905 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\6.4.0\staticwebassets\fonts\SourceSans3VF-Upright.ttf.woff2'
+2025-05-27 09:00:30.905 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2 - 200 170188 font/woff2 68.8893ms
+2025-05-27 09:45:04.845 -04:00 [INF] User profile is available. Using 'C:\Users\punko\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-05-27 09:45:05.077 -04:00 [INF] Starting web application
+2025-05-27 09:45:05.333 -04:00 [INF] Now listening on: http://localhost:5245
+2025-05-27 09:45:05.335 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-05-27 09:45:05.336 -04:00 [INF] Hosting environment: Development
+2025-05-27 09:45:05.337 -04:00 [INF] Content root path: C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Server
+2025-05-27 09:45:12.238 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/PoConnectFive.Client.styles.css - null null
+2025-05-27 09:45:12.238 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/blazor.webassembly.js - null null
+2025-05-27 09:45:12.238 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/aspnetcore-browser-refresh.js - null null
+2025-05-27 09:45:12.253 -04:00 [WRN] Failed to determine the https port for redirect.
+2025-05-27 09:45:12.258 -04:00 [INF] The file /_framework/blazor.webassembly.js was not modified
+2025-05-27 09:45:12.258 -04:00 [INF] The file /PoConnectFive.Client.styles.css was not modified
+2025-05-27 09:45:12.261 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/blazor.webassembly.js - 304 null text/javascript 24.6145ms
+2025-05-27 09:45:12.261 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/aspnetcore-browser-refresh.js - 404 0 null 24.7516ms
+2025-05-27 09:45:12.261 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/PoConnectFive.Client.styles.css - 304 null text/css 24.6768ms
+2025-05-27 09:45:12.275 -04:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5245/_framework/aspnetcore-browser-refresh.js, Response status code: 404
+2025-05-27 09:45:12.577 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js - null null
+2025-05-27 09:45:12.581 -04:00 [INF] The file /_framework/dotnet.js was not modified
+2025-05-27 09:45:12.582 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js - 304 null text/javascript 5.9476ms
+2025-05-27 09:45:12.656 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/blazor.boot.json - null null
+2025-05-27 09:45:12.691 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.native.uhsveqo9bs.js - null null
+2025-05-27 09:45:12.691 -04:00 [INF] Sending file. Request path: '/_framework/blazor.boot.json'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\blazor.boot.json'
+2025-05-27 09:45:12.693 -04:00 [INF] The file /_framework/dotnet.native.uhsveqo9bs.js was not modified
+2025-05-27 09:45:12.694 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.native.uhsveqo9bs.js - 304 null text/javascript 2.8743ms
+2025-05-27 09:45:12.695 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/blazor.boot.json - 200 48002 application/json 38.6359ms
+2025-05-27 09:45:12.727 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.vftcbfe3js.pdb - null null
+2025-05-27 09:45:12.727 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/appsettings.json - null null
+2025-05-27 09:45:12.728 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.5nhp1wfg9b.js - null null
+2025-05-27 09:45:12.738 -04:00 [INF] The file /appsettings.json was not modified
+2025-05-27 09:45:12.740 -04:00 [INF] The file /_framework/dotnet.runtime.5nhp1wfg9b.js was not modified
+2025-05-27 09:45:12.741 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/appsettings.json - 304 null application/json 13.7988ms
+2025-05-27 09:45:12.741 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.5nhp1wfg9b.js - 304 null text/javascript 13.1757ms
+2025-05-27 09:45:12.750 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Client.vftcbfe3js.pdb'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Client.vftcbfe3js.pdb'
+2025-05-27 09:45:12.752 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.vftcbfe3js.pdb - 200 79248 application/octet-stream 24.8134ms
+2025-05-27 09:45:12.765 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.rkubay1bgv.wasm - null null
+2025-05-27 09:45:12.777 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Client.rkubay1bgv.wasm'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Client.rkubay1bgv.wasm'
+2025-05-27 09:45:12.778 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.rkubay1bgv.wasm - 200 166165 application/wasm 13ms
+2025-05-27 09:45:17.573 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/.well-known/appspecific/com.chrome.devtools.json - null null
+2025-05-27 09:45:17.587 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/.well-known/appspecific/com.chrome.devtools.json - 404 0 null 13.3261ms
+2025-05-27 09:45:17.588 -04:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5245/.well-known/appspecific/com.chrome.devtools.json, Response status code: 404
+2025-05-27 09:45:17.716 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js.map - null null
+2025-05-27 09:45:17.716 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.js.map - null null
+2025-05-27 09:45:17.734 -04:00 [INF] Sending file. Request path: '/_framework/dotnet.js.map'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\dotnet.js.map'
+2025-05-27 09:45:17.735 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js.map - 200 56573 text/plain 19.1101ms
+2025-05-27 09:45:17.740 -04:00 [INF] Sending file. Request path: '/_framework/dotnet.runtime.js.map'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\dotnet.runtime.js.map'
+2025-05-27 09:45:17.740 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.js.map - 200 275939 text/plain 24.6759ms
+2025-05-27 09:55:40.055 -04:00 [INF] User profile is available. Using 'C:\Users\punko\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-05-27 09:55:40.123 -04:00 [INF] Starting web application
+2025-05-27 09:55:40.265 -04:00 [INF] Now listening on: http://localhost:5245
+2025-05-27 09:55:40.266 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-05-27 09:55:40.268 -04:00 [INF] Hosting environment: Development
+2025-05-27 09:55:40.268 -04:00 [INF] Content root path: C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Server
+2025-05-27 09:55:42.345 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/aspnetcore-browser-refresh.js - null null
+2025-05-27 09:55:42.345 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/blazor.webassembly.js - null null
+2025-05-27 09:55:42.348 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/PoConnectFive.Client.styles.css - null null
+2025-05-27 09:55:42.367 -04:00 [WRN] Failed to determine the https port for redirect.
+2025-05-27 09:55:42.370 -04:00 [INF] The file /PoConnectFive.Client.styles.css was not modified
+2025-05-27 09:55:42.371 -04:00 [INF] The file /_framework/blazor.webassembly.js was not modified
+2025-05-27 09:55:42.374 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/PoConnectFive.Client.styles.css - 304 null text/css 25.8438ms
+2025-05-27 09:55:42.374 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/blazor.webassembly.js - 304 null text/javascript 30.1566ms
+2025-05-27 09:55:42.374 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/aspnetcore-browser-refresh.js - 404 0 null 30.21ms
+2025-05-27 09:55:42.382 -04:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5245/_framework/aspnetcore-browser-refresh.js, Response status code: 404
+2025-05-27 09:55:42.422 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js - null null
+2025-05-27 09:55:42.424 -04:00 [INF] The file /_framework/dotnet.js was not modified
+2025-05-27 09:55:42.426 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js - 304 null text/javascript 3.8668ms
+2025-05-27 09:55:42.508 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/blazor.boot.json - null null
+2025-05-27 09:55:42.516 -04:00 [INF] Sending file. Request path: '/_framework/blazor.boot.json'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\blazor.boot.json'
+2025-05-27 09:55:42.517 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/blazor.boot.json - 200 48002 application/json 9.2072ms
+2025-05-27 09:55:42.524 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.5nhp1wfg9b.js - null null
+2025-05-27 09:55:42.524 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.native.uhsveqo9bs.js - null null
+2025-05-27 09:55:42.528 -04:00 [INF] The file /_framework/dotnet.runtime.5nhp1wfg9b.js was not modified
+2025-05-27 09:55:42.529 -04:00 [INF] The file /_framework/dotnet.native.uhsveqo9bs.js was not modified
+2025-05-27 09:55:42.530 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.5nhp1wfg9b.js - 304 null text/javascript 6.051ms
+2025-05-27 09:55:42.531 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.native.uhsveqo9bs.js - 304 null text/javascript 6.7185ms
+2025-05-27 09:55:42.544 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/appsettings.json - null null
+2025-05-27 09:55:42.545 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.z0wka1g1ef.pdb - null null
+2025-05-27 09:55:42.545 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Shared.lap2ead1pz.pdb - null null
+2025-05-27 09:55:42.546 -04:00 [INF] The file /appsettings.json was not modified
+2025-05-27 09:55:42.548 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/appsettings.json - 304 null application/json 4.0948ms
+2025-05-27 09:55:42.554 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Client.z0wka1g1ef.pdb'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Client.z0wka1g1ef.pdb'
+2025-05-27 09:55:42.555 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.z0wka1g1ef.pdb - 200 79488 application/octet-stream 9.9206ms
+2025-05-27 09:55:42.620 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Shared.lap2ead1pz.pdb'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Shared.lap2ead1pz.pdb'
+2025-05-27 09:55:42.621 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Shared.lap2ead1pz.pdb - 200 27600 application/octet-stream 76.4076ms
+2025-05-27 09:55:42.772 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Shared.r1wc42c26m.wasm - null null
+2025-05-27 09:55:42.772 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.3l49tqg0a5.wasm - null null
+2025-05-27 09:55:42.788 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Client.3l49tqg0a5.wasm'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Client.3l49tqg0a5.wasm'
+2025-05-27 09:55:42.789 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Client.3l49tqg0a5.wasm - 200 166165 application/wasm 16.9576ms
+2025-05-27 09:55:42.791 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Shared.r1wc42c26m.wasm'. Physical path: 'C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\bin\Debug\net9.0\wwwroot\_framework\PoConnectFive.Shared.r1wc42c26m.wasm'
+2025-05-27 09:55:42.791 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/PoConnectFive.Shared.r1wc42c26m.wasm - 200 43285 application/wasm 19.8819ms
+2025-05-27 09:55:46.584 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/.well-known/appspecific/com.chrome.devtools.json - null null
+2025-05-27 09:55:46.602 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/.well-known/appspecific/com.chrome.devtools.json - 404 0 null 18.1494ms
+2025-05-27 09:55:46.603 -04:00 [INF] Request reached the end of the middleware pipeline without being handled by application code. Request path: GET http://localhost:5245/.well-known/appspecific/com.chrome.devtools.json, Response status code: 404
+2025-05-27 09:55:46.735 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js.map - null null
+2025-05-27 09:55:46.736 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.js.map - null null
+2025-05-27 09:55:46.738 -04:00 [INF] The file /_framework/dotnet.js.map was not modified
+2025-05-27 09:55:46.739 -04:00 [INF] The file /_framework/dotnet.runtime.js.map was not modified
+2025-05-27 09:55:46.739 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.js.map - 304 null text/plain 4.0224ms
+2025-05-27 09:55:46.740 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5245/_framework/dotnet.runtime.js.map - 304 null text/plain 4.3283ms

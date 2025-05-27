@@ -98,13 +98,13 @@
         else if (mode == "two-player")
         {
             await StartNewGameTwoPlayer();
-        }
-        else
+        }        else
         {
             await StartNewGameTwoPlayer(); // Default to two player mode
         }
-
-        await UpdateWinProbabilities();
+        
+        // Removed the initial win probability calculation to prevent console spam on game start
+        // Win probabilities will be calculated after the first move is made
     }
 
     private async Task OnColumnClicked(int column)
@@ -319,18 +319,25 @@
         {
             _currentState = GameStateService.MakeMove(column);
             await UpdateWinProbabilities();
-        }
-        catch (InvalidOperationException ex)
+        }        catch (InvalidOperationException)
         {
-            // Handle invalid move
-            Console.WriteLine($"Invalid move: {ex.Message}");
+            // Silently handle invalid move - no console output needed
         }
-    }
-
-    private async Task UpdateWinProbabilities()
+    }    private async Task UpdateWinProbabilities()
     {
-        winProbabilities = await WinProbabilityService.CalculateWinProbabilities(GameStateService.GetCurrentState(), 1000);
-        StateHasChanged();
+        try {
+            // Drastically reduced simulations to prevent console spam
+            // Only calculate probabilities if the game is still in progress
+            if (_currentState?.Status == GameStatus.InProgress) {
+                winProbabilities = await WinProbabilityService.CalculateWinProbabilities(GameStateService.GetCurrentState(), 5);
+                StateHasChanged();
+            }
+        }
+        catch (Exception) {
+            // Silently handle any errors during probability calculation 
+            // This prevents game from being blocked by probability calculations
+            winProbabilities = new List<(int column, double probability)>();
+        }
     }
 
     private string GetCellClass(int playerId)

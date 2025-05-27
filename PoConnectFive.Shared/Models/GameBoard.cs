@@ -25,13 +25,11 @@ namespace PoConnectFive.Shared.Models
         private readonly int[,] _board;
         public const int Rows = 9;
         public const int Columns = 9;
-        public const int WinLength = 5;
-
-        public GameBoard(ILogger<GameBoard> logger)
+        public const int WinLength = 5; public GameBoard(ILogger<GameBoard> logger)
         {
             _logger = logger;
             _board = new int[Rows, Columns];
-            _logger.LogInformation("Created new game board with dimensions {Rows}x{Columns}", Rows, Columns);
+            // Removed logging to reduce console output
         }
 
         public int[,] GetBoard() => _board;
@@ -66,10 +64,10 @@ namespace PoConnectFive.Shared.Models
         public GameBoard PlacePiece(int column, int playerId)
         {
             _logger.LogInformation("Placing piece for player {PlayerId} in column {Column}", playerId, column);
-            
+
             var newBoard = new GameBoard(_logger);
             Array.Copy(_board, newBoard._board, _board.Length);
-            
+
             var targetRow = GetTargetRow(column);
             if (targetRow == -1)
             {
@@ -79,13 +77,13 @@ namespace PoConnectFive.Shared.Models
 
             newBoard._board[targetRow, column] = playerId;
             _logger.LogDebug("Piece placed at position ({Row}, {Column})", targetRow, column);
-            
+
             return newBoard;
         }
 
         public bool CheckWin(int row, int column, int playerId)
         {
-            _logger.LogInformation("Checking win condition for player {PlayerId} at ({Row}, {Column})", 
+            _logger.LogInformation("Checking win condition for player {PlayerId} at ({Row}, {Column})",
                 playerId, row, column);
 
             return CheckDirection(row, column, 1, 0, playerId) ||  // Horizontal
@@ -97,7 +95,7 @@ namespace PoConnectFive.Shared.Models
         private bool CheckDirection(int startRow, int startCol, int rowStep, int colStep, int playerId)
         {
             var count = 1;
-            _logger.LogDebug("Checking direction ({RowStep}, {ColStep}) from ({StartRow}, {StartCol})", 
+            _logger.LogDebug("Checking direction ({RowStep}, {ColStep}) from ({StartRow}, {StartCol})",
                 rowStep, colStep, startRow, startCol);
 
             // Check in positive direction
@@ -105,7 +103,7 @@ namespace PoConnectFive.Shared.Models
             {
                 var row = startRow + i * rowStep;
                 var col = startCol + i * colStep;
-                
+
                 if (row < 0 || row >= Rows || col < 0 || col >= Columns || _board[row, col] != playerId)
                 {
                     break;
@@ -118,7 +116,7 @@ namespace PoConnectFive.Shared.Models
             {
                 var row = startRow - i * rowStep;
                 var col = startCol - i * colStep;
-                
+
                 if (row < 0 || row >= Rows || col < 0 || col >= Columns || _board[row, col] != playerId)
                 {
                     break;
