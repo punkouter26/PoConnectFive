@@ -48,16 +48,16 @@ resource sharedOpenAI 'Microsoft.CognitiveServices/accounts@2023-05-01' existing
 
 // Create User Assigned Managed Identity
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: empty(resourcePrefix) ? 'id-${resourceToken}' : 'id-${resourcePrefix}-${resourceToken}'
+  name: 'id-${resourcePrefix}-${resourceToken}'
   location: location
   tags: {
     'azd-env-name': environmentName
   }
 }
 
-// Create App Service using existing shared App Service Plan
+// Create App Service
 resource appService 'Microsoft.Web/sites@2023-01-01' = {
-  name: empty(resourcePrefix) ? resourceToken : '${resourcePrefix}-${resourceToken}'
+  name: '${resourcePrefix}-${resourceToken}'
   location: location
   kind: 'app'
   identity: {
@@ -136,4 +136,5 @@ resource appServiceSiteExtension 'Microsoft.Web/sites/siteextensions@2023-01-01'
 output WEB_APP_NAME string = appService.name
 output WEB_APP_URI string = 'https://${appService.properties.defaultHostName}'
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = sharedApplicationInsights.properties.ConnectionString
+output STORAGE_CONNECTION_STRING string = 'DefaultEndpointsProtocol=https;AccountName=${sharedStorageAccount.name};AccountKey=${sharedStorageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
 output OPENAI_ENDPOINT string = sharedOpenAI.properties.endpoint

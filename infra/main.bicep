@@ -10,7 +10,7 @@ param environmentName string
 param location string
 
 @description('Name of the resource group to create')
-param resourceGroupName string = 'rg-${environmentName}'
+param resourceGroupName string = 'PoConnectFive'
 
 @description('Existing shared resource group name')
 param sharedResourceGroupName string = 'PoShared'
@@ -27,9 +27,9 @@ param sharedStorageAccountName string = 'posharedtablestorage'
 @description('Name of the existing shared OpenAI service')
 param sharedOpenAIName string = 'PoSharedOpenaiEastUS'
 
-// Resource token for unique naming
-var resourceToken = uniqueString(subscription().id, location, environmentName)
-var resourcePrefix = 'pcf'
+// Resource token for unique naming - use solution name directly for clean URLs
+var resourceToken = 'PoConnectFive'
+var resourcePrefix = ''
 
 // Reference existing shared resource group
 resource sharedResourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' existing = {
@@ -70,6 +70,4 @@ output RESOURCE_GROUP_ID string = resourceGroup.id
 output WEB_APP_NAME string = resources.outputs.WEB_APP_NAME
 output WEB_APP_URI string = resources.outputs.WEB_APP_URI
 output APPLICATIONINSIGHTS_CONNECTION_STRING string = resources.outputs.APPLICATIONINSIGHTS_CONNECTION_STRING
-output AZURE_KEY_VAULT_ENDPOINT string = resources.outputs.AZURE_KEY_VAULT_ENDPOINT
-output TABLE_STORAGE_CONNECTION_STRING string = resources.outputs.TABLE_STORAGE_CONNECTION_STRING
 output OPENAI_ENDPOINT string = resources.outputs.OPENAI_ENDPOINT

@@ -21,7 +21,10 @@ resource storageTableDataContributorRoleAssignment 'Microsoft.Authorization/role
   name: guid(sharedStorageAccount.id, managedIdentityPrincipalId, 'Storage Table Data Contributor')
   scope: sharedStorageAccount
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3') // Storage Table Data Contributor
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3'
+    ) // Storage Table Data Contributor
     principalId: managedIdentityPrincipalId
     principalType: 'ServicePrincipal'
   }
@@ -32,7 +35,10 @@ resource cognitiveServicesUserRoleAssignment 'Microsoft.Authorization/roleAssign
   name: guid(sharedOpenAI.id, managedIdentityPrincipalId, 'Cognitive Services User')
   scope: sharedOpenAI
   properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'a97b65f3-24c7-4388-baec-2e87135dc908') // Cognitive Services User
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      'a97b65f3-24c7-4388-baec-2e87135dc908'
+    ) // Cognitive Services User
     principalId: managedIdentityPrincipalId
     principalType: 'ServicePrincipal'
   }
