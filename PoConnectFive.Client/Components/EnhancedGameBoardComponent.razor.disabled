@@ -1,0 +1,527 @@
+@using PoConnectFive.Shared.Models
+@using PoConnectFive.Shared.Services
+@using PoConnectFive.Client.Services
+@inject VisualFeedbackService VisualFeedbackService
+@inject IJSRuntime JSRuntime
+@inject ILogger<EnhancedGameBoardComponent> Logger
+
+<div class="game-board-container" 
+     style="background-color: @_currentTheme.BackgroundColor; color: @_currentTheme.TextColor;"
+     @onkeydown="OnKeyDown" 
+     tabindex="0"
+     role="grid"
+     aria-label="Connect Five Game Board">
+    
+    @if (_accessibilitySettings.ScreenReaderSupport)
+    {
+        <div id="board-description" class="sr-only" aria-live="polite">
+            @_screenReaderDescription?.OverallState
+        </div>
+    }
+
+    <canvas @ref="canvasRef" 
+            width="@CanvasWidth" 
+            height="@CanvasHeight"
+            style="border: 2px solid @_currentTheme.GridLineColor; cursor: pointer;"
+            @onmousemove="OnMouseMove"
+            @onmouseleave="OnMouseLeave"
+            @onclick="OnCanvasClick"
+            role="presentation"
+            aria-describedby="board-description">
+    </canvas>
+
+    @if (_accessibilitySettings.ScreenReaderSupport)
+    {
+        <div class="accessibility-controls mt-3">
+            <h3>Column Status</h3>
+            <div class="row">
+                @for (int col = 0; col < GameBoard.Columns; col++)
+                {
+                    var column = col; // Capture for closure
+                    <div class="col">
+                        <button class="btn btn-outline-primary btn-sm w-100 mb-1"
+                                @onclick="() => OnColumnClick(column)"
+                                disabled="@(!GameState.Board.IsValidMove(column))"
+                                aria-label="@GetColumnAccessibilityLabel(column)">
+                            Col @(column + 1)
+                        </button>
+                        <small class="text-muted d-block">
+                            @GetColumnStatus(column)
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (_previewMode && _currentPreview != null)
+    {
+        <div class="move-preview-info mt-3 p-3" style="background-color: @(_currentTheme.EmptyCellColor); border: 1px solid @(_currentTheme.GridLineColor);">
+            <h4>Move Preview</h4>
+            <p><strong>Column:</strong> @(_currentPreview.Column + 1)</p>
+            <p><strong>Type:</strong> @_currentPreview.MoveType</p>
+            <p><strong>Description:</strong> @_currentPreview.AccessibilityDescription</p>
+            @if (_currentPreview.ThreatsCreated > 0)
+            {
+                <div class="alert alert-success">
+                    <i class="fas fa-sword"></i> Creates @_currentPreview.ThreatsCreated threat(s)
+                </div>
+            }
+            @if (_currentPreview.ThreatsBlocked > 0)
+            {
+                <div class="alert alert-warning">
+                    <i class="fas fa-shield"></i> Blocks @_currentPreview.ThreatsBlocked threat(s)
+                </div>
+            }
+        </div>
+    }
+
+    @if (_visualIndicators.Any())
+    {
+        <div class="visual-indicators mt-2">
+            @foreach (var indicator in _visualIndicators)
+            {
+                <div class="indicator @indicator.Type.ToString().ToLower()" 
+                     style="color: @indicator.Color;">
+                    <i class="fas fa-@GetIndicatorIcon(indicator.Type)"></i>
+                    @GetIndicatorDescription(indicator)
+                </div>
+            }
+        </div>
+    }
+
+    <!-- Theme Selection -->
+    <div class="theme-controls mt-3">
+        <div class="row">
+            <div class="col-md-6">
+                <label for="theme-select" class="form-label">Theme:</label>
+                <select id="theme-select" class="form-select" @onchange="OnThemeChanged">
+                    <option value="default">Default</option>
+                    <option value="high-contrast">High Contrast</option>
+                    <option value="colorblind-friendly">Color Blind Friendly</option>
+                    <option value="dark">Dark Mode</option>
+                </select>
+            </div>
+            <div class="col-md-6">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" 
+                           @bind="_accessibilitySettings.ScreenReaderSupport" 
+                           @onchange="OnAccessibilityChanged" 
+                           id="screen-reader-check">
+                    <label class="form-check-label" for="screen-reader-check">
+                        Screen Reader Support
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" 
+                           @bind="_accessibilitySettings.ReducedMotion" 
+                           @onchange="OnAccessibilityChanged" 
+                           id="reduced-motion-check">
+                    <label class="form-check-label" for="reduced-motion-check">
+                        Reduced Motion
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public GameState GameState { get; set; } = new();
+    [Parameter] public EventCallback<int> OnMove { get; set; }
+    [Parameter] public bool PreviewMode { get; set; } = true;
+
+    private ElementReference canvasRef;
+    private IJSObjectReference? canvasContext;
+    private ThemeConfiguration _currentTheme = new();
+    private AccessibilitySettings _accessibilitySettings = new();
+    private ScreenReaderDescription? _screenReaderDescription;
+    private MovePreview? _currentPreview;
+    private List<VisualIndicator> _visualIndicators = new();
+    private AnimationConfig _animationConfig = new();
+    
+    private int _hoveredColumn = -1;
+    private bool _previewMode = true;
+    private string _currentThemeName = "default";
+
+    // Canvas dimensions
+    private const int CanvasWidth = 630;  // 9 columns * 70px
+    private const int CanvasHeight = 560; // 8 rows * 70px
+    private const int CellSize = 70;
+    private const int PieceRadius = 25;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentTheme = await VisualFeedbackService.GetCurrentTheme("default");
+        _animationConfig = await VisualFeedbackService.GetAnimationConfig();
+        await UpdateAccessibilityDescription();
+        await UpdateVisualIndicators();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            canvasContext = await JSRuntime.InvokeAsync<IJSObjectReference>("getCanvasContext", canvasRef);
+            await DrawBoard();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (canvasContext != null)
+        {
+            await DrawBoard();
+            await UpdateAccessibilityDescription();
+            await UpdateVisualIndicators();
+        }
+    }
+
+    private async Task OnMouseMove(MouseEventArgs e)
+    {
+        if (!PreviewMode) return;
+
+        var column = GetColumnFromPosition(e.OffsetX);
+        if (column != _hoveredColumn && column >= 0 && column < GameBoard.Columns)
+        {
+            _hoveredColumn = column;
+            
+            if (GameState.Board.IsValidMove(column))
+            {
+                _currentPreview = await VisualFeedbackService.GetMovePreview(GameState, column);
+                
+                if (_animationConfig.HoverEffectEnabled)
+                {
+                    await DrawBoard();
+                    await DrawMovePreview(column);
+                }
+
+                // Trigger haptic feedback for valid hover
+                if (_accessibilitySettings.HapticFeedback)
+                {
+                    var haptic = await VisualFeedbackService.GetHapticFeedback(GameEvent.TurnChanged);
+                    await TriggerHapticFeedback(haptic);
+                }
+
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task OnMouseLeave(MouseEventArgs e)
+    {
+        _hoveredColumn = -1;
+        _currentPreview = null;
+        await DrawBoard();
+        StateHasChanged();
+    }
+
+    private async Task OnCanvasClick(MouseEventArgs e)
+    {
+        var column = GetColumnFromPosition(e.OffsetX);
+        if (column >= 0 && column < GameBoard.Columns)
+        {
+            await OnColumnClick(column);
+        }
+    }
+
+    private async Task OnColumnClick(int column)
+    {
+        if (!GameState.Board.IsValidMove(column)) 
+        {
+            // Invalid move feedback
+            var haptic = await VisualFeedbackService.GetHapticFeedback(GameEvent.InvalidMove);
+            await TriggerHapticFeedback(haptic);
+            
+            Logger.LogInformation("Invalid move attempted in column {Column}", column);
+            return;
+        }
+
+        // Valid move feedback
+        var successHaptic = await VisualFeedbackService.GetHapticFeedback(GameEvent.PiecePlaced);
+        await TriggerHapticFeedback(successHaptic);
+
+        await OnMove.InvokeAsync(column);
+    }
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (!_accessibilitySettings.ScreenReaderSupport) return;
+
+        switch (e.Code)
+        {
+            case "ArrowLeft":
+                _hoveredColumn = Math.Max(0, _hoveredColumn - 1);
+                await UpdatePreviewForColumn(_hoveredColumn);
+                break;
+            case "ArrowRight":
+                _hoveredColumn = Math.Min(GameBoard.Columns - 1, _hoveredColumn + 1);
+                await UpdatePreviewForColumn(_hoveredColumn);
+                break;
+            case "Enter":
+            case "Space":
+                if (_hoveredColumn >= 0 && _hoveredColumn < GameBoard.Columns)
+                {
+                    await OnColumnClick(_hoveredColumn);
+                }
+                break;
+        }
+    }
+
+    private async Task OnThemeChanged(ChangeEventArgs e)
+    {
+        _currentThemeName = e.Value?.ToString() ?? "default";
+        _currentTheme = await VisualFeedbackService.GetCurrentTheme(_currentThemeName);
+        await DrawBoard();
+        StateHasChanged();
+    }
+
+    private async Task OnAccessibilityChanged()
+    {
+        await VisualFeedbackService.ConfigureAccessibility(_accessibilitySettings);
+        _currentTheme = await VisualFeedbackService.GetCurrentTheme(_currentThemeName);
+        _animationConfig = await VisualFeedbackService.GetAnimationConfig();
+        await UpdateAccessibilityDescription();
+        await DrawBoard();
+        StateHasChanged();
+    }
+
+    private async Task UpdatePreviewForColumn(int column)
+    {
+        if (column >= 0 && column < GameBoard.Columns && GameState.Board.IsValidMove(column))
+        {
+            _currentPreview = await VisualFeedbackService.GetMovePreview(GameState, column);
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateAccessibilityDescription()
+    {
+        if (_accessibilitySettings.ScreenReaderSupport)
+        {
+            _screenReaderDescription = await VisualFeedbackService.GetBoardDescription(GameState);
+        }
+    }
+
+    private async Task UpdateVisualIndicators()
+    {
+        _visualIndicators = await VisualFeedbackService.GetVisualIndicators(GameState);
+    }
+
+    private async Task DrawBoard()
+    {
+        if (canvasContext == null) return;
+
+        try
+        {
+            // Clear canvas
+            await JSRuntime.InvokeVoidAsync("clearCanvas", canvasContext, CanvasWidth, CanvasHeight);
+
+            // Draw background
+            await JSRuntime.InvokeVoidAsync("setFillStyle", canvasContext, _currentTheme.BoardColor);
+            await JSRuntime.InvokeVoidAsync("fillRect", canvasContext, 0, 0, CanvasWidth, CanvasHeight);
+
+            // Draw grid and pieces
+            for (int row = 0; row < GameBoard.Rows; row++)
+            {
+                for (int col = 0; col < GameBoard.Columns; col++)
+                {
+                    var x = col * CellSize + CellSize / 2;
+                    var y = row * CellSize + CellSize / 2;
+
+                    // Draw cell background
+                    await JSRuntime.InvokeVoidAsync("setFillStyle", canvasContext, _currentTheme.EmptyCellColor);
+                    await JSRuntime.InvokeVoidAsync("fillCircle", canvasContext, x, y, PieceRadius);
+
+                    // Draw grid lines
+                    await JSRuntime.InvokeVoidAsync("setStrokeStyle", canvasContext, _currentTheme.GridLineColor);
+                    await JSRuntime.InvokeVoidAsync("strokeCircle", canvasContext, x, y, PieceRadius);
+
+                    // Draw pieces
+                    var cell = GameState.Board.GetCell(row, col);
+                    if (cell != 0)
+                    {
+                        var color = cell == 1 ? _currentTheme.Player1Color : _currentTheme.Player2Color;
+                        await JSRuntime.InvokeVoidAsync("setFillStyle", canvasContext, color);
+                        await JSRuntime.InvokeVoidAsync("fillCircle", canvasContext, x, y, PieceRadius);
+
+                        // Draw shapes for accessibility if enabled
+                        if (_currentTheme.UseShapes)
+                        {
+                            var shape = cell == 1 ? _currentTheme.Player1Shape : _currentTheme.Player2Shape;
+                            if (shape == "square")
+                            {
+                                await JSRuntime.InvokeVoidAsync("setFillStyle", canvasContext, "#FFFFFF");
+                                await JSRuntime.InvokeVoidAsync("fillRect", canvasContext, x - 8, y - 8, 16, 16);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Draw visual indicators
+            await DrawVisualIndicators();
+
+            // Draw hover preview if applicable
+            if (_hoveredColumn >= 0 && _animationConfig.HoverEffectEnabled)
+            {
+                await DrawMovePreview(_hoveredColumn);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error drawing board");
+        }
+    }
+
+    private async Task DrawMovePreview(int column)
+    {
+        if (canvasContext == null || !GameState.Board.IsValidMove(column)) return;
+
+        var targetRow = GameState.Board.GetTargetRow(column);
+        var x = column * CellSize + CellSize / 2;
+        var y = targetRow * CellSize + CellSize / 2;
+
+        var color = GameState.CurrentPlayer.Id == 1 ? _currentTheme.Player1Color : _currentTheme.Player2Color;
+        
+        // Draw preview piece with reduced opacity
+        await JSRuntime.InvokeVoidAsync("setGlobalAlpha", canvasContext, 0.7);
+        await JSRuntime.InvokeVoidAsync("setFillStyle", canvasContext, color);
+        await JSRuntime.InvokeVoidAsync("fillCircle", canvasContext, x, y, PieceRadius);
+        await JSRuntime.InvokeVoidAsync("setGlobalAlpha", canvasContext, 1.0);
+
+        // Draw preview effects
+        if (_currentPreview?.PreviewEffects != null)
+        {
+            foreach (var effect in _currentPreview.PreviewEffects)
+            {
+                await DrawPreviewEffect(effect);
+            }
+        }
+    }
+
+    private async Task DrawPreviewEffect(PreviewEffect effect)
+    {
+        if (canvasContext == null) return;
+
+        var x = effect.Position.Column * CellSize + CellSize / 2;
+        var y = effect.Position.Row * CellSize + CellSize / 2;
+
+        await JSRuntime.InvokeVoidAsync("setGlobalAlpha", canvasContext, effect.Opacity);
+
+        switch (effect.Type)
+        {
+            case EffectType.WinIndicator:
+                await JSRuntime.InvokeVoidAsync("setStrokeStyle", canvasContext, effect.Color);
+                await JSRuntime.InvokeVoidAsync("setLineWidth", canvasContext, 4);
+                await JSRuntime.InvokeVoidAsync("strokeCircle", canvasContext, x, y, PieceRadius + 5);
+                break;
+            case EffectType.BlockIndicator:
+                await JSRuntime.InvokeVoidAsync("setStrokeStyle", canvasContext, effect.Color);
+                await JSRuntime.InvokeVoidAsync("setLineWidth", canvasContext, 3);
+                await JSRuntime.InvokeVoidAsync("strokeRect", canvasContext, x - PieceRadius, y - PieceRadius, PieceRadius * 2, PieceRadius * 2);
+                break;
+        }
+
+        await JSRuntime.InvokeVoidAsync("setGlobalAlpha", canvasContext, 1.0);
+        await JSRuntime.InvokeVoidAsync("setLineWidth", canvasContext, 1);
+    }
+
+    private async Task DrawVisualIndicators()
+    {
+        if (canvasContext == null) return;
+
+        foreach (var indicator in _visualIndicators)
+        {
+            foreach (var position in indicator.Positions)
+            {
+                var x = position.Column * CellSize + CellSize / 2;
+                var y = position.Row * CellSize + CellSize / 2;
+
+                switch (indicator.Type)
+                {
+                    case IndicatorType.WinningLine:
+                        await JSRuntime.InvokeVoidAsync("setStrokeStyle", canvasContext, indicator.Color);
+                        await JSRuntime.InvokeVoidAsync("setLineWidth", canvasContext, 6);
+                        await JSRuntime.InvokeVoidAsync("strokeCircle", canvasContext, x, y, PieceRadius + 8);
+                        break;
+                    case IndicatorType.Threat:
+                        await JSRuntime.InvokeVoidAsync("setStrokeStyle", canvasContext, indicator.Color);
+                        await JSRuntime.InvokeVoidAsync("setLineWidth", canvasContext, 3);
+                        await JSRuntime.InvokeVoidAsync("strokeCircle", canvasContext, x, y, PieceRadius + 3);
+                        break;
+                }
+            }
+        }
+
+        await JSRuntime.InvokeVoidAsync("setLineWidth", canvasContext, 1);
+    }
+
+    private async Task TriggerHapticFeedback(HapticPattern pattern)
+    {
+        if (!_accessibilitySettings.HapticFeedback) return;
+
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("triggerHapticFeedback", pattern.Duration, pattern.Intensity);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogWarning(ex, "Haptic feedback not supported on this device");
+        }
+    }
+
+    private int GetColumnFromPosition(double x)
+    {
+        return (int)(x / CellSize);
+    }
+
+    private string GetColumnAccessibilityLabel(int column)
+    {
+        var piecesInColumn = 0;
+        for (int row = 0; row < GameBoard.Rows; row++)
+        {
+            if (GameState.Board.GetCell(row, column) != 0)
+                piecesInColumn++;
+        }
+
+        var status = GameState.Board.IsValidMove(column) ? "available" : "full";
+        return $"Column {column + 1}, {piecesInColumn} pieces, {status}";
+    }
+
+    private string GetColumnStatus(int column)
+    {
+        var piecesInColumn = 0;
+        for (int row = 0; row < GameBoard.Rows; row++)
+        {
+            if (GameState.Board.GetCell(row, column) != 0)
+                piecesInColumn++;
+        }
+
+        return $"{piecesInColumn}/8";
+    }
+
+    private string GetIndicatorIcon(IndicatorType type)
+    {
+        return type switch
+        {
+            IndicatorType.WinningLine => "crown",
+            IndicatorType.Threat => "exclamation-triangle",
+            IndicatorType.BlockingMove => "shield",
+            IndicatorType.PreviewPiece => "eye",
+            _ => "circle"
+        };
+    }
+
+    private string GetIndicatorDescription(VisualIndicator indicator)
+    {
+        return indicator.Type switch
+        {
+            IndicatorType.WinningLine => "Winning line detected",
+            IndicatorType.Threat => $"Threat detected ({indicator.Positions.Count} positions)",
+            IndicatorType.BlockingMove => "Blocking move suggested",
+            IndicatorType.PreviewPiece => "Move preview",
+            _ => "Visual indicator"
+        };
+    }
+}

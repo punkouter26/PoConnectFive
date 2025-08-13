@@ -73,13 +73,15 @@
     private GameState? _currentState;
     private DateTime _gameStartTime;
     // Removed player IDs, using names and difficulty now for API calls
-    private string? _player1Name; 
-    private string? _player2Name; 
+    private string? _player1Name;
+    private string? _player2Name;
     private AIDifficulty? _aiDifficulty; // Store AI difficulty for stat updates
     private GameBoardComponent? gameBoardRef;
     private List<(int column, double probability)> winProbabilities = new();
     private bool _isWinning = false;
     private bool _isInvalidMove = false;
+    // Indicates whether it's currently the AI's turn (blocks player input)
+    private bool _isAITurn = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -109,23 +111,31 @@
 
     private async Task OnColumnClicked(int column)
     {
-        if (_currentState?.Status != GameStatus.InProgress)
+        // Block player input while AI is thinking or if game not in progress
+        if (_isAITurn || _currentState?.Status != GameStatus.InProgress)
             return;
 
         try
         {
             if (await GameService.IsValidMove(_currentState, column))
             {
-                var previousState = _currentState;
+                // Apply the player's move
                 _currentState = await GameService.MakeMove(_currentState, column);
-                
                 await SoundService.PlayPieceDrop();
 
+                // If game ended after the player's move, handle it
                 if (_currentState.Status != GameStatus.InProgress)
                 {
                     _isWinning = true;
                     await SoundService.PlayWin();
                     await HandleGameEnd();
+                    return;
+                }
+
+                // If next player is AI, trigger AI move sequence
+                if (_currentState.CurrentPlayer.Type == PlayerType.AI)
+                {
+                    await PerformAIMoveAsync();
                 }
             }
             else
@@ -143,6 +153,53 @@
         }
     }
 
+    private async Task PerformAIMoveAsync()
+    {
+        if (_currentState == null) return;
+        if (_currentState.CurrentPlayer.Type != PlayerType.AI) return;
+
+        try
+        {
+            _isAITurn = true;
+            StateHasChanged();
+
+            // Small delay to simulate AI thinking and give user feedback
+            await Task.Delay(600);
+
+            // Ask service for AI's chosen column
+            var aiColumn = await GameService.GetAIMove(_currentState);
+
+            // Double-check move validity and that game is still in progress
+            if (_currentState.Status != GameStatus.InProgress || !await GameService.IsValidMove(_currentState, aiColumn))
+            {
+                _isAITurn = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Apply AI move
+            _currentState = await GameService.MakeMove(_currentState, aiColumn);
+            await SoundService.PlayPieceDrop();
+
+            // If game ended after AI move, handle it
+            if (_currentState.Status != GameStatus.InProgress)
+            {
+                _isWinning = true;
+                await SoundService.PlayWin();
+                await HandleGameEnd();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during AI move: {ex.Message}");
+        }
+        finally
+        {
+            _isAITurn = false;
+            StateHasChanged();
+        }
+    }
+
     private async Task HandleGameEnd()
     {
         var gameTime = DateTime.UtcNow - _gameStartTime;
@@ -152,10 +209,10 @@
         {
             var result = _currentState.Status switch
             {
-                GameStatus.Player1Won => GameResult.Win,
-                GameStatus.Player2Won => GameResult.Loss, // Human (Player 1) lost
-                GameStatus.Draw => GameResult.Draw,
-                _ => (GameResult?)null // Should not happen if game ended
+                GameStatus.Player1Won => PlayerGameResult.Win,
+                GameStatus.Player2Won => PlayerGameResult.Loss, // Human (Player 1) lost
+                GameStatus.Draw => PlayerGameResult.Draw,
+                _ => (PlayerGameResult?)null // Should not happen if game ended
             };
 
             if (result.HasValue)

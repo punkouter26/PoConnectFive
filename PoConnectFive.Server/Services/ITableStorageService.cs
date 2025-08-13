@@ -8,5 +8,5 @@ public interface ITableStorageService
 {
     Task<Result<bool>> CheckConnection();
     Task<List<PlayerStatEntity>> GetTopPlayersByDifficultyAsync(AIDifficulty difficulty, int count = 5);
-    Task UpsertPlayerStatAsync(string playerName, AIDifficulty difficulty, GameResult result, TimeSpan gameTime);
-} 
+    Task UpsertPlayerStatAsync(string playerName, AIDifficulty difficulty, PlayerGameResult result, TimeSpan gameTime);
+}

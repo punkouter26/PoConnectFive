@@ -27,15 +27,25 @@ namespace PoConnectFive.Shared.Services.AI
     {
         private const int MAX_DEPTH = 5; // Adjust depth based on performance testing
         private readonly Random _random = new Random();
+        private readonly IBoardEvaluator _evaluator;
         public AIDifficulty Difficulty => AIDifficulty.Hard;
+
+        public HardAIPlayer() : this(new BoardEvaluator())
+        {
+        }
+
+        public HardAIPlayer(IBoardEvaluator evaluator)
+        {
+            _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
+        }
 
         public Task<int> GetNextMove(GameState gameState)
         {
             var validMoves = GetValidMoves(gameState.Board);
-            
+
             // If no moves, something is wrong, but return a default
             if (validMoves.Count == 0)
-                return Task.FromResult(0); 
+                return Task.FromResult(0);
 
             // If only one move available, take it
             if (validMoves.Count == 1)
@@ -54,14 +64,14 @@ namespace PoConnectFive.Shared.Services.AI
             {
                 var newBoard = gameState.Board.PlacePiece(move, gameState.CurrentPlayer.Id);
                 int row = FindPieceRow(newBoard, move, gameState.CurrentPlayer.Id);
-                
+
                 // Immediate win detection
                 if (newBoard.CheckWin(row, move, gameState.CurrentPlayer.Id))
                     return Task.FromResult(move); // Found a winning move
 
                 // Composite Pattern: Recursive position evaluation
                 int score = Minimax(newBoard, MAX_DEPTH - 1, alpha, beta, false, gameState.CurrentPlayer.Id);
-                
+
                 // Add a small random factor to break ties and add unpredictability
                 // score += _random.Next(-2, 3); 
 
@@ -70,17 +80,18 @@ namespace PoConnectFive.Shared.Services.AI
                     bestScore = score;
                     bestMove = move;
                 }
-                
+
                 // Alpha-Beta Pruning update
                 alpha = Math.Max(alpha, bestScore);
                 if (beta <= alpha)
                     break; // Prune the branch
             }
-            
+
             // If bestMove wasn't updated (e.g., all moves lead to immediate loss), pick a random valid one
-             if (bestMove == -1 && validMoves.Any()) {
-                 bestMove = validMoves[_random.Next(validMoves.Count)];
-             }
+            if (bestMove == -1 && validMoves.Any())
+            {
+                bestMove = validMoves[_random.Next(validMoves.Count)];
+            }
 
 
             return Task.FromResult(bestMove);
@@ -131,7 +142,7 @@ namespace PoConnectFive.Shared.Services.AI
                 foreach (var move in validMoves)
                 {
                     var newBoard = board.PlacePiece(move, opponentId);
-                     // Check if this move resulted in a win for Opponent
+                    // Check if this move resulted in a win for Opponent
                     int row = FindPieceRow(newBoard, move, opponentId);
                     if (newBoard.CheckWin(row, move, opponentId))
                     {
@@ -151,16 +162,8 @@ namespace PoConnectFive.Shared.Services.AI
         // Strategy Pattern: Board evaluation strategy
         private int EvaluateBoard(GameBoard board, int aiPlayerId)
         {
-            int score = 0;
-            int opponentId = aiPlayerId == 1 ? 2 : 1;
-
-            // Composite Pattern: Evaluates board in different directions
-            score += EvaluateLines(board, aiPlayerId, opponentId, 0, 1);  // Horizontal
-            score += EvaluateLines(board, aiPlayerId, opponentId, 1, 0);  // Vertical
-            score += EvaluateLines(board, aiPlayerId, opponentId, 1, 1);  // Diagonal \
-            score += EvaluateLines(board, aiPlayerId, opponentId, 1, -1); // Diagonal /
-
-            return score;
+            // Delegate to injected evaluator for easier testing and strategy swapping
+            return _evaluator.EvaluateBoard(board, aiPlayerId);
         }
 
         // Helper to evaluate all lines on the board
@@ -175,7 +178,7 @@ namespace PoConnectFive.Shared.Services.AI
                 {
                     // Add small bonus for pieces in center columns (adjust range as needed)
                     // Example: Columns 6, 7, 8, 9 for a 14-column board (Indices 5, 6, 7, 8)
-                    if (col >= GameBoard.Columns / 2 - 2 && col <= GameBoard.Columns / 2 + 1) 
+                    if (col >= GameBoard.Columns / 2 - 2 && col <= GameBoard.Columns / 2 + 1)
                     {
                         if (board.GetCell(row, col) == aiPlayerId) centerColumnBonus += 1;
                         // Optional: Penalize opponent for center control?
@@ -204,7 +207,7 @@ namespace PoConnectFive.Shared.Services.AI
             // Rule out sequences blocked by both players (no potential)
             if (aiCount > 0 && opponentCount > 0)
             {
-                return 0; 
+                return 0;
             }
 
             // AI Scoring - Prioritize longer sequences
@@ -264,11 +267,11 @@ namespace PoConnectFive.Shared.Services.AI
             for (int row = GameBoard.Rows - 1; row >= 0; row--)
             {
                 // Check the specific player ID OR if the cell is non-empty (if called after opponent move)
-                 if (board.GetCell(row, column) != 0) 
+                if (board.GetCell(row, column) != 0)
                     return row;
             }
             // Should ideally not happen if called after a valid PlacePiece
-            return GameBoard.Rows -1; // Fallback: assume bottom row if somehow empty
+            return GameBoard.Rows - 1; // Fallback: assume bottom row if somehow empty
             // throw new InvalidOperationException($"Piece not found in column {column} after placement.");
         }
 

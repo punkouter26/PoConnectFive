@@ -1,36 +1,142 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">PoConnectFive.Client</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
+﻿<nav class="primary-nav" role="navigation" aria-label="Main Navigation">
+    <button class="nav-toggle" @onclick="ToggleNavMenu" aria-expanded="@(!collapseNavMenu).ToString().ToLower()"
+        aria-controls="primary-navigation">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="hamburger" aria-hidden="true"></span>
+    </button>
 
-<div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
-    <nav class="nav flex-column">
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
-        </div>
-    </nav>
-</div>
+    <ul id="primary-navigation" class="nav-list @NavMenuCssClass">
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">Home</NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/leaderboard">Leaderboard</NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/settings">Settings</NavLink>
+        </li>
+    </ul>
+</nav>
+
+<style>
+    /* Visually hidden (screen-reader only) */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .primary-nav {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .nav-toggle {
+        display: none;
+        background: transparent;
+        border: none;
+        padding: 0.5rem;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    .hamburger {
+        width: 22px;
+        height: 2px;
+        background: currentColor;
+        display: block;
+        position: relative;
+    }
+
+    .hamburger::before,
+    .hamburger::after {
+        content: "";
+        width: 22px;
+        height: 2px;
+        background: currentColor;
+        position: absolute;
+        left: 0;
+    }
+
+    .hamburger::before {
+        top: -7px;
+    }
+
+    .hamburger::after {
+        top: 7px;
+    }
+
+    .nav-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .nav-item {
+        margin: 0;
+    }
+
+    .nav-link {
+        color: inherit;
+        text-decoration: none;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        display: inline-block;
+    }
+
+    .nav-link.active {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Collapsed state for small screens */
+    .nav-list.collapsed {
+        display: none;
+    }
+
+    /* Responsive rules: show toggle on small screens and stack nav vertically */
+    @@media (max-width: 768px) {
+        .nav-toggle {
+            display: inline-flex;
+        }
+
+        .nav-list {
+            flex-direction: column;
+            gap: 0;
+            background: transparent;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .nav-link {
+            padding: 0.75rem 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .nav-list.collapsed {
+            display: none;
+        }
+
+        .nav-list:not(.collapsed) {
+            display: flex;
+        }
+    }
+</style>
 
 @code {
     private bool collapseNavMenu = true;
 
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+    private string NavMenuCssClass => collapseNavMenu ? "collapsed" : "expanded";
 
     private void ToggleNavMenu()
     {

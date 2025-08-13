@@ -14,10 +14,10 @@ namespace PoConnectFive.Shared.Models // Changed namespace
         public AIDifficulty Difficulty { get; set; }
 
         [Required]
-        public GameResult Result { get; set; }
+        public PlayerGameResult Result { get; set; }
 
         [Required]
         [Range(0, double.MaxValue)] // Basic validation for game time
-        public double GameTimeMilliseconds { get; set; } 
+        public double GameTimeMilliseconds { get; set; }
     }
 }

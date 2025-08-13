@@ -1,110 +1,110 @@
 @namespace PoConnectFive.Client.Shared
+@using PoConnectFive.Client.Layout
 @inherits LayoutComponentBase
 @inject NavigationManager NavigationManager
 
-<div class="page">
-    <header>
-        <div class="header-content">
-            <div class="logo" @onclick="@(() => NavigationManager.NavigateTo("/"))">
-                Connect Five
-            </div>
-            <nav>
-                <button class="nav-link" @onclick="@(() => NavigationManager.NavigateTo("/"))">Home</button>
-                <button class="nav-link" @onclick="@(() => NavigationManager.NavigateTo("/leaderboard"))">Leaderboard</button>
-                <button class="nav-link" @onclick="@(() => NavigationManager.NavigateTo("/settings"))">Settings</button>
-            </nav>
-        </div>
-    </header>
+<a class="skip-link" href="#maincontent">Skip to main content</a>
 
-    <main>
-        <article class="content">
-            @Body
-        </article>
-    </main>
+<header class="site-header" role="banner" aria-label="Main header">
+    <div class="container header-inner">
+        <a class="site-logo" href="/" aria-label="Connect Five home">Connect Five</a>
+        <NavMenu />
+    </div>
+</header>
 
-    <footer>
-        <div class="footer-content">
-            <p>&copy; @DateTime.Now.Year Connect Five. All rights reserved.</p>
-        </div>
-    </footer>
-</div>
+<main id="maincontent" role="main" class="site-main">
+    <div class="container content">
+        @Body
+    </div>
+</main>
+
+<footer class="site-footer" role="contentinfo">
+    <div class="container footer-inner">
+        <p>&copy; @DateTime.Now.Year Connect Five. All rights reserved.</p>
+    </div>
+</footer>
 
 <style>
-    .page {
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        background-color: #f0f2f5;
-    }
-
-    header {
-        background-color: #2196F3;
-        color: white;
-        padding: 1rem 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .header-content {
+    /* Layout utility classes */
+    .container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 0 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
     }
 
-    .logo {
-        font-size: 1.5rem;
-        font-weight: bold;
-        cursor: pointer;
-        transition: opacity 0.2s;
+    .skip-link {
+        position: absolute;
+        left: -999px;
+        top: auto;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
     }
 
-    .logo:hover {
-        opacity: 0.9;
-    }
-
-    nav {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .nav-link {
-        background: transparent;
-        border: none;
-        color: white;
+    .skip-link:focus {
+        left: 1rem;
+        top: 1rem;
+        width: auto;
+        height: auto;
+        background: #fff;
         padding: 0.5rem 1rem;
-        cursor: pointer;
-        font-size: 1rem;
+        z-index: 1000;
         border-radius: 4px;
-        transition: background-color 0.2s;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
     }
 
-    .nav-link:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+    /* Header */
+    .site-header {
+        background-color: #2b88d8;
+        color: #fff;
+        padding: 0.75rem 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     }
 
-    main {
-        flex: 1;
-        padding: 2rem 1rem;
+    .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .site-logo {
+        font-weight: 700;
+        font-size: 1.25rem;
+        color: #ffffff;
+        text-decoration: none;
+    }
+
+    /* Main content */
+    .site-main {
+        flex: 1 1 auto;
+        padding: 2.5rem 0;
+        background-color: #f5f7f8;
+        min-height: calc(100vh - 150px);
     }
 
     .content {
-        max-width: 1200px;
-        margin: 0 auto;
+        background: transparent;
     }
 
-    footer {
-        background-color: #1976D2;
-        color: white;
+    /* Footer */
+    .site-footer {
+        background-color: #1f6fb1;
+        color: #fff;
         padding: 1rem 0;
-        margin-top: auto;
     }
 
-    .footer-content {
-        max-width: 1200px;
-        margin: 0 auto;
-        padding: 0 1rem;
+    .footer-inner {
         text-align: center;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .site-logo {
+            font-size: 1rem;
+        }
+
+        .site-main {
+            padding: 1.25rem 0;
+        }
     }
 </style>

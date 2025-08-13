@@ -7,9 +7,12 @@
 
 <div class="container mt-4">
     <h1>System Diagnostics</h1>
-    
+
     <div class="alert alert-info" role="alert">
-        Running system diagnostics... @if(isRunning) { <span class="spinner-border spinner-border-sm" role="status"></span> }
+        Running system diagnostics... @if(isRunning) {
+        <span class="spinner-border spinner-border-sm"
+            role="status"></span>
+                }
     </div>
 
     <div class="row">
@@ -93,19 +96,19 @@
             StateHasChanged();
 
             // Basic API Health
-            await CheckEndpoint("API Health", "health");
+            await CheckEndpoint("API Health", "healthz");
 
             // Storage Health
-            await CheckEndpoint("Storage", "health/storage");
+            await CheckEndpoint("Storage", "healthz/storage");
 
             // Internet Connectivity
-            await CheckEndpoint("Internet", "health/internet");
+            await CheckEndpoint("Internet", "healthz/internet");
 
             // Log results to server
-            await Http.PostAsJsonAsync("health/log", new { Results = diagnosticResults });
+            await Http.PostAsJsonAsync("healthz/log", new { Results = diagnosticResults });
             Logger.LogInformation("Diagnostics completed with {HealthyCount} healthy and {UnhealthyCount} unhealthy results",
-                diagnosticResults.Count(r => r.IsHealthy),
-                diagnosticResults.Count(r => !r.IsHealthy));
+            diagnosticResults.Count(r => r.IsHealthy),
+            diagnosticResults.Count(r => !r.IsHealthy));
         }
         catch (Exception ex)
         {
@@ -156,4 +159,4 @@
         public bool IsHealthy { get; set; }
         public string? Error { get; set; }
     }
-} 
+}

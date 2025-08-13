@@ -1,6 +1,5 @@
 using System;
-using Microsoft.Extensions.Logging;
-using Serilog;
+using System.Text;
 
 namespace PoConnectFive.Shared.Models
 {
@@ -21,73 +20,56 @@ namespace PoConnectFive.Shared.Models
     /// </summary>
     public class GameBoard
     {
-        private readonly ILogger<GameBoard> _logger;
-        private readonly int[,] _board;
+        private readonly int[][] _board;
         public const int Rows = 9;
         public const int Columns = 9;
-        public const int WinLength = 5; public GameBoard(ILogger<GameBoard> logger)
+        public const int WinLength = 5;
+
+        public GameBoard()
         {
-            _logger = logger;
-            _board = new int[Rows, Columns];
-            // Removed logging to reduce console output
+            _board = new int[Rows][];
+            for (int i = 0; i < Rows; i++)
+            {
+                _board[i] = new int[Columns];
+            }
         }
 
-        public int[,] GetBoard() => _board;
+        public int[][] GetBoard() => _board;
 
         public bool IsValidMove(int column)
         {
             if (column < 0 || column >= Columns)
             {
-                _logger.LogWarning("Invalid column index: {Column}", column);
                 return false;
             }
 
-            var isValid = _board[0, column] == 0;
-            _logger.LogDebug("Move validation for column {Column}: {IsValid}", column, isValid);
-            return isValid;
+            return _board[0][column] == 0;
         }
 
         public int GetTargetRow(int column)
         {
+            if (column < 0 || column >= Columns)
+                throw new ArgumentOutOfRangeException(nameof(column));
+
             for (int row = Rows - 1; row >= 0; row--)
             {
-                if (_board[row, column] == 0)
+                if (_board[row][column] == 0)
                 {
-                    _logger.LogDebug("Target row for column {Column} is {Row}", column, row);
                     return row;
                 }
             }
-            _logger.LogWarning("No valid target row found for column {Column}", column);
             return -1;
         }
 
         public GameBoard PlacePiece(int column, int playerId)
         {
-            _logger.LogInformation("Placing piece for player {PlayerId} in column {Column}", playerId, column);
-
-            var newBoard = new GameBoard(_logger);
-            Array.Copy(_board, newBoard._board, _board.Length);
-
-            var targetRow = GetTargetRow(column);
-            if (targetRow == -1)
-            {
-                _logger.LogError("Failed to place piece - no valid target row");
-                throw new InvalidOperationException("No valid target row found");
-            }
-
-            newBoard._board[targetRow, column] = playerId;
-            _logger.LogDebug("Piece placed at position ({Row}, {Column})", targetRow, column);
-
-            return newBoard;
+            return CloneWithMove(column, playerId);
         }
 
         public bool CheckWin(int row, int column, int playerId)
         {
-            _logger.LogInformation("Checking win condition for player {PlayerId} at ({Row}, {Column})",
-                playerId, row, column);
-
-            return CheckDirection(row, column, 1, 0, playerId) ||  // Horizontal
-                   CheckDirection(row, column, 0, 1, playerId) ||  // Vertical
+            return CheckDirection(row, column, 0, 1, playerId) ||  // Horizontal
+                   CheckDirection(row, column, 1, 0, playerId) ||  // Vertical
                    CheckDirection(row, column, 1, 1, playerId) ||  // Diagonal down-right
                    CheckDirection(row, column, 1, -1, playerId);   // Diagonal down-left
         }
@@ -95,8 +77,6 @@ namespace PoConnectFive.Shared.Models
         private bool CheckDirection(int startRow, int startCol, int rowStep, int colStep, int playerId)
         {
             var count = 1;
-            _logger.LogDebug("Checking direction ({RowStep}, {ColStep}) from ({StartRow}, {StartCol})",
-                rowStep, colStep, startRow, startCol);
 
             // Check in positive direction
             for (int i = 1; i < WinLength; i++)
@@ -104,7 +84,7 @@ namespace PoConnectFive.Shared.Models
                 var row = startRow + i * rowStep;
                 var col = startCol + i * colStep;
 
-                if (row < 0 || row >= Rows || col < 0 || col >= Columns || _board[row, col] != playerId)
+                if (row < 0 || row >= Rows || col < 0 || col >= Columns || _board[row][col] != playerId)
                 {
                     break;
                 }
@@ -117,16 +97,14 @@ namespace PoConnectFive.Shared.Models
                 var row = startRow - i * rowStep;
                 var col = startCol - i * colStep;
 
-                if (row < 0 || row >= Rows || col < 0 || col >= Columns || _board[row, col] != playerId)
+                if (row < 0 || row >= Rows || col < 0 || col >= Columns || _board[row][col] != playerId)
                 {
                     break;
                 }
                 count++;
             }
 
-            var hasWon = count >= WinLength;
-            _logger.LogDebug("Direction check result: {Count} pieces in a row, Win: {HasWon}", count, hasWon);
-            return hasWon;
+            return count >= WinLength;
         }
 
         public bool HasValidMoves()
@@ -135,32 +113,52 @@ namespace PoConnectFive.Shared.Models
             {
                 if (IsValidMove(col))
                 {
-                    _logger.LogDebug("Valid move found in column {Column}", col);
                     return true;
                 }
             }
-            _logger.LogInformation("No valid moves remaining");
             return false;
         }
 
+        public int this[int row, int column] => _board[row][column];
+
         public int GetCell(int row, int column)
         {
-            return _board[row, column];
+            return _board[row][column];
+        }
+
+        public GameBoard CloneWithMove(int column, int playerId)
+        {
+            if (column < 0 || column >= Columns)
+                throw new ArgumentOutOfRangeException(nameof(column));
+
+            var targetRow = GetTargetRow(column);
+            if (targetRow == -1)
+                throw new InvalidOperationException("No valid target row found");
+
+            var newBoard = new GameBoard();
+            for (int i = 0; i < Rows; i++)
+            {
+                Array.Copy(_board[i], newBoard._board[i], Columns);
+            }
+
+            newBoard._board[targetRow][column] = playerId;
+            return newBoard;
         }
 
         // Memento Pattern: Board state can be serialized for debugging
         public override string ToString()
         {
-            var result = "";
+            var sb = new StringBuilder(Rows * Columns * 2);
             for (int i = 0; i < Rows; i++)
             {
                 for (int j = 0; j < Columns; j++)
                 {
-                    result += _board[i, j] + " ";
+                    sb.Append(_board[i][j]);
+                    sb.Append(' ');
                 }
-                result += Environment.NewLine;
+                sb.AppendLine();
             }
-            return result;
+            return sb.ToString();
         }
     }
 }

@@ -1,7 +1,7 @@
 using System;
 using Azure; // Keep Azure dependencies here for now
 using Azure.Data.Tables; // Keep Azure dependencies here for now
-using PoConnectFive.Shared.Models; 
+using PoConnectFive.Shared.Models;
 
 namespace PoConnectFive.Shared.Models // Changed namespace
 {
@@ -16,10 +16,10 @@ namespace PoConnectFive.Shared.Models // Changed namespace
     public class PlayerStatEntity : ITableEntity
     {
         // PartitionKey: Group stats by difficulty
-        public string PartitionKey { get; set; } = default!; 
+        public string PartitionKey { get; set; } = default!;
 
         // RowKey: Unique identifier within the partition (player name)
-        public string RowKey { get; set; } = default!; 
+        public string RowKey { get; set; } = default!;
 
         // Player's display name (might differ in casing from RowKey)
         public string PlayerName { get; set; } = default!;
@@ -45,12 +45,12 @@ namespace PoConnectFive.Shared.Models // Changed namespace
         {
             PartitionKey = difficulty.ToString();
             // Store RowKey as lowercase for consistent lookups, but keep original casing for display
-            RowKey = playerName.ToLowerInvariant(); 
+            RowKey = playerName.ToLowerInvariant();
             PlayerName = playerName;
             LastPlayed = DateTimeOffset.UtcNow;
         }
 
-        public void UpdateStats(GameResult result, TimeSpan gameTime)
+        public void UpdateStats(PlayerGameResult result, TimeSpan gameTime)
         {
             GamesPlayed++;
             LastPlayed = DateTimeOffset.UtcNow;
@@ -60,7 +60,7 @@ namespace PoConnectFive.Shared.Models // Changed namespace
 
             switch (result)
             {
-                case GameResult.Win:
+                case PlayerGameResult.Win:
                     Wins++;
                     CurrentWinStreak++;
                     if (CurrentWinStreak > BestWinStreak)
@@ -68,11 +68,11 @@ namespace PoConnectFive.Shared.Models // Changed namespace
                         BestWinStreak = CurrentWinStreak;
                     }
                     break;
-                case GameResult.Loss:
+                case PlayerGameResult.Loss:
                     Losses++;
                     CurrentWinStreak = 0;
                     break;
-                case GameResult.Draw:
+                case PlayerGameResult.Draw:
                     Draws++;
                     CurrentWinStreak = 0; // Typically streaks end on draws too
                     break;

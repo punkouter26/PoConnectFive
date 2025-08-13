@@ -1,5 +1,6 @@
 using PoConnectFive.Server.Services;
 using PoConnectFive.Shared.Services;
+using PoConnectFive.Shared.Services.AI;
 using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
@@ -51,6 +52,8 @@ builder.Services.AddSwaggerGen();
 // Register custom services
 builder.Services.AddSingleton<ITableStorageService, TableStorageService>();
 builder.Services.AddScoped<GameStateService>();
+// Register AI board evaluator for injection into AI players
+builder.Services.AddSingleton<IBoardEvaluator, BoardEvaluator>();
 
 var app = builder.Build();
 

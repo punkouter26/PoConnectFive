@@ -6,7 +6,7 @@ using System.Net.Http;
 namespace PoConnectFive.Server.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("/healthz")]
 public class HealthController : ControllerBase
 {
     private readonly ILogger<HealthController> _logger;
@@ -28,7 +28,7 @@ public class HealthController : ControllerBase
     {
         var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         _logger.LogInformation("Health check requested from IP: {RemoteIp}", remoteIp);
-        
+
         return Ok(new
         {
             Status = "Healthy",
@@ -45,7 +45,7 @@ public class HealthController : ControllerBase
         try
         {
             var result = await _storageService.CheckConnection();
-            
+
             if (!result.IsSuccess)
             {
                 _logger.LogWarning("Storage check failed: {Error}", result.Error);
@@ -101,7 +101,7 @@ public class HealthController : ControllerBase
             _logger.LogInformation("Attempting HTTP request to google.com...");
             using var client = _httpClientFactory.CreateClient();
             var response = await client.GetAsync("https://www.google.com");
-            
+
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning("HTTP check failed with status code: {StatusCode}", response.StatusCode);
@@ -135,12 +135,12 @@ public class HealthController : ControllerBase
     public IActionResult LogDiagnostics([FromBody] DiagnosticsLog log)
     {
         var clientUrl = Request.Headers["Referer"].ToString();
-        _logger.LogInformation("Received diagnostics log from {ClientUrl} at {Timestamp}", 
+        _logger.LogInformation("Received diagnostics log from {ClientUrl} at {Timestamp}",
             clientUrl, DateTime.UtcNow);
 
         foreach (var result in log.Results.Where(r => !r.IsHealthy))
         {
-            _logger.LogWarning("Unhealthy diagnostic result: {Component} - {Error}", 
+            _logger.LogWarning("Unhealthy diagnostic result: {Component} - {Error}",
                 result.Component, result.Error);
         }
 
@@ -158,4 +158,4 @@ public class DiagnosticResult
     public string Component { get; set; } = "";
     public bool IsHealthy { get; set; }
     public string? Error { get; set; }
-} 
+}

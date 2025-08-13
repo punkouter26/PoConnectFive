@@ -31,7 +31,7 @@ namespace PoConnectFive.Shared.Models
         }
 
         // Update stats after a game
-        public void UpdateStats(GameResult result, TimeSpan gameTime)
+        public void UpdateStats(PlayerGameResult result, TimeSpan gameTime)
         {
             GamesPlayed++;
             TotalPlayTime += gameTime;
@@ -39,16 +39,16 @@ namespace PoConnectFive.Shared.Models
 
             switch (result)
             {
-                case GameResult.Win:
+                case PlayerGameResult.Win:
                     Wins++;
                     WinStreak++;
                     BestWinStreak = Math.Max(BestWinStreak, WinStreak);
                     break;
-                case GameResult.Loss:
+                case PlayerGameResult.Loss:
                     Losses++;
                     WinStreak = 0;
                     break;
-                case GameResult.Draw:
+                case PlayerGameResult.Draw:
                     Draws++;
                     WinStreak = 0;
                     break;
@@ -56,7 +56,7 @@ namespace PoConnectFive.Shared.Models
         }
     }
 
-    public enum GameResult
+    public enum PlayerGameResult
     {
         Win,
         Loss,

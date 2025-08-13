@@ -41,7 +41,7 @@ namespace PoConnectFive.Shared.Services.AI
             var blockingMove = FindImmediateThreat(gameState, opponentId);
             if (blockingMove.HasValue)
                 return Task.FromResult(blockingMove.Value);
-            
+
             // 3. Make random move, slightly preferring center columns
             var validMoves = new List<int>();
             for (int col = 0; col < GameBoard.Columns; col++)
@@ -51,18 +51,20 @@ namespace PoConnectFive.Shared.Services.AI
                     validMoves.Add(col);
                 }
             }
-            
+
             if (!validMoves.Any()) return Task.FromResult(0); // Should not happen in a valid game state
 
             // Simple center preference: Add center columns multiple times to bias random choice
             var weightedMoves = new List<int>(validMoves);
             int centerStart = GameBoard.Columns / 2 - 2; // Adjust range as needed
             int centerEnd = GameBoard.Columns / 2 + 1;   // Adjust range as needed
-            for (int col = centerStart; col <= centerEnd; col++) {
-                if (validMoves.Contains(col)) {
+            for (int col = centerStart; col <= centerEnd; col++)
+            {
+                if (validMoves.Contains(col))
+                {
                     // Add center columns again to increase their probability
-                    weightedMoves.Add(col); 
-                    weightedMoves.Add(col); 
+                    weightedMoves.Add(col);
+                    weightedMoves.Add(col);
                 }
             }
 
@@ -80,10 +82,10 @@ namespace PoConnectFive.Shared.Services.AI
 
                 // Temporarily place the piece to check for a win
                 var tempBoard = gameState.Board.PlacePiece(col, playerId);
-                
+
                 // Find the row where the piece actually landed
                 // Use the GetTargetRow method we added earlier for accuracy
-                int row = gameState.Board.GetTargetRow(col); 
+                int row = gameState.Board.GetTargetRow(col);
 
                 // Check if this move wins ONLY if a valid row was found
                 if (row != -1 && tempBoard.CheckWin(row, col, playerId))

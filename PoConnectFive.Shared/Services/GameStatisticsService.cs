@@ -42,7 +42,7 @@ namespace PoConnectFive.Shared.Services
         {
             var sessions = await _storageService.GetAllAsync<GameSession>("GameSessions");
             var statistics = new GameStatistics();
-            
+
             if (!sessions.Any())
             {
                 return statistics;
@@ -118,7 +118,7 @@ namespace PoConnectFive.Shared.Services
         private TimeSpan CalculateAverageGameDuration()
         {
             if (_gameSessions.Count == 0) return TimeSpan.Zero;
-            
+
             var totalDuration = TimeSpan.Zero;
             foreach (var session in _gameSessions)
             {
@@ -184,4 +184,4 @@ namespace PoConnectFive.Shared.Services
         public List<(int row, int col)> MostCommonWinningPositions { get; set; } = new();
         public Dictionary<string, PlayerStats> PlayerStats { get; set; } = new();
     }
-} 
+}

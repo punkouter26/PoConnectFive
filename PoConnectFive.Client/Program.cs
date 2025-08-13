@@ -53,6 +53,11 @@ builder.Services.AddScoped<GameStateService>();
 builder.Services.AddScoped<WinProbabilityService>();
 builder.Services.AddScoped<SoundService>();
 builder.Services.AddScoped<GameStatisticsService>();
+builder.Services.AddScoped<GameAnalyticsService>();
+
+// Register enhanced feature services (stub implementations)
+builder.Services.AddScoped<VisualFeedbackService>();
+builder.Services.AddScoped<StatisticsDashboardService>();
 
 // Register AI players
 builder.Services.AddScoped<IAIPlayer>(sp =>

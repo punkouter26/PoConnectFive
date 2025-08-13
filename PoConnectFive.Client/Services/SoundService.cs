@@ -49,6 +49,11 @@ namespace PoConnectFive.Client.Services
             await TryPlaySound("error");
         }
 
+        public async Task PlaySound(string soundName)
+        {
+            await TryPlaySound(soundName);
+        }
+
         public void ToggleMute()
         {
             _isMuted = !_isMuted;
@@ -56,4 +61,4 @@ namespace PoConnectFive.Client.Services
 
         public bool IsMuted => _isMuted;
     }
-} 
+}

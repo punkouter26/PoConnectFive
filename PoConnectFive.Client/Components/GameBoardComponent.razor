@@ -4,7 +4,8 @@
 @inject IJSRuntime JSRuntime
 
 <div class="game-board" @ref="boardElementReference">
-    <canvas id="gameCanvas" @ref="canvasReference" width="@(_boardWidth)" height="@(_boardHeight)"></canvas>
+    <canvas id="gameCanvas" @ref="canvasReference" width="@(_boardWidth)" height="@(_boardHeight)"
+        @onclick="OnCanvasClick" @onmousemove="OnCanvasMouseMove" @onmouseleave="OnCanvasMouseLeave"></canvas>
 </div>
 
 @code {
@@ -25,22 +26,35 @@
     private DotNetObjectReference<GameBoardComponent>? objRef;
     private int _boardWidth = 700; // Width and height match what's in the JS
     private int _boardHeight = 600;
+    private GameBoardViewModel? _viewModel;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
         {
             objRef = DotNetObjectReference.Create(this);
-            await JSRuntime.InvokeVoidAsync("gameBoardInterop.initialize", 
-                                        canvasReference, 
-                                        objRef, 
-                                        GameBoard.Rows, 
-                                        GameBoard.Columns);
+            // Create view-model which centralizes cell size & mapping logic
+            _viewModel = new GameBoardViewModel(GameBoard.Rows, GameBoard.Columns, _boardWidth, _boardHeight);
+
+            // Pass canvas dimensions and cell size to JS for consistent rendering.
+            await JSRuntime.InvokeVoidAsync("gameBoardInterop.initialize",
+            canvasReference,
+            objRef,
+            GameBoard.Rows,
+            GameBoard.Columns,
+            _boardWidth,
+            _boardHeight,
+            _viewModel.CellSize,
+            _viewModel.Inset);
         }
 
         if (Board != null && CurrentState != null)
         {
-            await JSRuntime.InvokeVoidAsync("gameBoardInterop.updateBoard", Board.GetBoard(), CurrentState.Status);
+            var boardData = Board.GetBoard();
+            if (boardData != null)
+            {
+                await JSRuntime.InvokeVoidAsync("gameBoardInterop.updateBoard", boardData, CurrentState.Status);
+            }
         }
     }
 
@@ -54,6 +68,38 @@
     public async Task OnAnimationCompleteFromJS()
     {
         await OnAnimationComplete.InvokeAsync();
+    }
+
+    private async Task OnCanvasClick(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
+    {
+        if (_viewModel == null) return;
+
+        // Get canvas left offset from JS to compute local X reliably
+        var canvasRect = await JSRuntime.InvokeAsync<DOMRect>("gameBoardInterop.getCanvasRect", canvasReference);
+        double localX = e.ClientX - canvasRect.left;
+        int column = _viewModel.MapClientXToColumn(localX);
+        if (column >= 0)
+        {
+            await OnColumnClicked.InvokeAsync(column);
+        }
+    }
+
+    private async Task OnCanvasMouseMove(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
+    {
+        if (_viewModel == null) return;
+        var canvasRect = await JSRuntime.InvokeAsync<DOMRect>("gameBoardInterop.getCanvasRect", canvasReference);
+        double localX = e.ClientX - canvasRect.left;
+        int column = _viewModel.MapClientXToColumn(localX);
+        if (column >= 0)
+        {
+            // request JS to show preview at this column
+            await JSRuntime.InvokeVoidAsync("gameBoardInterop.showPreview", column);
+        }
+    }
+
+    private async Task OnCanvasMouseLeave(Microsoft.AspNetCore.Components.Web.MouseEventArgs e)
+    {
+        await JSRuntime.InvokeVoidAsync("gameBoardInterop.clearPreview");
     }
 
     public async ValueTask DisposeAsync()
@@ -70,5 +116,16 @@
         {
             Console.WriteLine($"Error during disposal: {ex.Message}");
         }
+    }
+
+    // Minimal DOMRect proxy for JS interop calls
+    public class DOMRect
+    {
+        public double left { get; set; }
+        public double top { get; set; }
+        public double right { get; set; }
+        public double bottom { get; set; }
+        public double width { get; set; }
+        public double height { get; set; }
     }
 }

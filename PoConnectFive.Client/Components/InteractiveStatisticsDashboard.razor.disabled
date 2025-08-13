@@ -1,0 +1,672 @@
+@using PoConnectFive.Shared.Models
+@using PoConnectFive.Shared.Services
+@using PoConnectFive.Client.Services
+@using Radzen
+@using Radzen.Blazor
+@inject StatisticsDashboardService DashboardService
+@inject IJSRuntime JSRuntime
+@inject ILogger<InteractiveStatisticsDashboard> Logger
+
+<div class="statistics-dashboard">
+    <div class="dashboard-header mb-4">
+        <h2><i class="fas fa-chart-line"></i> Interactive Statistics Dashboard</h2>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <RadzenDatePicker @bind-Value="@_startDate" 
+                                  Placeholder="Start Date"
+                                  DateFormat="yyyy-MM-dd"
+                                  Change="@OnDateRangeChanged" />
+            </div>
+            <div class="col-md-6">
+                <RadzenDatePicker @bind-Value="@_endDate" 
+                                  Placeholder="End Date"
+                                  DateFormat="yyyy-MM-dd"
+                                  Change="@OnDateRangeChanged" />
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <RadzenButton Text="Export Data" 
+                          Icon="download" 
+                          Click="@ShowExportDialog" 
+                          ButtonStyle="ButtonStyle.Primary" />
+            <RadzenButton Text="Refresh Dashboard" 
+                          Icon="refresh" 
+                          Click="@RefreshDashboard" 
+                          ButtonStyle="ButtonStyle.Secondary" 
+                          class="ms-2" />
+        </div>
+    </div>
+
+    @if (_isLoading)
+    {
+        <div class="text-center p-5">
+            <RadzenProgressBarCircular ProgressBarStyle="ProgressBarStyle.Primary" 
+                                       Value="100" 
+                                       ShowValue="false" />
+            <p class="mt-3">Loading dashboard data...</p>
+        </div>
+    }
+    else if (_dashboardData != null)
+    {
+        <!-- Performance Overview Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5><i class="fas fa-trophy"></i> Win Rate</h5>
+                        <h3>@(_playerStats?.WinRate.ToString("F1") ?? "0.0")%</h3>
+                        <small>@GetTrendIcon(_dashboardData.TrendAnalysis.WinRateTrend) @_dashboardData.TrendAnalysis.WinRateTrend</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5><i class="fas fa-gamepad"></i> Total Games</h5>
+                        <h3>@(_playerStats?.TotalGames ?? 0)</h3>
+                        <small>@(_playerStats?.TotalWins ?? 0) wins, @(_playerStats?.TotalLosses ?? 0) losses</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5><i class="fas fa-clock"></i> Avg Game Time</h5>
+                        <h3>@(_playerStats?.AverageGameDuration.ToString(@"mm\:ss") ?? "00:00")</h3>
+                        <small>@GetTrendIcon(_dashboardData.TrendAnalysis.GameDurationTrend) @_dashboardData.TrendAnalysis.GameDurationTrend</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5><i class="fas fa-fire"></i> Win Streak</h5>
+                        <h3>@(_playerStats?.CurrentWinStreak ?? 0)</h3>
+                        <small>Best: @(_playerStats?.BestWinStreak ?? 0)</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Charts -->
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-line"></i> Performance Over Time</h5>
+                        <RadzenSelectBar @bind-Value="@_performanceChartPeriod" 
+                                         Change="@(() => RefreshChart(ChartType.Performance))"
+                                         TValue="ChartPeriod"
+                                         class="float-end">
+                            <Items>
+                                <RadzenSelectBarItem Text="Daily" Value="ChartPeriod.Daily" />
+                                <RadzenSelectBarItem Text="Weekly" Value="ChartPeriod.Weekly" />
+                                <RadzenSelectBarItem Text="Monthly" Value="ChartPeriod.Monthly" />
+                            </Items>
+                        </RadzenSelectBar>
+                    </div>
+                    <div class="card-body">
+                        <RadzenChart style="height: 300px;">
+                            <RadzenLineSeries Smooth="true" 
+                                              Data="@_dashboardData.PerformanceChart.DataPoints" 
+                                              CategoryProperty="X" 
+                                              ValueProperty="Y"
+                                              Title="Win Rate %">
+                                <RadzenMarkers MarkerType="MarkerType.Circle" />
+                            </RadzenLineSeries>
+                            <RadzenCategoryAxis Padding="20" />
+                            <RadzenValueAxis>
+                                <RadzenGridLines Visible="true" />
+                                <RadzenAxisTitle Text="Win Rate %" />
+                            </RadzenValueAxis>
+                        </RadzenChart>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-chart-bar"></i> Win Rate by Opponent</h5>
+                    </div>
+                    <div class="card-body">
+                        <RadzenChart style="height: 300px;">
+                            <RadzenColumnSeries Data="@_dashboardData.WinRateChart.DataPoints" 
+                                                CategoryProperty="X" 
+                                                ValueProperty="Y"
+                                                Title="Win Rate %"
+                                                Fill="#4CAF50">
+                            </RadzenColumnSeries>
+                            <RadzenCategoryAxis Padding="20" />
+                            <RadzenValueAxis>
+                                <RadzenGridLines Visible="true" />
+                                <RadzenAxisTitle Text="Win Rate %" />
+                            </RadzenValueAxis>
+                        </RadzenChart>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-graduation-cap"></i> AI Difficulty Progress</h5>
+                    </div>
+                    <div class="card-body">
+                        <RadzenChart style="height: 300px;">
+                            <RadzenScatterSeries Data="@_dashboardData.DifficultyProgressChart.DataPoints" 
+                                                 CategoryProperty="X" 
+                                                 ValueProperty="Y"
+                                                 Title="Difficulty Level">
+                                <RadzenMarkers MarkerType="MarkerType.Circle" Size="8" />
+                            </RadzenScatterSeries>
+                            <RadzenCategoryAxis Padding="20" />
+                            <RadzenValueAxis Min="0" Max="4">
+                                <RadzenGridLines Visible="true" />
+                                <RadzenAxisTitle Text="Difficulty Level" />
+                            </RadzenValueAxis>
+                        </RadzenChart>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-stopwatch"></i> Daily Playing Time</h5>
+                    </div>
+                    <div class="card-body">
+                        <RadzenChart style="height: 300px;">
+                            <RadzenAreaSeries Smooth="true" 
+                                              Data="@_dashboardData.PlayingTimeChart.DataPoints" 
+                                              CategoryProperty="X" 
+                                              ValueProperty="Y"
+                                              Title="Minutes Played"
+                                              Fill="#2196F3" 
+                                              FillOpacity="0.5">
+                            </RadzenAreaSeries>
+                            <RadzenCategoryAxis Padding="20" />
+                            <RadzenValueAxis>
+                                <RadzenGridLines Visible="true" />
+                                <RadzenAxisTitle Text="Minutes" />
+                            </RadzenValueAxis>
+                        </RadzenChart>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Achievements Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-award"></i> Achievement Progress</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            @foreach (var achievement in _dashboardData.AchievementProgress)
+                            {
+                                <div class="col-md-6 col-lg-4 mb-3">
+                                    <div class="achievement-card @(achievement.IsCompleted ? "completed" : "")" 
+                                         style="border: 1px solid #ddd; border-radius: 8px; padding: 15px;">
+                                        <div class="d-flex align-items-center mb-2">
+                                            @if (achievement.IsCompleted)
+                                            {
+                                                <i class="fas fa-trophy text-warning me-2"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="fas fa-star-o text-muted me-2"></i>
+                                            }
+                                            <strong>@achievement.Name</strong>
+                                        </div>
+                                        <p class="text-muted small mb-2">@achievement.Description</p>
+                                        <RadzenProgressBar Value="@((achievement.Progress / achievement.Target) * 100)" 
+                                                           ShowValue="false" 
+                                                           ProgressBarStyle="@(achievement.IsCompleted ? ProgressBarStyle.Success : ProgressBarStyle.Info)" />
+                                        <small class="text-muted">
+                                            @achievement.Progress / @achievement.Target
+                                            @if (achievement.IsCompleted)
+                                            {
+                                                <i class="fas fa-check text-success ms-2"></i>
+                                            }
+                                        </small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Insights -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-lightbulb"></i> Performance Insights</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (_dashboardData.PerformanceInsights.Any())
+                        {
+                            @foreach (var insight in _dashboardData.PerformanceInsights.OrderByDescending(i => i.Priority))
+                            {
+                                <div class="alert @GetInsightAlertClass(insight.Type) d-flex align-items-start" role="alert">
+                                    <i class="@GetInsightIcon(insight.Type) me-3 mt-1"></i>
+                                    <div>
+                                        <h6 class="alert-heading mb-1">@insight.Title</h6>
+                                        <p class="mb-0">@insight.Description</p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted">No performance insights available. Play more games to get personalized recommendations!</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Statistics Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-table"></i> Detailed Game History</h5>
+                        <RadzenButton Text="Export Games" 
+                                      Icon="download" 
+                                      Click="@(() => ExportGameHistory())" 
+                                      ButtonStyle="ButtonStyle.Light" 
+                                      Size="ButtonSize.Small"
+                                      class="float-end" />
+                    </div>
+                    <div class="card-body">
+                        <RadzenDataGrid @ref="@_gameHistoryGrid"
+                                        Data="@_gameHistory" 
+                                        TItem="GameResult"
+                                        AllowFiltering="true" 
+                                        AllowPaging="true" 
+                                        PageSize="10"
+                                        AllowSorting="true"
+                                        ColumnWidth="150px">
+                            <Columns>
+                                <RadzenDataGridColumn TItem="GameResult" Property="CompletedAt" Title="Date" Width="140px">
+                                    <Template Context="game">
+                                        @game.CompletedAt?.ToString("yyyy-MM-dd HH:mm")
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="GameResult" Property="OpponentName" Title="Opponent" Width="120px" />
+                                <RadzenDataGridColumn TItem="GameResult" Property="OpponentDifficulty" Title="Difficulty" Width="100px">
+                                    <Template Context="game">
+                                        @if (!string.IsNullOrEmpty(game.OpponentDifficulty))
+                                        {
+                                            <span class="badge bg-@GetDifficultyBadgeColor(game.OpponentDifficulty)">
+                                                @game.OpponentDifficulty
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Human</span>
+                                        }
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="GameResult" Title="Result" Width="100px">
+                                    <Template Context="game">
+                                        @if (game.IsWin)
+                                        {
+                                            <span class="badge bg-success"><i class="fas fa-trophy"></i> Win</span>
+                                        }
+                                        else if (game.IsDraw)
+                                        {
+                                            <span class="badge bg-warning"><i class="fas fa-handshake"></i> Draw</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger"><i class="fas fa-times"></i> Loss</span>
+                                        }
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="GameResult" Property="Duration" Title="Duration" Width="100px">
+                                    <Template Context="game">
+                                        @game.Duration?.ToString(@"mm\:ss")
+                                    </Template>
+                                </RadzenDataGridColumn>
+                                <RadzenDataGridColumn TItem="GameResult" Property="TotalMoves" Title="Moves" Width="80px" />
+                                <RadzenDataGridColumn TItem="GameResult" Title="Actions" Width="100px" Sortable="false" Filterable="false">
+                                    <Template Context="game">
+                                        <RadzenButton Icon="info" 
+                                                      ButtonStyle="ButtonStyle.Light" 
+                                                      Size="ButtonSize.ExtraSmall"
+                                                      Click="@(() => ShowGameDetails(game))" 
+                                                      title="View Details" />
+                                    </Template>
+                                </RadzenDataGridColumn>
+                            </Columns>
+                        </RadzenDataGrid>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Export Dialog -->
+<RadzenDialog @bind-Visible="@_showExportDialog">
+    <div style="width: 400px;">
+        <h4 class="mb-3">Export Statistics</h4>
+        
+        <div class="mb-3">
+            <label class="form-label">Export Format:</label>
+            <RadzenDropDown @bind-Value="@_exportFormat" 
+                            Data="@_exportFormats" 
+                            TextProperty="Text" 
+                            ValueProperty="Value"
+                            class="w-100" />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Include Sections:</label>
+            <div class="form-check">
+                <RadzenCheckBox @bind-Value="@_includeCharts" TValue="bool" Name="includeCharts" />
+                <label class="form-check-label ms-2">Charts and Visualizations</label>
+            </div>
+            <div class="form-check">
+                <RadzenCheckBox @bind-Value="@_includeRawData" TValue="bool" Name="includeRawData" />
+                <label class="form-check-label ms-2">Raw Game Data</label>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end">
+            <RadzenButton Text="Cancel" 
+                          ButtonStyle="ButtonStyle.Light" 
+                          Click="@(() => _showExportDialog = false)" 
+                          class="me-2" />
+            <RadzenButton Text="Export" 
+                          Icon="download"
+                          ButtonStyle="ButtonStyle.Primary" 
+                          Click="@ExportData" />
+        </div>
+    </div>
+</RadzenDialog>
+
+@code {
+    [Parameter] public string PlayerId { get; set; } = string.Empty;
+
+    private DashboardData? _dashboardData;
+    private PlayerStatistics? _playerStats;
+    private List<GameResult> _gameHistory = new();
+    private bool _isLoading = true;
+
+    private DateTime? _startDate = DateTime.UtcNow.AddDays(-30);
+    private DateTime? _endDate = DateTime.UtcNow;
+    private ChartPeriod _performanceChartPeriod = ChartPeriod.Daily;
+
+    private bool _showExportDialog = false;
+    private ExportFormat _exportFormat = ExportFormat.Json;
+    private bool _includeCharts = true;
+    private bool _includeRawData = true;
+
+    private RadzenDataGrid<GameResult>? _gameHistoryGrid;
+
+    private readonly List<DropDownItem> _exportFormats = new()
+    {
+        new() { Text = "JSON", Value = ExportFormat.Json },
+        new() { Text = "CSV", Value = ExportFormat.Csv },
+        new() { Text = "Excel", Value = ExportFormat.Excel },
+        new() { Text = "PDF", Value = ExportFormat.Pdf }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            _isLoading = true;
+            StateHasChanged();
+
+            var dateRange = new DateRange
+            {
+                Start = _startDate ?? DateTime.UtcNow.AddDays(-30),
+                End = _endDate ?? DateTime.UtcNow
+            };
+
+            _dashboardData = await DashboardService.GetDashboardData(PlayerId, dateRange);
+            
+            // Load additional data (this would come from PlayerStatisticsService)
+            // For now, we'll create mock data
+            _playerStats = new PlayerStatistics
+            {
+                PlayerId = PlayerId,
+                TotalGames = 150,
+                TotalWins = 95,
+                TotalLosses = 50,
+                TotalDraws = 5,
+                WinRate = 63.3,
+                CurrentWinStreak = 3,
+                BestWinStreak = 8,
+                AverageGameDuration = TimeSpan.FromMinutes(8.5)
+            };
+
+            _gameHistory = GenerateMockGameHistory(); // This would come from the service
+
+            Logger.LogInformation("Dashboard data loaded for player {PlayerId}", PlayerId);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading dashboard data for player {PlayerId}", PlayerId);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task OnDateRangeChanged()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task RefreshDashboard()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task RefreshChart(ChartType chartType)
+    {
+        if (_dashboardData == null) return;
+
+        try
+        {
+            var config = new ChartConfiguration
+            {
+                DateRange = new DateRange
+                {
+                    Start = _startDate ?? DateTime.UtcNow.AddDays(-30),
+                    End = _endDate ?? DateTime.UtcNow
+                },
+                Period = _performanceChartPeriod,
+                ShowTrendLine = true
+            };
+
+            var updatedChart = await DashboardService.GetChartData(PlayerId, chartType, config);
+
+            switch (chartType)
+            {
+                case ChartType.Performance:
+                    _dashboardData.PerformanceChart = updatedChart;
+                    break;
+            }
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error refreshing chart {ChartType}", chartType);
+        }
+    }
+
+    private void ShowExportDialog()
+    {
+        _showExportDialog = true;
+    }
+
+    private async Task ExportData()
+    {
+        try
+        {
+            var config = new ExportConfiguration
+            {
+                Format = _exportFormat,
+                DateRange = new DateRange
+                {
+                    Start = _startDate ?? DateTime.UtcNow.AddDays(-30),
+                    End = _endDate ?? DateTime.UtcNow
+                },
+                IncludeCharts = _includeCharts,
+                IncludeRawData = _includeRawData
+            };
+
+            var result = await DashboardService.ExportData(PlayerId, config);
+            
+            // Trigger download
+            await JSRuntime.InvokeVoidAsync("downloadFile", result.FileName, result.ContentType, result.Data);
+            
+            _showExportDialog = false;
+            Logger.LogInformation("Data exported for player {PlayerId} in format {Format}", PlayerId, _exportFormat);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting data for player {PlayerId}", PlayerId);
+        }
+    }
+
+    private async Task ExportGameHistory()
+    {
+        try
+        {
+            var config = new ExportConfiguration
+            {
+                Format = ExportFormat.Csv,
+                IncludeRawData = true,
+                IncludeCharts = false
+            };
+
+            var result = await DashboardService.ExportData(PlayerId, config);
+            await JSRuntime.InvokeVoidAsync("downloadFile", result.FileName, result.ContentType, result.Data);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting game history for player {PlayerId}", PlayerId);
+        }
+    }
+
+    private void ShowGameDetails(GameResult game)
+    {
+        // This would open a detailed game analysis dialog
+        Logger.LogInformation("Show details for game on {Date}", game.CompletedAt);
+    }
+
+    // Helper methods
+    private string GetTrendIcon(TrendDirection trend)
+    {
+        return trend switch
+        {
+            TrendDirection.Improving => "📈",
+            TrendDirection.Declining => "📉",
+            TrendDirection.Stable => "➡️",
+            _ => ""
+        };
+    }
+
+    private string GetInsightAlertClass(InsightType type)
+    {
+        return type switch
+        {
+            InsightType.Positive => "alert-success",
+            InsightType.Improvement => "alert-info",
+            InsightType.Strategic => "alert-warning",
+            InsightType.Warning => "alert-danger",
+            _ => "alert-secondary"
+        };
+    }
+
+    private string GetInsightIcon(InsightType type)
+    {
+        return type switch
+        {
+            InsightType.Positive => "fas fa-thumbs-up",
+            InsightType.Improvement => "fas fa-arrow-up",
+            InsightType.Strategic => "fas fa-chess",
+            InsightType.Warning => "fas fa-exclamation-triangle",
+            _ => "fas fa-info-circle"
+        };
+    }
+
+    private string GetDifficultyBadgeColor(string difficulty)
+    {
+        return difficulty switch
+        {
+            "Easy" => "success",
+            "Medium" => "warning",
+            "Hard" => "danger",
+            _ => "secondary"
+        };
+    }
+
+    // Mock data generation (this would be replaced with actual service calls)
+    private List<GameResult> GenerateMockGameHistory()
+    {
+        var games = new List<GameResult>();
+        var random = new Random();
+        var startDate = DateTime.UtcNow.AddDays(-30);
+
+        for (int i = 0; i < 50; i++)
+        {
+            var game = new GameResult
+            {
+                CompletedAt = startDate.AddDays(random.Next(0, 30)).AddHours(random.Next(0, 24)),
+                OpponentName = random.Next(0, 3) switch
+                {
+                    0 => "AI Easy",
+                    1 => "AI Medium", 
+                    2 => "AI Hard",
+                    _ => "Human Player"
+                },
+                OpponentDifficulty = random.Next(0, 4) switch
+                {
+                    0 => "Easy",
+                    1 => "Medium",
+                    2 => "Hard",
+                    _ => null
+                },
+                IsWin = random.NextDouble() > 0.4,
+                IsDraw = random.NextDouble() > 0.9,
+                Duration = TimeSpan.FromMinutes(random.Next(3, 20)),
+                TotalMoves = random.Next(15, 60)
+            };
+
+            games.Add(game);
+        }
+
+        return games.OrderByDescending(g => g.CompletedAt).ToList();
+    }
+
+    private class DropDownItem
+    {
+        public string Text { get; set; } = string.Empty;
+        public ExportFormat Value { get; set; }
+    }
+}

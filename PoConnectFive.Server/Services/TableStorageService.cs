@@ -21,7 +21,7 @@ namespace PoConnectFive.Server.Services
         {
             _logger = logger;
             var connectionString = configuration["AzureTableStorage:ConnectionString"];
-            
+
             if (string.IsNullOrEmpty(connectionString))
             {
                 _logger.LogError("Azure Table Storage connection string is not configured");
@@ -72,14 +72,14 @@ namespace PoConnectFive.Server.Services
                 // Try to retrieve the test entity
                 _logger.LogInformation("Attempting to retrieve test entity...");
                 var retrievedEntity = await tableClient.GetEntityAsync<TableEntity>(
-                    testEntity.PartitionKey, 
+                    testEntity.PartitionKey,
                     testEntity.RowKey
                 );
 
                 // Clean up
                 _logger.LogInformation("Cleaning up test entity...");
                 await tableClient.DeleteEntityAsync(
-                    testEntity.PartitionKey, 
+                    testEntity.PartitionKey,
                     testEntity.RowKey
                 );
 
@@ -88,8 +88,8 @@ namespace PoConnectFive.Server.Services
             }
             catch (RequestFailedException ex)
             {
-                _logger.LogError(ex, 
-                    "Table Storage connection check failed with status code {StatusCode}: {Message}", 
+                _logger.LogError(ex,
+                    "Table Storage connection check failed with status code {StatusCode}: {Message}",
                     ex.Status, ex.Message);
                 return Result<bool>.Failure($"Azure Table Storage request failed: {ex.Message} (Status: {ex.Status})");
             }
@@ -109,7 +109,7 @@ namespace PoConnectFive.Server.Services
             {
                 _logger.LogInformation("Querying top players for difficulty {Difficulty}", partitionKey);
                 var query = _tableClient.QueryAsync<PlayerStatEntity>(filter: $"PartitionKey eq '{partitionKey}'");
-                
+
                 await foreach (var player in query)
                 {
                     topPlayers.Add(player);
@@ -130,7 +130,7 @@ namespace PoConnectFive.Server.Services
             return topPlayers;
         }
 
-        public async Task UpsertPlayerStatAsync(string playerName, AIDifficulty difficulty, GameResult result, TimeSpan gameTime)
+        public async Task UpsertPlayerStatAsync(string playerName, AIDifficulty difficulty, PlayerGameResult result, TimeSpan gameTime)
         {
             var partitionKey = difficulty.ToString();
             var rowKey = playerName.ToLowerInvariant();

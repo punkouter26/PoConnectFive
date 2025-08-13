@@ -25,10 +25,10 @@ namespace PoConnectFive.Shared.Services
     /// </summary>
     public class GameService : IGameService
     {
-        private readonly ILogger<GameBoard> _logger;
+        private readonly ILogger<GameService> _logger;
         private IAIPlayer? _aiPlayer;
 
-        public GameService(ILogger<GameBoard> logger)
+        public GameService(ILogger<GameService> logger)
         {
             _logger = logger;
         }
@@ -53,7 +53,7 @@ namespace PoConnectFive.Shared.Services
             }
 
             // Factory pattern: Creating initial game state
-            return Task.FromResult(GameState.CreateNew(player1, player2, _logger));
+            return Task.FromResult(GameState.CreateNew(player1, player2));
         }
 
         public Task<GameState> MakeMove(GameState currentState, int column)
@@ -66,15 +66,16 @@ namespace PoConnectFive.Shared.Services
                 throw new InvalidOperationException("Invalid move");
 
             // State pattern: Immutable state transitions
+            // Determine the target row on the current board before placing the piece so we check the correct cell
+            int row = currentState.Board.GetTargetRow(column);
             var newBoard = currentState.Board.PlacePiece(column, currentState.CurrentPlayer.Id);
-            int row = FindPieceRow(newBoard, column, currentState.CurrentPlayer.Id);
             bool isWin = newBoard.CheckWin(row, column, currentState.CurrentPlayer.Id);
             bool isDraw = !isWin && IsBoardFull(newBoard);
             var status = DetermineGameStatus(currentState, isWin, isDraw);
 
             // State pattern: Creating new game state
-            var nextPlayer = status == GameStatus.InProgress ? 
-                (currentState.CurrentPlayer == currentState.Player1 ? currentState.Player2 : currentState.Player1) : 
+            var nextPlayer = status == GameStatus.InProgress ?
+                (currentState.CurrentPlayer == currentState.Player1 ? currentState.Player2 : currentState.Player1) :
                 currentState.CurrentPlayer;
 
             var newState = new GameState(
@@ -105,15 +106,6 @@ namespace PoConnectFive.Shared.Services
             return _aiPlayer.GetNextMove(currentState);
         }
 
-        private int FindPieceRow(GameBoard board, int column, int playerId)
-        {
-            for (int row = GameBoard.Rows - 1; row >= 0; row--)
-            {
-                if (board.GetCell(row, column) == playerId)
-                    return row;
-            }
-            throw new InvalidOperationException("Piece not found in column");
-        }
 
         private bool IsBoardFull(GameBoard board)
         {
@@ -130,8 +122,8 @@ namespace PoConnectFive.Shared.Services
         {
             if (isWin)
             {
-                return currentState.CurrentPlayer == currentState.Player1 ? 
-                    GameStatus.Player1Won : 
+                return currentState.CurrentPlayer == currentState.Player1 ?
+                    GameStatus.Player1Won :
                     GameStatus.Player2Won;
             }
 

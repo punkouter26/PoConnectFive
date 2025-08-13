@@ -50,8 +50,8 @@ namespace PoConnectFive.Server.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdatePlayerStats([FromBody] PlayerStatUpdateDto updateDto)
         {
-             _logger.LogInformation("Received player stat update for Player: {PlayerName}, Difficulty: {Difficulty}, Result: {Result}", 
-                updateDto.PlayerName, updateDto.Difficulty, updateDto.Result);
+            _logger.LogInformation("Received player stat update for Player: {PlayerName}, Difficulty: {Difficulty}, Result: {Result}",
+               updateDto.PlayerName, updateDto.Difficulty, updateDto.Result);
 
             if (!ModelState.IsValid)
             {
@@ -67,7 +67,7 @@ namespace PoConnectFive.Server.Controllers
             }
             catch (Exception ex)
             {
-                 _logger.LogError(ex, "Error updating player stats for Player: {PlayerName}", updateDto.PlayerName);
+                _logger.LogError(ex, "Error updating player stats for Player: {PlayerName}", updateDto.PlayerName);
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error updating player statistics.");
             }
         }

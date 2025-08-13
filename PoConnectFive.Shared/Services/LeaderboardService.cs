@@ -26,7 +26,7 @@ namespace PoConnectFive.Shared.Services
     {
         Task<List<PlayerStats>> GetTopPlayers(int count = 10);
         Task<PlayerStats> GetPlayerStats(string playerId);
-        Task UpdatePlayerStats(string playerId, GameResult result, TimeSpan gameTime);
+        Task UpdatePlayerStats(string playerId, PlayerGameResult result, TimeSpan gameTime);
         Task<PlayerStats> CreatePlayer(string playerName);
     }
 
@@ -63,16 +63,16 @@ namespace PoConnectFive.Shared.Services
         public async Task<PlayerStats> GetPlayerStats(string playerId)
         {
             var allStats = await GetAllPlayerStats();
-            return allStats.FirstOrDefault(p => p.PlayerId == playerId) 
+            return allStats.FirstOrDefault(p => p.PlayerId == playerId)
                 ?? throw new KeyNotFoundException($"Player {playerId} not found");
         }
 
-        public async Task UpdatePlayerStats(string playerId, GameResult result, TimeSpan gameTime)
+        public async Task UpdatePlayerStats(string playerId, PlayerGameResult result, TimeSpan gameTime)
         {
             // Repository pattern: Data access abstraction
             var allStats = await GetAllPlayerStats();
             var playerStats = allStats.FirstOrDefault(p => p.PlayerId == playerId);
-            
+
             if (playerStats == null)
                 throw new KeyNotFoundException($"Player {playerId} not found");
 
@@ -84,12 +84,12 @@ namespace PoConnectFive.Shared.Services
         public async Task<PlayerStats> CreatePlayer(string playerName)
         {
             var allStats = await GetAllPlayerStats();
-            
+
             // Factory pattern: Creating new player stats
             string playerId = Guid.NewGuid().ToString();
             var newStats = PlayerStats.CreateNew(playerId, playerName);
             allStats.Add(newStats);
-            
+
             await SavePlayerStats(allStats);
             return newStats;
         }

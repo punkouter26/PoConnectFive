@@ -19,7 +19,7 @@ namespace PoConnectFive.Shared.Interfaces
         /// Updates player statistics after a game against a specific AI difficulty.
         /// Player stats are identified by name and difficulty.
         /// </summary>
-        Task UpdatePlayerStats(string playerName, AIDifficulty difficulty, GameResult result, TimeSpan gameTime);
+        Task UpdatePlayerStats(string playerName, AIDifficulty difficulty, PlayerGameResult result, TimeSpan gameTime);
 
         /// <summary>
         /// Gets player stats by ID. Maintained for backward compatibility.

@@ -1,0 +1,693 @@
+@page "/enhanced-statistics"
+@using PoConnectFive.Shared.Models
+@using PoConnectFive.Shared.Services
+@using PoConnectFive.Client.Services
+@inject StatisticsDashboardService DashboardService
+@inject IJSRuntime JSRuntime
+@inject ILogger<EnhancedStatistics> Logger
+
+<div class="enhanced-statistics-page">
+    <div class="container-fluid p-4">
+        <div class="row">
+            <div class="col-12">
+                <div class="page-header mb-4">
+                    <h1><i class="fas fa-chart-line"></i> Enhanced Statistics Dashboard</h1>
+                    <p class="lead text-muted">Comprehensive game analytics and performance insights</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Statistics Dashboard Component -->
+        <div class="row">
+            <div class="col-12">
+                <InteractiveStatisticsDashboard PlayerId="@_currentPlayerId" />
+            </div>
+        </div>
+
+        <!-- Additional Analytics Features -->
+        <div class="row mt-4">
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-brain"></i> AI Performance Analysis</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (_aiPerformanceData.Any())
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>AI Difficulty</th>
+                                            <th>Games Played</th>
+                                            <th>Win Rate</th>
+                                            <th>Avg Duration</th>
+                                            <th>Trend</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var data in _aiPerformanceData)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    <span class="badge bg-@GetDifficultyColor(data.Difficulty)">
+                                                        @data.Difficulty
+                                                    </span>
+                                                </td>
+                                                <td>@data.GamesPlayed</td>
+                                                <td>
+                                                    <span class="text-@GetWinRateColor(data.WinRate)">
+                                                        @data.WinRate.ToString("F1")%
+                                                    </span>
+                                                </td>
+                                                <td>@data.AverageDuration.ToString(@"mm\:ss")</td>
+                                                <td>
+                                                    <i class="fas fa-@GetTrendIcon(data.Trend) text-@GetTrendColor(data.Trend)"></i>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center">Play against AI opponents to see performance analysis</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-calendar-alt"></i> Session Analytics</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (_sessionAnalytics.Any())
+                        {
+                            <div class="row">
+                                @foreach (var session in _sessionAnalytics.Take(7))
+                                {
+                                    <div class="col-12 mb-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>@session.Date.ToString("MMM dd")</strong>
+                                                <br>
+                                                <small class="text-muted">@session.GamesPlayed games</small>
+                                            </div>
+                                            <div class="text-end">
+                                                <span class="badge bg-@GetWinRateColor(session.WinRate) me-2">
+                                                    @session.WinRate.ToString("F0")%
+                                                </span>
+                                                <small class="text-muted">@session.PlayTime.ToString(@"h\:mm")</small>
+                                            </div>
+                                        </div>
+                                        <div class="progress mt-1" style="height: 6px;">
+                                            <div class="progress-bar bg-success" 
+                                                 style="width: @session.WinRate%"
+                                                 title="Win Rate: @session.WinRate.ToString("F1")%"></div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center">No session data available</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Performance Insights and Recommendations -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-lightbulb"></i> Personalized Insights & Recommendations</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (_personalizedInsights.Any())
+                        {
+                            <div class="row">
+                                @foreach (var insight in _personalizedInsights)
+                                {
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="insight-card p-3 border rounded">
+                                            <div class="d-flex align-items-start">
+                                                <div class="insight-icon me-3">
+                                                    <i class="fas fa-@GetInsightIcon(insight.Category) text-@GetInsightColor(insight.Category)"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h6 class="mb-1">@insight.Title</h6>
+                                                    <p class="mb-2 text-muted small">@insight.Description</p>
+                                                    @if (insight.ActionItems.Any())
+                                                    {
+                                                        <div class="action-items">
+                                                            <strong class="small">Action Items:</strong>
+                                                            <ul class="small mb-0 mt-1">
+                                                                @foreach (var action in insight.ActionItems.Take(3))
+                                                                {
+                                                                    <li>@action</li>
+                                                                }
+                                                            </ul>
+                                                        </div>
+                                                    }
+                                                    @if (insight.Priority == InsightPriority.High)
+                                                    {
+                                                        <div class="mt-2">
+                                                            <span class="badge bg-warning">High Priority</span>
+                                                        </div>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="text-center py-4">
+                                <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No insights available yet</h5>
+                                <p class="text-muted">Play more games to get personalized recommendations!</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Advanced Analytics Tools -->
+        <div class="row mt-4">
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-fire"></i> Heat Map Analysis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="heatmap-container">
+                            <canvas id="moveHeatMap" width="315" height="280" style="border: 1px solid #ddd;"></canvas>
+                        </div>
+                        <p class="small text-muted mt-2">
+                            Shows your most frequently used starting positions and winning moves.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-clock"></i> Time Analysis</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="time-stats">
+                            <div class="stat-row d-flex justify-content-between mb-2">
+                                <span>Average Move Time:</span>
+                                <strong>@_timeAnalysis.AverageMoveTime.ToString(@"ss\:fff")</strong>
+                            </div>
+                            <div class="stat-row d-flex justify-content-between mb-2">
+                                <span>Fastest Game:</span>
+                                <strong>@_timeAnalysis.FastestGame.ToString(@"mm\:ss")</strong>
+                            </div>
+                            <div class="stat-row d-flex justify-content-between mb-2">
+                                <span>Longest Game:</span>
+                                <strong>@_timeAnalysis.LongestGame.ToString(@"mm\:ss")</strong>
+                            </div>
+                            <div class="stat-row d-flex justify-content-between mb-2">
+                                <span>Peak Performance Time:</span>
+                                <strong>@_timeAnalysis.PeakPerformanceHour:00</strong>
+                            </div>
+                        </div>
+                        <div class="progress mt-3">
+                            <div class="progress-bar bg-info" 
+                                 style="width: @(_timeAnalysis.ConsistencyScore)%"
+                                 title="Consistency Score: @_timeAnalysis.ConsistencyScore%"></div>
+                        </div>
+                        <small class="text-muted">Consistency: @_timeAnalysis.ConsistencyScore%</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h6><i class="fas fa-trophy"></i> Achievement Tracker</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="achievement-summary">
+                            <div class="text-center mb-3">
+                                <h3 class="text-primary">@_achievementSummary.CompletedCount</h3>
+                                <small class="text-muted">of @_achievementSummary.TotalCount achievements</small>
+                            </div>
+                            <div class="progress mb-3">
+                                <div class="progress-bar bg-success" 
+                                     style="width: @_achievementSummary.CompletionPercentage%"></div>
+                            </div>
+                            @if (_achievementSummary.RecentAchievements.Any())
+                            {
+                                <div class="recent-achievements">
+                                    <h6 class="small mb-2">Recent Achievements:</h6>
+                                    @foreach (var achievement in _achievementSummary.RecentAchievements.Take(3))
+                                    {
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="fas fa-trophy text-warning me-2"></i>
+                                            <span class="small">@achievement.Name</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            <button class="btn btn-outline-primary btn-sm w-100 mt-2" 
+                                    @onclick="ShowAllAchievements">
+                                View All Achievements
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Export and Sharing -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-download"></i> Data Export & Sharing</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-lg-6">
+                                <h6>Export Options</h6>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <button class="btn btn-outline-primary btn-sm" @onclick="() => ExportData(ExportFormat.Json)">
+                                        <i class="fas fa-file-code"></i> JSON
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" @onclick="() => ExportData(ExportFormat.Csv)">
+                                        <i class="fas fa-file-csv"></i> CSV
+                                    </button>
+                                    <button class="btn btn-outline-info btn-sm" @onclick="() => ExportData(ExportFormat.Excel)">
+                                        <i class="fas fa-file-excel"></i> Excel
+                                    </button>
+                                    <button class="btn btn-outline-danger btn-sm" @onclick="() => ExportData(ExportFormat.Pdf)">
+                                        <i class="fas fa-file-pdf"></i> PDF Report
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="col-lg-6">
+                                <h6>Sharing & Comparison</h6>
+                                <div class="d-flex flex-wrap gap-2 mb-3">
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="GenerateShareableLink">
+                                        <i class="fas fa-link"></i> Share Stats
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CompareWithFriends">
+                                        <i class="fas fa-users"></i> Compare
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm" @onclick="CreateStatisticsWidget">
+                                        <i class="fas fa-code"></i> Embed Widget
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Privacy Note:</strong> Only aggregate statistics are shared. Individual game details remain private unless explicitly shared.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _currentPlayerId = "current-player";
+    private List<AIPerformanceData> _aiPerformanceData = new();
+    private List<SessionAnalytic> _sessionAnalytics = new();
+    private List<PersonalizedInsight> _personalizedInsights = new();
+    private TimeAnalysis _timeAnalysis = new();
+    private AchievementSummary _achievementSummary = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllAnalytics();
+    }
+
+    private async Task LoadAllAnalytics()
+    {
+        try
+        {
+            // Load AI performance data
+            _aiPerformanceData = GenerateAIPerformanceData();
+            
+            // Load session analytics
+            _sessionAnalytics = GenerateSessionAnalytics();
+            
+            // Load personalized insights
+            _personalizedInsights = GeneratePersonalizedInsights();
+            
+            // Load time analysis
+            _timeAnalysis = GenerateTimeAnalysis();
+            
+            // Load achievement summary
+            _achievementSummary = GenerateAchievementSummary();
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error loading analytics data");
+        }
+    }
+
+    private async Task ExportData(ExportFormat format)
+    {
+        try
+        {
+            var config = new ExportConfiguration
+            {
+                Format = format,
+                IncludeCharts = true,
+                IncludeRawData = true
+            };
+
+            var result = await DashboardService.ExportData(_currentPlayerId, config);
+            await JSRuntime.InvokeVoidAsync("downloadFile", result.FileName, result.ContentType, result.Data);
+            
+            Logger.LogInformation("Data exported in format: {Format}", format);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "Error exporting data in format: {Format}", format);
+        }
+    }
+
+    private void GenerateShareableLink()
+    {
+        Logger.LogInformation("Generate shareable statistics link");
+        // Implementation would create a shareable link to statistics
+    }
+
+    private void CompareWithFriends()
+    {
+        Logger.LogInformation("Compare statistics with friends");
+        // Implementation would open comparison interface
+    }
+
+    private void CreateStatisticsWidget()
+    {
+        Logger.LogInformation("Create embeddable statistics widget");
+        // Implementation would generate widget code
+    }
+
+    private void ShowAllAchievements()
+    {
+        Logger.LogInformation("Show all achievements");
+        // Implementation would navigate to achievements page
+    }
+
+    // Helper methods for styling
+    private string GetDifficultyColor(string difficulty)
+    {
+        return difficulty switch
+        {
+            "Easy" => "success",
+            "Medium" => "warning",
+            "Hard" => "danger",
+            _ => "secondary"
+        };
+    }
+
+    private string GetWinRateColor(double winRate)
+    {
+        return winRate switch
+        {
+            >= 70 => "success",
+            >= 50 => "primary",
+            >= 30 => "warning",
+            _ => "danger"
+        };
+    }
+
+    private string GetTrendIcon(TrendDirection trend)
+    {
+        return trend switch
+        {
+            TrendDirection.Improving => "arrow-up",
+            TrendDirection.Declining => "arrow-down",
+            TrendDirection.Stable => "minus",
+            _ => "minus"
+        };
+    }
+
+    private string GetTrendColor(TrendDirection trend)
+    {
+        return trend switch
+        {
+            TrendDirection.Improving => "success",
+            TrendDirection.Declining => "danger",
+            TrendDirection.Stable => "secondary",
+            _ => "secondary"
+        };
+    }
+
+    private string GetInsightIcon(string category)
+    {
+        return category switch
+        {
+            "Strategy" => "chess",
+            "Timing" => "clock",
+            "Pattern" => "puzzle-piece",
+            "Focus" => "target",
+            _ => "lightbulb"
+        };
+    }
+
+    private string GetInsightColor(string category)
+    {
+        return category switch
+        {
+            "Strategy" => "primary",
+            "Timing" => "info",
+            "Pattern" => "success",
+            "Focus" => "warning",
+            _ => "secondary"
+        };
+    }
+
+    // Mock data generation methods
+    private List<AIPerformanceData> GenerateAIPerformanceData()
+    {
+        return new List<AIPerformanceData>
+        {
+            new() { Difficulty = "Easy", GamesPlayed = 45, WinRate = 87.5, AverageDuration = TimeSpan.FromMinutes(5.2), Trend = TrendDirection.Stable },
+            new() { Difficulty = "Medium", GamesPlayed = 38, WinRate = 63.2, AverageDuration = TimeSpan.FromMinutes(8.7), Trend = TrendDirection.Improving },
+            new() { Difficulty = "Hard", GamesPlayed = 22, WinRate = 31.8, AverageDuration = TimeSpan.FromMinutes(12.3), Trend = TrendDirection.Improving }
+        };
+    }
+
+    private List<SessionAnalytic> GenerateSessionAnalytics()
+    {
+        var analytics = new List<SessionAnalytic>();
+        var random = new Random();
+        
+        for (int i = 0; i < 14; i++)
+        {
+            analytics.Add(new SessionAnalytic
+            {
+                Date = DateTime.Today.AddDays(-i),
+                GamesPlayed = random.Next(2, 12),
+                WinRate = random.Next(30, 90),
+                PlayTime = TimeSpan.FromMinutes(random.Next(15, 120))
+            });
+        }
+        
+        return analytics.OrderByDescending(a => a.Date).ToList();
+    }
+
+    private List<PersonalizedInsight> GeneratePersonalizedInsights()
+    {
+        return new List<PersonalizedInsight>
+        {
+            new()
+            {
+                Category = "Strategy",
+                Title = "Center Column Preference",
+                Description = "You have a strong preference for center columns, which is strategically sound. However, consider varying your opening moves to become less predictable.",
+                ActionItems = new List<string> { "Try edge openings occasionally", "Study corner trap patterns", "Practice defensive positioning" },
+                Priority = InsightPriority.Medium
+            },
+            new()
+            {
+                Category = "Timing",
+                Title = "Move Speed Optimization",
+                Description = "Your average move time has increased 15% in recent games. While careful consideration is good, faster decision-making can prevent timeout pressure.",
+                ActionItems = new List<string> { "Practice pattern recognition", "Set move time goals", "Use blitz training mode" },
+                Priority = InsightPriority.High
+            },
+            new()
+            {
+                Category = "Pattern",
+                Title = "Threat Recognition Improvement",
+                Description = "Your threat blocking accuracy has improved 23% over the last 20 games. Continue practicing tactical patterns to maintain this progress.",
+                ActionItems = new List<string> { "Study fork patterns", "Practice threat combinations", "Review missed blocks" },
+                Priority = InsightPriority.Low
+            }
+        };
+    }
+
+    private TimeAnalysis GenerateTimeAnalysis()
+    {
+        return new TimeAnalysis
+        {
+            AverageMoveTime = TimeSpan.FromSeconds(4.2),
+            FastestGame = TimeSpan.FromMinutes(2.1),
+            LongestGame = TimeSpan.FromMinutes(18.7),
+            PeakPerformanceHour = 14, // 2 PM
+            ConsistencyScore = 78.5
+        };
+    }
+
+    private AchievementSummary GenerateAchievementSummary()
+    {
+        return new AchievementSummary
+        {
+            CompletedCount = 12,
+            TotalCount = 25,
+            CompletionPercentage = 48.0,
+            RecentAchievements = new List<Achievement>
+            {
+                new() { Name = "Speed Demon", Description = "Win a game in under 3 minutes" },
+                new() { Name = "Comeback King", Description = "Win after being behind 3 pieces" },
+                new() { Name = "Perfect Week", Description = "Win 10 games in a row" }
+            }
+        };
+    }
+
+    // Data model classes
+    public class AIPerformanceData
+    {
+        public string Difficulty { get; set; } = string.Empty;
+        public int GamesPlayed { get; set; }
+        public double WinRate { get; set; }
+        public TimeSpan AverageDuration { get; set; }
+        public TrendDirection Trend { get; set; }
+    }
+
+    public class SessionAnalytic
+    {
+        public DateTime Date { get; set; }
+        public int GamesPlayed { get; set; }
+        public double WinRate { get; set; }
+        public TimeSpan PlayTime { get; set; }
+    }
+
+    public class PersonalizedInsight
+    {
+        public string Category { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public List<string> ActionItems { get; set; } = new();
+        public InsightPriority Priority { get; set; }
+    }
+
+    public class TimeAnalysis
+    {
+        public TimeSpan AverageMoveTime { get; set; }
+        public TimeSpan FastestGame { get; set; }
+        public TimeSpan LongestGame { get; set; }
+        public int PeakPerformanceHour { get; set; }
+        public double ConsistencyScore { get; set; }
+    }
+
+    public class AchievementSummary
+    {
+        public int CompletedCount { get; set; }
+        public int TotalCount { get; set; }
+        public double CompletionPercentage { get; set; }
+        public List<Achievement> RecentAchievements { get; set; } = new();
+    }
+}
+
+<style>
+    .enhanced-statistics-page {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        color: #333;
+    }
+
+    .page-header {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 2rem;
+        color: white;
+    }
+
+    .card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-2px);
+    }
+
+    .insight-card {
+        background: #f8f9fa;
+        transition: all 0.2s ease-in-out;
+    }
+
+    .insight-card:hover {
+        background: #e9ecef;
+        transform: translateY(-1px);
+    }
+
+    .insight-icon {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(0, 123, 255, 0.1);
+    }
+
+    .heatmap-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .stat-row {
+        padding: 0.25rem 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .stat-row:last-child {
+        border-bottom: none;
+    }
+
+    .achievement-summary {
+        text-align: center;
+    }
+
+    .recent-achievements {
+        text-align: left;
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 1rem;
+        }
+        
+        .container-fluid {
+            padding: 1rem;
+        }
+    }
+</style>
