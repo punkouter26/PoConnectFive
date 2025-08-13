@@ -5,6 +5,7 @@ using Serilog;
 using Serilog.Events;
 using Serilog.Sinks.ApplicationInsights.TelemetryConverters;
 
+// Updated deployment configuration - testing CI/CD pipeline
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Application Insights
