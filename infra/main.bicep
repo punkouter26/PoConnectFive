@@ -16,7 +16,7 @@ param resourceGroupName string = 'PoConnectFive'
 param sharedResourceGroupName string = 'PoShared'
 
 @description('Name of the existing shared App Service Plan in PoShared')
-param sharedAppServicePlanName string = 'PoSharedAppServicePlan'
+param sharedAppServicePlanName string = 'PoShared'
 
 // Create new resource group named exactly after the solution
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2023-07-01' = {

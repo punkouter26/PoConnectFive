@@ -27,4 +27,4 @@ infra:
     location: eastus2
     resourceGroupName: PoConnectFive
     sharedResourceGroupName: PoShared
-    sharedAppServicePlanName: PoSharedAppServicePlan
+    sharedAppServicePlanName: PoShared

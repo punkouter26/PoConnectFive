@@ -23,13 +23,15 @@ resource sharedAppServicePlan 'Microsoft.Web/serverfarms@2023-01-01' existing = 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
   name: resourceName
   location: location
-  sku: {
-    name: 'PerGB2018'
-  }
-  retentionInDays: 30
-  features: {
-    legacy: 0
-    searchVersion: 1
+  properties: {
+    sku: {
+      name: 'PerGB2018'
+    }
+    retentionInDays: 30
+    features: {
+      legacy: 0
+      searchVersion: 1
+    }
   }
   tags: {
     'azd-env-name': environmentName
@@ -44,7 +46,7 @@ resource applicationInsights 'Microsoft.Insights/components@2020-02-02' = {
   properties: {
     Application_Type: 'web'
     Flow_Type: 'Bluefield'
-    IngestionMode: 'ApplicationInsights'
+    IngestionMode: 'LogAnalytics'
     WorkspaceResourceId: logAnalytics.id
   }
   tags: {
@@ -81,6 +83,8 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
     httpsOnly: true
     siteConfig: {
       netFrameworkVersion: 'v9.0'
+      use32BitWorkerProcess: true  // Required for F1 tier
+      alwaysOn: false  // AlwaysOn not available on F1 tier
       metadata: [
         {
           name: 'CURRENT_STACK'
