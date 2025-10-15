@@ -21,7 +21,7 @@ services:
 infra:
   provider: bicep
   path: infra
-  module: main.bicep
+  module: main
   parameters:
     environmentName: dev
     location: eastus2
