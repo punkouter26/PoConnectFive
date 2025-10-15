@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet build)",
+      "Bash(dotnet run:*)",
+      "Bash(dotnet list package:*)",
+      "Bash(dotnet restore)",
+      "Bash(dotnet format)",
+      "Bash(npx -p @mermaid-js/mermaid-cli mmdc:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

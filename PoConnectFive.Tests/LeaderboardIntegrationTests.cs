@@ -78,7 +78,7 @@ namespace PoConnectFive.Tests
             mockStorage.Verify(s => s.UpsertPlayerStatAsync(
                 It.Is<string>(n => n == sampleDto.PlayerName),
                 It.Is<AIDifficulty>(d => d == sampleDto.Difficulty),
-                It.Is<GameResult>(r => r == sampleDto.Result),
+                It.Is<PlayerGameResult>(r => r == sampleDto.Result),
                 It.IsAny<TimeSpan>()), Times.Once);
 
             // Act - GET the leaderboard for Easy difficulty

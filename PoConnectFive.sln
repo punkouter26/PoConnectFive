@@ -1,4 +1,5 @@
-﻿Microsoft Visual Studio Solution File, Format Version 12.00
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
@@ -7,6 +8,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoConnectFive.Server", "PoConnectFive.Server\PoConnectFive.Server.csproj", "{A511EB7D-ECB7-4EE8-B44A-95A6275E8574}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoConnectFive.Shared", "PoConnectFive.Shared\PoConnectFive.Shared.csproj", "{B5823924-76D1-4C65-A4F9-67AF8D555C5B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoConnectFive.Tests", "PoConnectFive.Tests\PoConnectFive.Tests.csproj", "{7CA50049-5CE2-498E-A32D-21A796321B0E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -54,6 +57,18 @@ Global
 		{B5823924-76D1-4C65-A4F9-67AF8D555C5B}.Release|x64.Build.0 = Release|Any CPU
 		{B5823924-76D1-4C65-A4F9-67AF8D555C5B}.Release|x86.ActiveCfg = Release|Any CPU
 		{B5823924-76D1-4C65-A4F9-67AF8D555C5B}.Release|x86.Build.0 = Release|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Debug|x64.Build.0 = Debug|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Debug|x86.Build.0 = Debug|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Release|x64.ActiveCfg = Release|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Release|x64.Build.0 = Release|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Release|x86.ActiveCfg = Release|Any CPU
+		{7CA50049-5CE2-498E-A32D-21A796321B0E}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

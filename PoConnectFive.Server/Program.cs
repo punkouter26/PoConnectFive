@@ -30,21 +30,11 @@ builder.Host.UseSerilog();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
 
-// Add CORS services with specific origins
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins(
-                "http://localhost:5245",
-                "https://localhost:5245",
-                "http://localhost:7033",
-                "https://localhost:7033")
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
-    });
-});
+// Add HttpClient factory for health checks
+builder.Services.AddHttpClient();
+
+// CORS not needed since Blazor WASM client is hosted inside the API project
+// Both served from the same origin (localhost:5000/5001)
 
 // Add Swagger/OpenAPI services
 builder.Services.AddEndpointsApiExplorer();
@@ -78,8 +68,7 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Use CORS before authorization
-app.UseCors();
+// CORS removed - not needed since client is hosted in same app
 app.UseAuthorization();
 
 app.MapRazorPages();
@@ -101,3 +90,6 @@ finally
 }
 
 // Removed WeatherForecast record and endpoint mapping
+
+// Make Program visible to test host (must appear after top-level statements)
+public partial class Program { }

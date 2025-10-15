@@ -1,20 +1,17 @@
 using PoConnectFive.Shared.Models;
 using System;
 using Xunit;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace PoConnectFive.Tests
 {
     public class GameBoardTests
     {
-        private readonly ILogger<GameBoard> _logger = NullLogger<GameBoard>.Instance;
 
         [Fact]
         public void PlacePiece_ValidMove_PiecePlacedCorrectly()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             int column = 0;
             int playerId = 1;
 
@@ -29,7 +26,7 @@ namespace PoConnectFive.Tests
         public void PlacePiece_InvalidColumn_ThrowsException()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
 
             // Act & Assert
             Assert.Throws<ArgumentOutOfRangeException>(() => board.PlacePiece(-1, 1));
@@ -40,7 +37,7 @@ namespace PoConnectFive.Tests
         public void CheckWin_HorizontalWin_ReturnsTrue()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             int playerId = 1;
             var newBoard = board;
 
@@ -58,7 +55,7 @@ namespace PoConnectFive.Tests
         public void CheckWin_VerticalWin_ReturnsTrue()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             int playerId = 1;
             var newBoard = board;
 
@@ -76,7 +73,7 @@ namespace PoConnectFive.Tests
         public void CheckWin_DiagonalWin_ReturnsTrue()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             int playerId = 1;
             var newBoard = board;
 
@@ -99,7 +96,7 @@ namespace PoConnectFive.Tests
         public void CheckWin_NoWin_ReturnsFalse()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             int playerId = 1;
             var newBoard = board;
 
@@ -117,7 +114,7 @@ namespace PoConnectFive.Tests
         public void IsValidMove_EmptyColumn_ReturnsTrue()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
 
             // Act & Assert
             Assert.True(board.IsValidMove(0));
@@ -127,7 +124,7 @@ namespace PoConnectFive.Tests
         public void IsValidMove_FullColumn_ReturnsFalse()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var newBoard = board;
 
             // Fill entire column
@@ -144,7 +141,7 @@ namespace PoConnectFive.Tests
         public void GetTargetRow_ValidColumn_ReturnsCorrectRow()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             int column = 0;
 
             // Act
@@ -158,7 +155,7 @@ namespace PoConnectFive.Tests
         public void GetTargetRow_FullColumn_ReturnsMinusOne()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var newBoard = board;
 
             // Fill entire column
@@ -178,7 +175,7 @@ namespace PoConnectFive.Tests
         public void GetTargetRow_InvalidColumn_ReturnsMinusOne()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
 
             // Act & Assert
             Assert.Equal(-1, board.GetTargetRow(-1));
@@ -189,7 +186,7 @@ namespace PoConnectFive.Tests
         public void PlacePiece_MultiplePieces_StackedCorrectly()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             int column = 0;
             int player1Id = 1;
             int player2Id = 2;

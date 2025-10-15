@@ -3675,3 +3675,220 @@ System.InvalidOperationException: Azure Table Storage connection string is not c
 2025-08-13 12:29:52.838 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/leaderboard/Easy - 200 null application/json; charset=utf-8 209.6319ms
 2025-08-13 12:29:52.832 -04:00 [INF] Executed endpoint 'PoConnectFive.Server.Controllers.LeaderboardController.GetTopPlayers (PoConnectFive.Server)'
 2025-08-13 12:29:52.840 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/api/leaderboard/Hard - 200 null application/json; charset=utf-8 208.9241ms
+2025-10-13 17:03:31.180 -04:00 [INF] User profile is available. Using 'C:\Users\punko\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-10-13 17:03:31.861 -04:00 [INF] Starting web application
+2025-10-13 17:03:32.685 -04:00 [INF] Now listening on: https://localhost:5001
+2025-10-13 17:03:32.688 -04:00 [INF] Now listening on: http://localhost:5000
+2025-10-13 17:03:32.743 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-10-13 17:03:32.745 -04:00 [INF] Hosting environment: Development
+2025-10-13 17:03:32.780 -04:00 [INF] Content root path: C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Server
+2025-10-13 17:16:23.324 -04:00 [INF] User profile is available. Using 'C:\Users\punko\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-10-13 17:16:23.470 -04:00 [INF] Starting web application
+2025-10-13 17:16:24.078 -04:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5000: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2025-10-13 17:16:24.132 -04:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5000: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Server\Program.cs:line 92
+2025-10-13 17:16:37.072 -04:00 [INF] User profile is available. Using 'C:\Users\punko\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-10-13 17:16:37.187 -04:00 [INF] Starting web application
+2025-10-13 17:16:37.506 -04:00 [ERR] Hosting failed to start
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5000: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+2025-10-13 17:16:37.698 -04:00 [FTL] Application terminated unexpectedly
+System.IO.IOException: Failed to bind to address http://127.0.0.1:5000: address already in use.
+ ---> Microsoft.AspNetCore.Connections.AddressInUseException: Only one usage of each socket address (protocol/network address/port) is normally permitted.
+ ---> System.Net.Sockets.SocketException (10048): Only one usage of each socket address (protocol/network address/port) is normally permitted.
+   at System.Net.Sockets.Socket.UpdateStatusAfterSocketErrorAndThrowException(SocketError error, Boolean disconnectOnFailure, String callerName)
+   at System.Net.Sockets.Socket.DoBind(EndPoint endPointSnapshot, SocketAddress socketAddress)
+   at System.Net.Sockets.Socket.Bind(EndPoint localEP)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportOptions.CreateDefaultBoundListenSocket(EndPoint endpoint)
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketConnectionListener.Bind()
+   at Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets.SocketTransportFactory.BindAsync(EndPoint endpoint, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Infrastructure.TransportManager.BindAsync(EndPoint endPoint, ConnectionDelegate connectionDelegate, EndpointConfig endpointConfig, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.<>c__DisplayClass28_0`1.<<StartAsync>g__OnBind|0>d.MoveNext()
+--- End of stack trace from previous location ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.BindEndpointAsync(ListenOptions endpoint, AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.LocalhostListenOptions.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.Internal.AddressBinder.AddressesStrategy.BindAsync(AddressBindContext context, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.BindAsync(CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServerImpl.StartAsync[TContext](IHttpApplication`1 application, CancellationToken cancellationToken)
+   at Microsoft.AspNetCore.Hosting.GenericWebHostService.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.Internal.Host.<StartAsync>b__14_1(IHostedService service, CancellationToken token)
+   at Microsoft.Extensions.Hosting.Internal.Host.ForeachService[T](IEnumerable`1 services, CancellationToken token, Boolean concurrent, Boolean abortOnFirstException, List`1 exceptions, Func`3 operation)
+   at Microsoft.Extensions.Hosting.Internal.Host.StartAsync(CancellationToken cancellationToken)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.RunAsync(IHost host, CancellationToken token)
+   at Microsoft.Extensions.Hosting.HostingAbstractionsHostExtensions.Run(IHost host)
+   at Program.<Main>$(String[] args) in C:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Server\Program.cs:line 92
+2025-10-14 21:37:55.100 -04:00 [INF] User profile is available. Using 'C:\Users\punko\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2025-10-14 21:37:55.233 -04:00 [INF] Starting web application
+2025-10-14 21:37:55.554 -04:00 [INF] Now listening on: http://localhost:5000
+2025-10-14 21:37:55.555 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2025-10-14 21:37:55.555 -04:00 [INF] Hosting environment: Development
+2025-10-14 21:37:55.555 -04:00 [INF] Content root path: c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Server
+2025-10-14 21:42:11.979 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/ - null null
+2025-10-14 21:42:11.993 -04:00 [WRN] Failed to determine the https port for redirect.
+2025-10-14 21:42:12.006 -04:00 [INF] Executing endpoint 'Fallback {*path:nonfile}'
+2025-10-14 21:42:12.062 -04:00 [INF] Sending file. Request path: '/index.html'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\index.html'
+2025-10-14 21:42:12.062 -04:00 [INF] Executed endpoint 'Fallback {*path:nonfile}'
+2025-10-14 21:42:12.064 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/index.html - 200 2421 text/html 86.3104ms
+2025-10-14 21:42:12.080 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/PoConnectFive.Client.styles.css - null null
+2025-10-14 21:42:12.080 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/css/variables.css - null null
+2025-10-14 21:42:12.081 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/js/gameBoard.js - null null
+2025-10-14 21:42:12.099 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_content/Radzen.Blazor/Radzen.Blazor.js - null null
+2025-10-14 21:42:12.104 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_content/Radzen.Blazor/css/standard-base.css - null null
+2025-10-14 21:42:12.107 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/css/app.css - null null
+2025-10-14 21:42:12.112 -04:00 [INF] Sending file. Request path: '/PoConnectFive.Client.styles.css'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\scopedcss\bundle\PoConnectFive.Client.styles.css'
+2025-10-14 21:42:12.113 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/PoConnectFive.Client.styles.css - 200 2928 text/css 32.9925ms
+2025-10-14 21:42:12.114 -04:00 [INF] Sending file. Request path: '/css/variables.css'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\css\variables.css'
+2025-10-14 21:42:12.114 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/css/variables.css - 200 1736 text/css 33.8545ms
+2025-10-14 21:42:12.121 -04:00 [INF] Sending file. Request path: '/css/app.css'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\css\app.css'
+2025-10-14 21:42:12.121 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/css/app.css - 200 9011 text/css 14.3735ms
+2025-10-14 21:42:12.125 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/blazor.webassembly.js - null null
+2025-10-14 21:42:12.139 -04:00 [INF] Sending file. Request path: '/_framework/blazor.webassembly.js.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\zookan2cw0-{0}-md9yvkcqlf-md9yvkcqlf.gz'
+2025-10-14 21:42:12.140 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/blazor.webassembly.js.gz - 200 18006 text/javascript 14.8992ms
+2025-10-14 21:42:12.140 -04:00 [INF] Sending file. Request path: '/js/gameBoard.js'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\js\gameBoard.js'
+2025-10-14 21:42:12.140 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/js/gameBoard.js - 200 11021 text/javascript 59.0007ms
+2025-10-14 21:42:12.145 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/css/standard-base.css'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\8.0.4\staticwebassets\css\standard-base.css'
+2025-10-14 21:42:12.145 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_content/Radzen.Blazor/css/standard-base.css - 200 732273 text/css 41.3808ms
+2025-10-14 21:42:12.153 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/Radzen.Blazor.js'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\8.0.4\staticwebassets\Radzen.Blazor.js'
+2025-10-14 21:42:12.153 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_content/Radzen.Blazor/Radzen.Blazor.js - 200 96614 text/javascript 53.2826ms
+2025-10-14 21:42:12.225 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/dotnet.js - null null
+2025-10-14 21:42:12.243 -04:00 [INF] Sending file. Request path: '/_framework/dotnet.js.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\yiiqdajh2y-{0}-g4ekh6zsr7-g4ekh6zsr7.gz'
+2025-10-14 21:42:12.246 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/dotnet.js.gz - 200 12662 text/javascript 20.8169ms
+2025-10-14 21:42:12.254 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/blazor.boot.json - null null
+2025-10-14 21:42:12.272 -04:00 [INF] Sending file. Request path: '/_framework/blazor.boot.json.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\qd32wn28c2-{0}-mt92peqa4y-mt92peqa4y.gz'
+2025-10-14 21:42:12.272 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/blazor.boot.json.gz - 200 13072 application/json 18.866ms
+2025-10-14 21:42:12.280 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/dotnet.native.9ih887ebfz.js - null null
+2025-10-14 21:42:12.280 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/dotnet.runtime.st3wwc8rqy.js - null null
+2025-10-14 21:42:12.291 -04:00 [INF] Sending file. Request path: '/_framework/dotnet.native.9ih887ebfz.js.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\3s5pe9gzs0-{0}-9ih887ebfz-9ih887ebfz.gz'
+2025-10-14 21:42:12.291 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/dotnet.native.9ih887ebfz.js.gz - 200 34747 text/javascript 11.1532ms
+2025-10-14 21:42:12.309 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/appsettings.json - null null
+2025-10-14 21:42:12.322 -04:00 [INF] Sending file. Request path: '/appsettings.json'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\wwwroot\appsettings.json'
+2025-10-14 21:42:12.322 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/appsettings.json - 200 48 application/json 13.5953ms
+2025-10-14 21:42:12.322 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/PoConnectFive.Client.wflcuvb5so.pdb - null null
+2025-10-14 21:42:12.322 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/PoConnectFive.Shared.u5mmjupwvv.pdb - null null
+2025-10-14 21:42:12.325 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/Azure.Core.ltf0pljmuu.wasm - null null
+2025-10-14 21:42:12.328 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/Azure.Data.Tables.kob1m6m4ky.wasm - null null
+2025-10-14 21:42:12.337 -04:00 [INF] Sending file. Request path: '/_framework/dotnet.runtime.st3wwc8rqy.js.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\igymih0404-{0}-st3wwc8rqy-st3wwc8rqy.gz'
+2025-10-14 21:42:12.337 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/dotnet.runtime.st3wwc8rqy.js.gz - 200 55609 text/javascript 57.3857ms
+2025-10-14 21:42:12.345 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Client.wflcuvb5so.pdb.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\6v14q7zw6u-{0}-wflcuvb5so-wflcuvb5so.gz'
+2025-10-14 21:42:12.345 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/PoConnectFive.Client.wflcuvb5so.pdb.gz - 200 67320 application/octet-stream 22.668ms
+2025-10-14 21:42:12.347 -04:00 [INF] Sending file. Request path: '/_framework/Azure.Core.ltf0pljmuu.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\y8yc1mgt1q-{0}-ltf0pljmuu-ltf0pljmuu.gz'
+2025-10-14 21:42:12.347 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/Azure.Core.ltf0pljmuu.wasm.gz - 200 171798 application/wasm 21.7578ms
+2025-10-14 21:42:12.351 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/Microsoft.Bcl.AsyncInterfaces.5c87cxjbfz.wasm - null null
+2025-10-14 21:42:12.354 -04:00 [INF] Sending file. Request path: '/_framework/Azure.Data.Tables.kob1m6m4ky.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\umukw5pcq1-{0}-kob1m6m4ky-kob1m6m4ky.gz'
+2025-10-14 21:42:12.354 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/Azure.Data.Tables.kob1m6m4ky.wasm.gz - 200 156583 application/wasm 26.1857ms
+2025-10-14 21:42:12.355 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Shared.u5mmjupwvv.pdb.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\zvop24leg6-{0}-u5mmjupwvv-u5mmjupwvv.gz'
+2025-10-14 21:42:12.355 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/PoConnectFive.Shared.u5mmjupwvv.pdb.gz - 200 23767 application/octet-stream 32.5098ms
+2025-10-14 21:42:12.359 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/Radzen.Blazor.e0fdsc6ait.wasm - null null
+2025-10-14 21:42:12.361 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/Serilog.888bec0kyk.wasm - null null
+2025-10-14 21:42:12.364 -04:00 [INF] Sending file. Request path: '/_framework/Microsoft.Bcl.AsyncInterfaces.5c87cxjbfz.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\jdd2wmvp6u-{0}-5c87cxjbfz-5c87cxjbfz.gz'
+2025-10-14 21:42:12.364 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/Microsoft.Bcl.AsyncInterfaces.5c87cxjbfz.wasm.gz - 200 2649 application/wasm 13.2314ms
+2025-10-14 21:42:12.382 -04:00 [INF] Sending file. Request path: '/_framework/Serilog.888bec0kyk.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\dmvwjk8n05-{0}-888bec0kyk-888bec0kyk.gz'
+2025-10-14 21:42:12.382 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/Serilog.888bec0kyk.wasm.gz - 200 67735 application/wasm 20.7501ms
+2025-10-14 21:42:12.382 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/Serilog.Extensions.Logging.3ys5876a4v.wasm - null null
+2025-10-14 21:42:12.383 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/Serilog.Sinks.Console.rtr49hgfiq.wasm - null null
+2025-10-14 21:42:12.383 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/Serilog.Sinks.File.2xjoy8x0ef.wasm - null null
+2025-10-14 21:42:12.389 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/System.ClientModel.8v22nu9vj1.wasm - null null
+2025-10-14 21:42:12.400 -04:00 [INF] Sending file. Request path: '/_framework/Serilog.Sinks.File.2xjoy8x0ef.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\6vgqb0rxt3-{0}-2xjoy8x0ef-2xjoy8x0ef.gz'
+2025-10-14 21:42:12.400 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/Serilog.Sinks.File.2xjoy8x0ef.wasm.gz - 200 16459 application/wasm 17.2785ms
+2025-10-14 21:42:12.407 -04:00 [INF] Sending file. Request path: '/_framework/Serilog.Sinks.Console.rtr49hgfiq.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\1pdoryrts1-{0}-rtr49hgfiq-rtr49hgfiq.gz'
+2025-10-14 21:42:12.407 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/Serilog.Sinks.Console.rtr49hgfiq.wasm.gz - 200 16172 application/wasm 24.7464ms
+2025-10-14 21:42:12.408 -04:00 [INF] Sending file. Request path: '/_framework/Serilog.Extensions.Logging.3ys5876a4v.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\apmcdryf3e-{0}-3ys5876a4v-3ys5876a4v.gz'
+2025-10-14 21:42:12.408 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/Serilog.Extensions.Logging.3ys5876a4v.wasm.gz - 200 13323 application/wasm 25.5914ms
+2025-10-14 21:42:12.412 -04:00 [INF] Sending file. Request path: '/_framework/System.ClientModel.8v22nu9vj1.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\k7gymc9itf-{0}-8v22nu9vj1-8v22nu9vj1.gz'
+2025-10-14 21:42:12.412 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/System.ClientModel.8v22nu9vj1.wasm.gz - 200 44158 application/wasm 23.0512ms
+2025-10-14 21:42:12.412 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/System.Memory.Data.myq4mmrtuj.wasm - null null
+2025-10-14 21:42:12.433 -04:00 [INF] Sending file. Request path: '/_framework/System.Memory.Data.myq4mmrtuj.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\cgif562khi-{0}-myq4mmrtuj-myq4mmrtuj.gz'
+2025-10-14 21:42:12.434 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/System.Memory.Data.myq4mmrtuj.wasm.gz - 200 9170 application/wasm 21.2815ms
+2025-10-14 21:42:12.438 -04:00 [INF] Sending file. Request path: '/_framework/Radzen.Blazor.e0fdsc6ait.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\2eiyo49gyf-{0}-e0fdsc6ait-e0fdsc6ait.gz'
+2025-10-14 21:42:12.438 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/Radzen.Blazor.e0fdsc6ait.wasm.gz - 200 633270 application/wasm 79.4847ms
+2025-10-14 21:42:12.504 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/PoConnectFive.Shared.dhsx4vew46.wasm - null null
+2025-10-14 21:42:12.525 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_framework/PoConnectFive.Client.t8lbgp1fq4.wasm - null null
+2025-10-14 21:42:12.526 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Shared.dhsx4vew46.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\3n4d3jca92-{0}-dhsx4vew46-dhsx4vew46.gz'
+2025-10-14 21:42:12.526 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/PoConnectFive.Shared.dhsx4vew46.wasm.gz - 200 39335 application/wasm 22.1231ms
+2025-10-14 21:42:12.540 -04:00 [INF] Sending file. Request path: '/_framework/PoConnectFive.Client.t8lbgp1fq4.wasm.gz'. Physical path: 'c:\Users\punko\Downloads\PoConnectFive\PoConnectFive.Client\obj\Debug\net9.0\compressed\4g4h9yyn4n-{0}-t8lbgp1fq4-t8lbgp1fq4.gz'
+2025-10-14 21:42:12.540 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_framework/PoConnectFive.Client.t8lbgp1fq4.wasm.gz - 200 61906 application/wasm 15.0312ms
+2025-10-14 21:42:13.476 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2 - null null
+2025-10-14 21:42:13.476 -04:00 [INF] Request starting HTTP/1.1 GET http://localhost:5000/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2 - null null
+2025-10-14 21:42:13.500 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\8.0.4\staticwebassets\fonts\MaterialSymbolsOutlined.woff2'
+2025-10-14 21:42:13.500 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_content/Radzen.Blazor/fonts/MaterialSymbolsOutlined.woff2 - 200 973704 font/woff2 23.6961ms
+2025-10-14 21:42:13.525 -04:00 [INF] Sending file. Request path: '/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2'. Physical path: 'C:\Users\punko\.nuget\packages\radzen.blazor\8.0.4\staticwebassets\fonts\SourceSans3VF-Upright.ttf.woff2'
+2025-10-14 21:42:13.527 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5000/_content/Radzen.Blazor/fonts/SourceSans3VF-Upright.ttf.woff2 - 200 170188 font/woff2 50.3611ms

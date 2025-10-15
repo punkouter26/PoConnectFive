@@ -1,0 +1,92 @@
+graph TB
+    subgraph "App Root"
+        App[App.razor<br/>Application Entry Point]
+    end
+
+    subgraph "Layout"
+        App --> MainLayout[MainLayout.razor<br/>Main Application Shell]
+        MainLayout --> NavMenu[NavMenu.razor<br/>Navigation Sidebar]
+    end
+
+    subgraph "Pages"
+        MainLayout --> Index[Index.razor<br/>/]
+        MainLayout --> Game[Game.razor<br/>/game]
+        MainLayout --> Leaderboard[Leaderboard.razor<br/>/leaderboard]
+        MainLayout --> Statistics[Statistics.razor<br/>/statistics]
+        MainLayout --> Settings[Settings.razor<br/>/settings]
+        MainLayout --> Diag[Diag.razor<br/>/diag]
+    end
+
+    subgraph "Game Page Components"
+        Game --> GameBoard[GameBoard Component<br/>Interactive 9x9 Grid]
+        Game --> PlayerInfo[Player Info Display<br/>Names & Colors]
+        Game --> GameControls[Game Controls<br/>New Game, Menu]
+        Game --> GameStatus[Game Status Banner<br/>Current Turn, Winner]
+
+        GameBoard --> Cell1[Cell Component<br/>Individual Grid Cell]
+        GameBoard --> Cell2[Cell Component]
+        GameBoard --> CellN[... 81 Cells Total]
+    end
+
+    subgraph "Leaderboard Components"
+        Leaderboard --> DifficultyFilter[Difficulty Selector<br/>Easy/Medium/Hard]
+        Leaderboard --> PlayerTable[Player Rankings Table<br/>Top 5 Players]
+
+        PlayerTable --> Row1[Player Row<br/>Rank, Name, Stats]
+        PlayerTable --> Row2[Player Row]
+        PlayerTable --> RowN[... More Rows]
+    end
+
+    subgraph "Statistics Components"
+        Statistics --> StatsOverview[Stats Overview Cards<br/>Total Games, Win %]
+        Statistics --> WinChart[Win Probability Chart<br/>Visualization]
+        Statistics --> GameHistory[Game History List<br/>Recent Games]
+    end
+
+    subgraph "Settings Components"
+        Settings --> AISettings[AI Difficulty Setting<br/>Dropdown/Radio]
+        Settings --> SoundSettings[Sound Toggle<br/>On/Off Switch]
+        Settings --> PlayerSettings[Player Name Inputs<br/>Player 1 & 2]
+        Settings --> SaveButton[Save Settings Button]
+    end
+
+    subgraph "Diagnostics Components"
+        Diag --> DiagTable[Diagnostics Results Table<br/>Component Status]
+        Diag --> HealthBadge1[Health Badge<br/>Storage Status]
+        Diag --> HealthBadge2[Health Badge<br/>Internet Status]
+        Diag --> HealthBadge3[Health Badge<br/>API Status]
+        Diag --> RunButton[Run Diagnostics Button]
+    end
+
+    subgraph "Shared Components Used Across Pages"
+        SharedComps[Shared Components]
+        SharedComps --> LoadingSpinner[Loading Spinner<br/>Async Operations]
+        SharedComps --> ErrorDisplay[Error Display<br/>Error Messages]
+        SharedComps --> SuccessMessage[Success Toast<br/>Confirmations]
+    end
+
+    %% Services (Injected into Components)
+    subgraph "Client Services"
+        Services[Injected Services]
+        Services --> SoundService[SoundService<br/>Audio Playback]
+        Services --> ApiService[ApiPlayerDataService<br/>API Communication]
+        Services --> StorageService[BrowserStorageService<br/>Local Storage]
+        Services --> ErrorService[ErrorHandlingService<br/>Error Management]
+        Services --> LogService[LoggingHelper<br/>Client Logging]
+    end
+
+    Game -.->|Uses| SoundService
+    Game -.->|Uses| ApiService
+    Leaderboard -.->|Uses| ApiService
+    Statistics -.->|Uses| ApiService
+    Settings -.->|Uses| StorageService
+    Diag -.->|Uses| ApiService
+    Diag -.->|Uses| LogService
+
+    style App fill:#e1f5ff
+    style MainLayout fill:#ffe1e1
+    style Game fill:#e1ffe1
+    style Leaderboard fill:#fff4e1
+    style Statistics fill:#ffe1ff
+    style Settings fill:#ffffe1
+    style Diag fill:#e1ffff

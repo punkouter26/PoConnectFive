@@ -6,7 +6,7 @@ using System.Net.Http;
 namespace PoConnectFive.Server.Controllers;
 
 [ApiController]
-[Route("/healthz")]
+[Route("api/[controller]")]
 public class HealthController : ControllerBase
 {
     private readonly ILogger<HealthController> _logger;
@@ -24,15 +24,91 @@ public class HealthController : ControllerBase
     }
 
     [HttpGet]
-    public IActionResult CheckHealth()
+    public async Task<IActionResult> CheckHealth()
     {
         var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
         _logger.LogInformation("Health check requested from IP: {RemoteIp}", remoteIp);
 
+        var healthChecks = new List<HealthCheckResult>();
+
+        // Check Azure Table Storage
+        try
+        {
+            var storageResult = await _storageService.CheckConnection();
+            healthChecks.Add(new HealthCheckResult
+            {
+                Component = "Azure Table Storage",
+                IsHealthy = storageResult.IsSuccess,
+                Error = storageResult.Error,
+                ResponseTime = 0 // Can add timing if needed
+            });
+        }
+        catch (Exception ex)
+        {
+            healthChecks.Add(new HealthCheckResult
+            {
+                Component = "Azure Table Storage",
+                IsHealthy = false,
+                Error = ex.Message,
+                ResponseTime = 0
+            });
+        }
+
+        // Check Internet Connectivity (DNS)
+        try
+        {
+            var dnsResult = await Dns.GetHostAddressesAsync("google.com");
+            healthChecks.Add(new HealthCheckResult
+            {
+                Component = "DNS Resolution",
+                IsHealthy = dnsResult.Any(),
+                Error = dnsResult.Any() ? null : "No addresses returned",
+                ResponseTime = 0
+            });
+        }
+        catch (Exception ex)
+        {
+            healthChecks.Add(new HealthCheckResult
+            {
+                Component = "DNS Resolution",
+                IsHealthy = false,
+                Error = ex.Message,
+                ResponseTime = 0
+            });
+        }
+
+        // Check HTTP Connectivity
+        try
+        {
+            using var client = _httpClientFactory.CreateClient();
+            client.Timeout = TimeSpan.FromSeconds(5);
+            var response = await client.GetAsync("https://www.google.com");
+            healthChecks.Add(new HealthCheckResult
+            {
+                Component = "HTTP Connectivity",
+                IsHealthy = response.IsSuccessStatusCode,
+                Error = response.IsSuccessStatusCode ? null : $"Status: {response.StatusCode}",
+                ResponseTime = 0
+            });
+        }
+        catch (Exception ex)
+        {
+            healthChecks.Add(new HealthCheckResult
+            {
+                Component = "HTTP Connectivity",
+                IsHealthy = false,
+                Error = ex.Message,
+                ResponseTime = 0
+            });
+        }
+
+        var allHealthy = healthChecks.All(h => h.IsHealthy);
+
         return Ok(new
         {
-            Status = "Healthy",
-            Timestamp = DateTime.UtcNow
+            Status = allHealthy ? "Healthy" : "Unhealthy",
+            Timestamp = DateTime.UtcNow,
+            Checks = healthChecks
         });
     }
 
@@ -158,4 +234,12 @@ public class DiagnosticResult
     public string Component { get; set; } = "";
     public bool IsHealthy { get; set; }
     public string? Error { get; set; }
+}
+
+public class HealthCheckResult
+{
+    public string Component { get; set; } = "";
+    public bool IsHealthy { get; set; }
+    public string? Error { get; set; }
+    public long ResponseTime { get; set; }
 }

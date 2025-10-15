@@ -95,17 +95,33 @@
             diagnosticResults.Clear();
             StateHasChanged();
 
-            // Basic API Health
-            await CheckEndpoint("API Health", "healthz");
-
-            // Storage Health
-            await CheckEndpoint("Storage", "healthz/storage");
-
-            // Internet Connectivity
-            await CheckEndpoint("Internet", "healthz/internet");
+            // Call the comprehensive health endpoint
+            var response = await Http.GetAsync("api/health");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var healthResponse = await response.Content.ReadFromJsonAsync<HealthResponse>();
+                
+                if (healthResponse?.Checks != null)
+                {
+                    foreach (var check in healthResponse.Checks)
+                    {
+                        diagnosticResults.Add(new DiagnosticResult
+                        {
+                            Component = check.Component,
+                            IsHealthy = check.IsHealthy,
+                            Error = check.Error
+                        });
+                    }
+                }
+            }
+            else
+            {
+                errorMessage = $"Failed to retrieve health status: {response.StatusCode}";
+            }
 
             // Log results to server
-            await Http.PostAsJsonAsync("healthz/log", new { Results = diagnosticResults });
+            await Http.PostAsJsonAsync("api/health/log", new { Results = diagnosticResults });
             Logger.LogInformation("Diagnostics completed with {HealthyCount} healthy and {UnhealthyCount} unhealthy results",
             diagnosticResults.Count(r => r.IsHealthy),
             diagnosticResults.Count(r => !r.IsHealthy));
@@ -158,5 +174,20 @@
         public string Component { get; set; } = "";
         public bool IsHealthy { get; set; }
         public string? Error { get; set; }
+    }
+
+    private class HealthResponse
+    {
+        public string Status { get; set; } = "";
+        public DateTime Timestamp { get; set; }
+        public List<HealthCheck> Checks { get; set; } = new();
+    }
+
+    private class HealthCheck
+    {
+        public string Component { get; set; } = "";
+        public bool IsHealthy { get; set; }
+        public string? Error { get; set; }
+        public long ResponseTime { get; set; }
     }
 }

@@ -1,0 +1,3 @@
+# Login assumed
+az group create --name PoConnectFive --location eastus2 --tags azd-env-name=dev
+az deployment sub create --name PoConnectFive-deploy --location eastus2 --template-file infra/main.bicep --parameters environmentName=dev location=eastus2 resourceGroupName=PoConnectFive sharedResourceGroupName=PoShared sharedAppServicePlanName=PoSharedAppServicePlan

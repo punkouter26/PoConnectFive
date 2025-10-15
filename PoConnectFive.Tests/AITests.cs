@@ -3,23 +3,20 @@ using PoConnectFive.Shared.Services.AI;
 using System;
 using System.Threading.Tasks;
 using Xunit;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 
 namespace PoConnectFive.Tests
 {
     public class AITests
     {
-        private readonly ILogger<GameBoard> _logger = NullLogger<GameBoard>.Instance;
 
         [Fact]
         public async Task EasyAI_BlocksImmediateWin()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var player1 = new Player(1, "Player 1", PlayerType.Human);
             var player2 = new Player(2, "AI", PlayerType.AI);
-            var gameState = GameState.CreateNew(player1, player2, _logger);
+            var gameState = GameState.CreateNew(player1, player2);
 
             // Place 4 pieces in a row for player 1
             for (int i = 0; i < 4; i++)
@@ -46,9 +43,10 @@ namespace PoConnectFive.Tests
         public async Task MediumAI_TakesWinningMove()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var player1 = new Player(1, "AI", PlayerType.AI);
-            var player2 = new Player(2, "Player 2", PlayerType.Human); var gameState = GameState.CreateNew(player1, player2, _logger);
+            var player2 = new Player(2, "Player 2", PlayerType.Human);
+            var gameState = GameState.CreateNew(player1, player2);
 
             // Place 4 pieces in a row for AI
             for (int i = 0; i < 4; i++)
@@ -74,10 +72,10 @@ namespace PoConnectFive.Tests
         public async Task HardAI_PrefersCenterColumns()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var player1 = new Player(1, "AI", PlayerType.AI);
             var player2 = new Player(2, "Player 2", PlayerType.Human);
-            var gameState = GameState.CreateNew(player1, player2, _logger);
+            var gameState = GameState.CreateNew(player1, player2);
 
             var hardAI = new HardAIPlayer();
 
@@ -92,10 +90,10 @@ namespace PoConnectFive.Tests
         public async Task HardAI_BlocksPotentialThreats()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var player1 = new Player(1, "AI", PlayerType.AI);
             var player2 = new Player(2, "Player 2", PlayerType.Human);
-            var gameState = GameState.CreateNew(player1, player2, _logger);
+            var gameState = GameState.CreateNew(player1, player2);
 
             // Create a potential threat for player 2
             gameState = new GameState(
@@ -120,10 +118,10 @@ namespace PoConnectFive.Tests
         public async Task HardAI_CreatesMultipleThreats()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var player1 = new Player(1, "AI", PlayerType.AI);
             var player2 = new Player(2, "Player 2", PlayerType.Human);
-            var gameState = GameState.CreateNew(player1, player2, _logger);
+            var gameState = GameState.CreateNew(player1, player2);
 
             // Set up a board where AI can create multiple threats
             gameState = new GameState(
@@ -149,10 +147,10 @@ namespace PoConnectFive.Tests
         public async Task EasyAI_ValidMoveWhenNoThreats()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var player1 = new Player(1, "AI", PlayerType.AI);
             var player2 = new Player(2, "Player 2", PlayerType.Human);
-            var gameState = GameState.CreateNew(player1, player2, _logger);
+            var gameState = GameState.CreateNew(player1, player2);
 
             var easyAI = new EasyAIPlayer();
 
@@ -167,10 +165,10 @@ namespace PoConnectFive.Tests
         public async Task MediumAI_BlocksMultipleThreats()
         {
             // Arrange
-            var board = new GameBoard(_logger);
+            var board = new GameBoard();
             var player1 = new Player(1, "AI", PlayerType.AI);
             var player2 = new Player(2, "Player 2", PlayerType.Human);
-            var gameState = GameState.CreateNew(player1, player2, _logger);
+            var gameState = GameState.CreateNew(player1, player2);
 
             // Create multiple threats for player 2
             gameState = new GameState(

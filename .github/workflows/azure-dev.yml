@@ -1,11 +1,13 @@
+name: Azure Deployment (AZD)
+
 # Run when commits are pushed to master
 on:
   workflow_dispatch:
   push:
     # Run when commits are pushed to mainline branch (main or master)
-    # Set this to the mainline branch you are using
     branches:
       - master
+      - main
 
 # Set up permissions for deploying with secretless Azure federated credentials
 # https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
@@ -13,22 +15,43 @@ permissions:
   id-token: write
   contents: read
 
-
 jobs:
   build:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
     env:
       AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
-      AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Install azd
         uses: Azure/setup-azd@v2
+
       - name: Log in with Azure (Federated Credentials)
         run: |
           azd auth login `
@@ -37,10 +60,53 @@ jobs:
             --tenant-id "$Env:AZURE_TENANT_ID"
         shell: pwsh
 
-
       - name: Provision Infrastructure
         run: azd provision --no-prompt
 
       - name: Deploy Application
         run: azd deploy --no-prompt
-        
+
+  verify:
+    runs-on: ubuntu-latest
+    needs: deploy
+    steps:
+      - name: Wait for deployment to stabilize
+        run: sleep 30
+
+      - name: Health Check - API Health Endpoint
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://poconnectfive.azurewebsites.net/api/health)
+          if [ $response -eq 200 ]; then
+            echo "✅ Health check passed (HTTP $response)"
+          else
+            echo "❌ Health check failed (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Health Check - Application Root
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" https://poconnectfive.azurewebsites.net/)
+          if [ $response -eq 200 ]; then
+            echo "✅ Application root accessible (HTTP $response)"
+          else
+            echo "❌ Application root failed (HTTP $response)"
+            exit 1
+          fi
+
+      - name: Verify Page Title
+        run: |
+          title=$(curl -s https://poconnectfive.azurewebsites.net/ | grep -o '<title>.*</title>' | sed 's/<title>//;s/<\/title>//')
+          if [[ "$title" == *"PoConnectFive"* ]]; then
+            echo "✅ Page title correct: $title"
+          else
+            echo "⚠️  Page title warning: $title"
+          fi
+
+      - name: Display deployment summary
+        run: |
+          echo "🎉 Deployment completed successfully!"
+          echo "📍 Application URL: https://poconnectfive.azurewebsites.net"
+          echo "🏥 Health Check: https://poconnectfive.azurewebsites.net/api/health"
+          echo "📊 Diagnostics: https://poconnectfive.azurewebsites.net/diag"
+          echo "📚 Swagger: https://poconnectfive.azurewebsites.net/swagger"
+

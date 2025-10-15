@@ -1,0 +1,199 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.DataContracts;
+
+namespace PoConnectFive.Server.Controllers;
+
+/// <summary>
+/// Controller for receiving client-side logs and telemetry
+/// Implements client-to-server log ingestion for centralized monitoring
+/// </summary>
+[ApiController]
+[Route("api/[controller]")]
+public class LogController : ControllerBase
+{
+    private readonly ILogger<LogController> _logger;
+    private readonly TelemetryClient _telemetryClient;
+
+    public LogController(ILogger<LogController> logger, TelemetryClient telemetryClient)
+    {
+        _logger = logger;
+        _telemetryClient = telemetryClient;
+    }
+
+    /// <summary>
+    /// POST /api/log/client - Receives client-side logs
+    /// </summary>
+    [HttpPost("client")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult LogFromClient([FromBody] ClientLogEntry logEntry)
+    {
+        if (logEntry == null || string.IsNullOrWhiteSpace(logEntry.Message))
+        {
+            return BadRequest("Log entry must contain a message");
+        }
+
+        // Get client information
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+        var userAgent = Request.Headers["User-Agent"].ToString();
+
+        // Log to Serilog/Application Insights based on log level
+        switch (logEntry.Level.ToLowerInvariant())
+        {
+            case "error":
+            case "critical":
+                _logger.LogError("[Client {ClientIp}] {Message} | Category: {Category} | Data: {Data}",
+                    clientIp, logEntry.Message, logEntry.Category, logEntry.AdditionalData);
+
+                // Track as exception in Application Insights
+                if (!string.IsNullOrEmpty(logEntry.Exception))
+                {
+                    var exception = new Exception(logEntry.Exception);
+                    _telemetryClient.TrackException(exception, new Dictionary<string, string>
+                    {
+                        { "Source", "Client" },
+                        { "ClientIp", clientIp },
+                        { "UserAgent", userAgent },
+                        { "Category", logEntry.Category ?? "" },
+                        { "Message", logEntry.Message }
+                    });
+                }
+                break;
+
+            case "warning":
+                _logger.LogWarning("[Client {ClientIp}] {Message} | Category: {Category} | Data: {Data}",
+                    clientIp, logEntry.Message, logEntry.Category, logEntry.AdditionalData);
+                break;
+
+            case "information":
+            case "info":
+                _logger.LogInformation("[Client {ClientIp}] {Message} | Category: {Category} | Data: {Data}",
+                    clientIp, logEntry.Message, logEntry.Category, logEntry.AdditionalData);
+                break;
+
+            default:
+                _logger.LogDebug("[Client {ClientIp}] {Message} | Category: {Category} | Data: {Data}",
+                    clientIp, logEntry.Message, logEntry.Category, logEntry.AdditionalData);
+                break;
+        }
+
+        return Ok(new { status = "logged", timestamp = DateTime.UtcNow });
+    }
+
+    /// <summary>
+    /// POST /api/log/event - Receives custom telemetry events from client
+    /// </summary>
+    [HttpPost("event")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult LogEvent([FromBody] TelemetryEvent telemetryEvent)
+    {
+        if (telemetryEvent == null || string.IsNullOrWhiteSpace(telemetryEvent.EventName))
+        {
+            return BadRequest("Event must have a name");
+        }
+
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        // Track custom event in Application Insights
+        var properties = new Dictionary<string, string>
+        {
+            { "Source", "Client" },
+            { "ClientIp", clientIp },
+            { "UserAgent", Request.Headers["User-Agent"].ToString() }
+        };
+
+        // Add custom properties
+        if (telemetryEvent.Properties != null)
+        {
+            foreach (var prop in telemetryEvent.Properties)
+            {
+                properties[prop.Key] = prop.Value?.ToString() ?? "";
+            }
+        }
+
+        var metrics = new Dictionary<string, double>();
+        if (telemetryEvent.Metrics != null)
+        {
+            foreach (var metric in telemetryEvent.Metrics)
+            {
+                if (double.TryParse(metric.Value?.ToString(), out double value))
+                {
+                    metrics[metric.Key] = value;
+                }
+            }
+        }
+
+        _telemetryClient.TrackEvent(telemetryEvent.EventName, properties, metrics);
+
+        _logger.LogInformation("[Client Event] {EventName} from {ClientIp} | Properties: {Properties}",
+            telemetryEvent.EventName, clientIp, telemetryEvent.Properties);
+
+        return Ok(new { status = "tracked", eventName = telemetryEvent.EventName, timestamp = DateTime.UtcNow });
+    }
+
+    /// <summary>
+    /// POST /api/log/performance - Receives performance metrics from client
+    /// </summary>
+    [HttpPost("performance")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public IActionResult LogPerformance([FromBody] PerformanceMetric performanceMetric)
+    {
+        if (performanceMetric == null || string.IsNullOrWhiteSpace(performanceMetric.MetricName))
+        {
+            return BadRequest("Performance metric must have a name");
+        }
+
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+        // Track metric in Application Insights
+        _telemetryClient.TrackMetric(
+            performanceMetric.MetricName,
+            performanceMetric.Value,
+            new Dictionary<string, string>
+            {
+                { "Source", "Client" },
+                { "ClientIp", clientIp },
+                { "Component", performanceMetric.Component ?? "Unknown" }
+            });
+
+        _logger.LogInformation("[Client Performance] {MetricName}: {Value}ms from {ClientIp}",
+            performanceMetric.MetricName, performanceMetric.Value, clientIp);
+
+        return Ok(new { status = "tracked", timestamp = DateTime.UtcNow });
+    }
+}
+
+/// <summary>
+/// Model for client log entries
+/// </summary>
+public class ClientLogEntry
+{
+    public string Level { get; set; } = "Information";
+    public string Message { get; set; } = "";
+    public string? Category { get; set; }
+    public string? Exception { get; set; }
+    public Dictionary<string, object>? AdditionalData { get; set; }
+}
+
+/// <summary>
+/// Model for custom telemetry events
+/// </summary>
+public class TelemetryEvent
+{
+    public string EventName { get; set; } = "";
+    public Dictionary<string, object>? Properties { get; set; }
+    public Dictionary<string, object>? Metrics { get; set; }
+}
+
+/// <summary>
+/// Model for performance metrics
+/// </summary>
+public class PerformanceMetric
+{
+    public string MetricName { get; set; } = "";
+    public double Value { get; set; }
+    public string? Component { get; set; }
+}

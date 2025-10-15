@@ -1,0 +1,101 @@
+graph TB
+    subgraph "Client Layer"
+        Client[PoConnectFive.Client<br/>Blazor WebAssembly]
+    end
+
+    subgraph "Server Layer"
+        Server[PoConnectFive.Server<br/>ASP.NET Core Web API]
+
+        subgraph "Controllers"
+            LeaderboardCtrl[LeaderboardController]
+            HealthCtrl[HealthController]
+            LogCtrl[LogController]
+        end
+
+        subgraph "Services"
+            TableStorage[TableStorageService]
+            GameStateServ[GameStateService]
+        end
+    end
+
+    subgraph "Shared Layer"
+        Shared[PoConnectFive.Shared<br/>Class Library]
+
+        subgraph "Models"
+            GameBoard[GameBoard]
+            GameState[GameState]
+            Player[Player]
+            PlayerStatEntity[PlayerStatEntity]
+        end
+
+        subgraph "AI Services"
+            EasyAI[EasyAIPlayer]
+            MediumAI[MediumAIPlayer]
+            HardAI[HardAIPlayer]
+            BoardEval[BoardEvaluator]
+        end
+
+        subgraph "Game Services"
+            GameServ[GameService]
+            Analytics[GameAnalyticsService]
+            Stats[PlayerStatisticsService]
+        end
+    end
+
+    subgraph "Test Layer"
+        Tests[PoConnectFive.Tests<br/>xUnit Tests]
+        GameBoardTests[GameBoardTests]
+        AITests[AITests]
+        IntegrationTests[Integration Tests]
+    end
+
+    subgraph "External Dependencies"
+        Azure[Azure Table Storage<br/>Player Stats & Leaderboard]
+        AppInsights[Application Insights<br/>Telemetry & Logging]
+        Azurite[Azurite<br/>Local Development]
+    end
+
+    %% Client Dependencies
+    Client -->|References| Shared
+    Client -->|HTTP Calls| Server
+    Client -->|Local Storage| Browser[(Browser Storage)]
+
+    %% Server Dependencies
+    Server -->|References| Shared
+    LeaderboardCtrl -->|Uses| TableStorage
+    LeaderboardCtrl -->|Uses| AppInsights
+    HealthCtrl -->|Uses| TableStorage
+    LogCtrl -->|Uses| AppInsights
+    Server -->|Uses| GameStateServ
+
+    %% Service Dependencies
+    TableStorage -->|Connects to| Azure
+    TableStorage -->|Dev Mode| Azurite
+    GameStateServ -->|Uses| GameState
+    GameStateServ -->|Uses| BoardEval
+
+    %% AI Dependencies
+    EasyAI -->|Implements| IAIPlayer[IAIPlayer Interface]
+    MediumAI -->|Implements| IAIPlayer
+    HardAI -->|Implements| IAIPlayer
+    HardAI -->|Uses| BoardEval
+
+    %% Test Dependencies
+    Tests -->|Tests| Server
+    Tests -->|Tests| Shared
+    GameBoardTests -->|Tests| GameBoard
+    AITests -->|Tests| EasyAI
+    AITests -->|Tests| MediumAI
+    AITests -->|Tests| HardAI
+
+    %% Telemetry Flow
+    Server -->|Sends Telemetry| AppInsights
+    Client -->|Logs via API| LogCtrl
+
+    style Client fill:#e1f5ff
+    style Server fill:#ffe1e1
+    style Shared fill:#e1ffe1
+    style Tests fill:#fff4e1
+    style Azure fill:#ff9999
+    style AppInsights fill:#ff9999
+    style Azurite fill:#cccccc

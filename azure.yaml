@@ -2,9 +2,29 @@
 
 name: PoConnectFive
 metadata:
-  template: PoConnectFive@0.0.1-beta
+  template: PoConnectFive
+  version: 1.0.0
+  description: PoConnectFive - Blazor WASM hosted app deployed to Azure App Service
 services:
   web:
     project: ./PoConnectFive.Server
     language: dotnet
     host: appservice
+    dist: ./bin/Release/net9.0/publish
+    hooks:
+      predeploy:
+        windows:
+          shell: pwsh
+          run: |
+            dotnet restore ./PoConnectFive.Server/PoConnectFive.Server.csproj
+            dotnet publish ./PoConnectFive.Server/PoConnectFive.Server.csproj -c Release -o ./PoConnectFive.Server/bin/Release/net9.0/publish
+infra:
+  provider: bicep
+  path: infra
+  module: main.bicep
+  parameters:
+    environmentName: dev
+    location: eastus2
+    resourceGroupName: PoConnectFive
+    sharedResourceGroupName: PoShared
+    sharedAppServicePlanName: PoSharedAppServicePlan
