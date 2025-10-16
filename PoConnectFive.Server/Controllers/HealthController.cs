@@ -104,7 +104,7 @@ public class HealthController : ControllerBase
 
         var allHealthy = healthChecks.All(h => h.IsHealthy);
 
-        var response = new
+        var healthResponse = new
         {
             Status = allHealthy ? "Healthy" : "Unhealthy",
             Timestamp = DateTime.UtcNow,
@@ -115,10 +115,10 @@ public class HealthController : ControllerBase
         {
             _logger.LogWarning("Health check failed. Unhealthy components: {UnhealthyComponents}",
                 string.Join(", ", healthChecks.Where(h => !h.IsHealthy).Select(h => h.Component)));
-            return StatusCode(StatusCodes.Status503ServiceUnavailable, response);
+            return StatusCode(StatusCodes.Status503ServiceUnavailable, healthResponse);
         }
 
-        return Ok(response);
+        return Ok(healthResponse);
     }
 
     [HttpGet("storage")]
