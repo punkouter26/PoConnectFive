@@ -26,7 +26,6 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
-          include-prerelease: true
 
       - name: Restore dependencies
         run: dotnet restore
@@ -61,9 +60,6 @@ jobs:
             --federated-credential-provider "github" `
             --tenant-id "$Env:AZURE_TENANT_ID"
         shell: pwsh
-
-      - name: Provision Infrastructure
-        run: azd provision --no-prompt
 
       - name: Deploy Application
         run: azd deploy --no-prompt
