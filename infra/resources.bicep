@@ -82,13 +82,13 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
     serverFarmId: sharedAppServicePlan.id
     httpsOnly: true
     siteConfig: {
-      netFrameworkVersion: 'v9.0'
+      netFrameworkVersion: 'v4.0'  // Keep v4.0 for the framework version
       use32BitWorkerProcess: true  // Required for F1 tier
       alwaysOn: false  // AlwaysOn not available on F1 tier
       metadata: [
         {
           name: 'CURRENT_STACK'
-          value: 'dotnet'
+          value: 'dotnetcore'
         }
       ]
       appSettings: [
