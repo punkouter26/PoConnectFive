@@ -10,19 +10,6 @@ services:
     project: ./PoConnectFive.Server
     language: dotnet
     host: appservice
-    dist: ./bin/Release/net9.0/publish
-    hooks:
-      predeploy:
-        windows:
-          shell: pwsh
-          run: |
-            dotnet restore ./PoConnectFive.Server/PoConnectFive.Server.csproj
-            dotnet publish ./PoConnectFive.Server/PoConnectFive.Server.csproj -c Release -o ./PoConnectFive.Server/bin/Release/net9.0/publish
-        posix:
-          shell: sh
-          run: |
-            dotnet restore ./PoConnectFive.Server/PoConnectFive.Server.csproj
-            dotnet publish ./PoConnectFive.Server/PoConnectFive.Server.csproj -c Release -o ./PoConnectFive.Server/bin/Release/net9.0/publish
 infra:
   provider: bicep
   path: infra
