@@ -97,14 +97,6 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
           value: applicationInsights.properties.ConnectionString
         }
         {
-          name: 'ApplicationInsightsAgent_EXTENSION_VERSION'
-          value: '~3'
-        }
-        {
-          name: 'XDT_MicrosoftApplicationInsights_Mode'
-          value: 'Recommended'
-        }
-        {
           name: 'AzureTableStorage__ConnectionString'
           value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
         }
@@ -121,11 +113,8 @@ resource appService 'Microsoft.Web/sites@2023-01-01' = {
   }
 }
 
-// App Service Site Extension for Application Insights
-resource appServiceSiteExtension 'Microsoft.Web/sites/siteextensions@2023-01-01' = {
-  name: 'Microsoft.ApplicationInsights.AzureWebSites'
-  parent: appService
-}
+// Note: Site Extension removed to save disk space on F1 tier
+// Application Insights is already configured via NuGet package
 
 // Outputs
 output WEB_APP_NAME string = appService.name
