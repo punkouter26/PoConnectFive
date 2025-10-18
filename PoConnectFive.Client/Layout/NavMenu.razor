@@ -1,4 +1,6 @@
-﻿<nav class="primary-nav" role="navigation" aria-label="Main Navigation">
+﻿@inject Client.Services.ThemeService ThemeService
+
+<nav class="primary-nav" role="navigation" aria-label="Main Navigation">
     <button class="nav-toggle" @onclick="ToggleNavMenu" aria-expanded="@(!collapseNavMenu).ToString().ToLower()"
         aria-controls="primary-navigation">
         <span class="sr-only">Toggle navigation</span>
@@ -14,6 +16,13 @@
         </li>
         <li class="nav-item">
             <NavLink class="nav-link" href="/settings">Settings</NavLink>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link theme-toggle" @onclick="ToggleTheme"
+                aria-label="@(ThemeService.IsHighContrast ? "Disable High Contrast" : "Enable High Contrast")"
+                title="@(ThemeService.IsHighContrast ? "Standard Theme" : "High Contrast Theme")">
+                @(ThemeService.IsHighContrast ? "🌙" : "☀️") Theme
+            </button>
         </li>
     </ul>
 </nav>
@@ -94,6 +103,15 @@
         display: inline-block;
     }
 
+    .theme-toggle {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: inherit;
+        font-family: inherit;
+        color: inherit;
+    }
+
     .nav-link.active {
         background: rgba(255, 255, 255, 0.08);
     }
@@ -138,8 +156,24 @@
 
     private string NavMenuCssClass => collapseNavMenu ? "collapsed" : "expanded";
 
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.LoadThemePreferenceAsync();
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task ToggleTheme()
+    {
+        await ThemeService.ToggleHighContrastAsync();
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
     }
 }

@@ -2,19 +2,42 @@
 <html lang="en">
 
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>PoConnectFive</title>
-<base href="/" />
+    <meta charset="utf-8" />
+    <!-- Enhanced viewport for mobile with PWA support -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="PoConnectFive" />
+    <meta name="theme-color" content="#007bff" />
+    <meta name="description"
+        content="A modern Connect Five game with AI opponents. Challenge yourself against Easy, Medium, or Hard difficulty!" />
+
+    <title>PoConnectFive - Connect Five Game</title>
+    <base href="/" />
+
+    <!-- Icons -->
     <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="192x192" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="icon-512.png" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json" />
+
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/variables.css" />
-    <!-- Removed duplicate animations.css reference as it's already imported in app.css -->
     <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="css/mobile.css" />
+    <link rel="stylesheet" href="css/animations.css" />
+    <link rel="stylesheet" href="css/accessibility.css" />
     <link rel="stylesheet" href="PoConnectFive.Client.styles.css" />
     <link rel="stylesheet" href="_content/Radzen.Blazor/css/standard-base.css">
 </head>
 
 <body>
+    <a href="#main-content" class="skip-to-content">Skip to main content</a>
     <div id="app">
         <div class="loading-container">
             <div class="loading-spinner"></div>
@@ -30,6 +53,7 @@
 
     <script src="_framework/blazor.webassembly.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="js/accessibility.js"></script>
     <script src="js/gameBoard.js"></script>
 
     <style>
@@ -74,6 +98,26 @@
             top: 0.5rem;
         }
     </style>
+
+    <!-- Service Worker Registration for PWA -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then((registration) => {
+                        console.log('ServiceWorker registered:', registration.scope);
+
+                        // Check for updates every hour
+                        setInterval(() => {
+                            registration.update();
+                        }, 3600000);
+                    })
+                    .catch((error) => {
+                        console.log('ServiceWorker registration failed:', error);
+                    });
+            });
+        }
+    </script>
 </body>
 
 </html>

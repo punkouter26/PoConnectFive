@@ -7,7 +7,9 @@
     "omnisharp.loggingLevel": "information",
     "editor.formatOnSave": true,
     "editor.formatOnType": true,
-    "editor.rulers": [120],
+    "editor.rulers": [
+        120
+    ],
     "editor.tabSize": 4,
     "editor.insertSpaces": true,
     "files.exclude": {
@@ -22,5 +24,135 @@
     },
     "files.associations": {
         "*.razor": "aspnetcorerazor"
+    },
+    "github.copilot.chat.mcp.enabled": true,
+    "github.copilot.chat.mcp.servers": {
+        "chrome-devtools": {
+            "command": "C:\\Program Files\\nodejs\\npx.cmd",
+            "args": [
+                "-y",
+                "chrome-devtools-mcp@latest"
+            ]
+        },
+        "azure-mcp": {
+            "command": "C:\\Program Files\\nodejs\\npx.cmd",
+            "args": [
+                "-y",
+                "@azure/mcp@latest",
+                "server",
+                "start"
+            ]
+        },
+        "context7-mcp": {
+            "command": "cmd",
+            "args": [
+                "/c",
+                "npx",
+                "-y",
+                "@upstash/context7-mcp"
+            ]
+        },
+        "browser-tools-mcp": {
+            "command": "C:\\Program Files\\nodejs\\npx.cmd",
+            "args": [
+                "-y",
+                "@agentdeskai/browser-tools-mcp@latest"
+            ]
+        },
+        "playwright-mcp": {
+            "command": "C:\\Program Files\\nodejs\\npx.cmd",
+            "args": [
+                "-y",
+                "@executeautomation/playwright-mcp-server"
+            ]
+        },
+        "supabase-mcp": {
+            "command": "cmd",
+            "args": [
+                "/c",
+                "npx",
+                "-y",
+                "@supabase/mcp-server-supabase@latest",
+                "--read-only"
+            ],
+            "env": {
+                "SUPABASE_ACCESS_TOKEN": "sbp_cca56bd455af35fc7a61328826b1a7e2e2f93970"
+            }
+        }
+    },
+    "mcpServers": {
+        "chrome-devtools": {
+            "command": "C:\\Program Files\\nodejs\\npx.cmd",
+            "args": [
+                "-y",
+                "chrome-devtools-mcp@latest"
+            ]
+        },
+        "github.com/Azure/azure-mcp": {
+            "command": "C:\\Program Files\\nodejs\\npx.cmd",
+            "args": [
+                "-y",
+                "@azure/mcp@latest",
+                "server",
+                "start"
+            ],
+            "disabled": false,
+            "autoApprove": [
+                "azureSubscription_list",
+                "subscription"
+            ]
+        },
+        "github.com/upstash/context7-mcp": {
+            "command": "cmd",
+            "args": [
+                "/c",
+                "npx",
+                "-y",
+                "@upstash/context7-mcp"
+            ],
+            "disabled": false,
+            "autoApprove": [
+                "resolve-library-id",
+                "get-library-docs"
+            ]
+        },
+        "github.com/AgentDeskAI/browser-tools-mcp": {
+            "command": "C:\\Program Files\\nodejs\\npx.cmd",
+            "args": [
+                "-y",
+                "@agentdeskai/browser-tools-mcp@latest"
+            ],
+            "disabled": false,
+            "autoApprove": [
+                "takeScreenshot"
+            ]
+        },
+        "github.com/executeautomation/mcp-playwright": {
+            "command": "C:\\Program Files\\nodejs\\npx.cmd",
+            "args": [
+                "-y",
+                "@executeautomation/playwright-mcp-server"
+            ],
+            "disabled": false,
+            "autoApprove": [
+                "playwright_navigate",
+                "playwright_get"
+            ]
+        },
+        "github.com/supabase-community/supabase-mcp": {
+            "command": "cmd",
+            "args": [
+                "/c",
+                "npx",
+                "-y",
+                "@supabase/mcp-server-supabase@latest",
+                "--read-only"
+            ],
+            "env": {
+                "SUPABASE_ACCESS_TOKEN": "sbp_cca56bd455af35fc7a61328826b1a7e2e2f93970"
+            },
+            "disabled": false,
+            "autoApprove": []
+        }
     }
-} 
+}

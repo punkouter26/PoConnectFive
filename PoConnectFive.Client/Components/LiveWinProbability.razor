@@ -1,0 +1,131 @@
+@using PoConnectFive.Shared.Models
+@using PoConnectFive.Shared.Services
+
+<div class="live-win-probability">
+    <div class="probability-bar-container" aria-label="Win Probability Indicator">
+        <div class="probability-bar">
+            <div class="player1-bar" style="width: @($"{Player1Probability:F1}%")"
+                title="@($"{CurrentState?.Player1.Name}: {Player1Probability:F1}%")">
+                @if (Player1Probability > 15)
+                {
+                    <span class="probability-label">@($"{Player1Probability:F0}%")</span>
+                }
+            </div>
+            <div class="player2-bar" style="width: @($"{Player2Probability:F1}%")"
+                title="@($"{CurrentState?.Player2.Name}: {Player2Probability:F1}%")">
+                @if (Player2Probability > 15)
+                {
+                    <span class="probability-label">@($"{Player2Probability:F0}%")</span>
+                }
+            </div>
+        </div>
+        <div class="player-labels">
+            <span class="player1-label">@CurrentState?.Player1.Name</span>
+            <span class="player2-label">@CurrentState?.Player2.Name</span>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public GameState? CurrentState { get; set; }
+
+    [Parameter]
+    public WinProbabilityService? ProbabilityService { get; set; }
+
+    private double Player1Probability => CurrentState != null && ProbabilityService != null
+    ? (CurrentState.CurrentPlayer.Id == 1
+    ? ProbabilityService.CalculateCurrentWinProbability(CurrentState)
+    : 100 - ProbabilityService.CalculateCurrentWinProbability(CurrentState))
+    : 50;
+
+    private double Player2Probability => 100 - Player1Probability;
+}
+
+<style>
+    .live-win-probability {
+        width: 100%;
+        max-width: 600px;
+        margin: 1rem auto;
+    }
+
+    .probability-bar-container {
+        background: var(--rz-base-background-color, #fff);
+        border: 2px solid var(--rz-border-color, #ddd);
+        border-radius: 8px;
+        padding: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .probability-bar {
+        display: flex;
+        height: 40px;
+        border-radius: 4px;
+        overflow: hidden;
+        background: var(--rz-base-200, #f5f5f5);
+        margin-bottom: 0.5rem;
+    }
+
+    .player1-bar {
+        background: linear-gradient(90deg, #ff6b6b 0%, #ee5a52 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: bold;
+        transition: width 0.5s ease-in-out;
+        position: relative;
+    }
+
+    .player2-bar {
+        background: linear-gradient(90deg, #ffd93d 0%, #f9ca24 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #333;
+        font-weight: bold;
+        transition: width 0.5s ease-in-out;
+        position: relative;
+    }
+
+    .probability-label {
+        font-size: 0.875rem;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+    }
+
+    .player-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.875rem;
+        color: var(--rz-text-secondary-color, #666);
+    }
+
+    .player1-label {
+        font-weight: 600;
+        color: #ff6b6b;
+    }
+
+    .player2-label {
+        font-weight: 600;
+        color: #f9ca24;
+    }
+
+    @@media (max-width: 768px) {
+        .live-win-probability {
+            max-width: 100%;
+            margin: 0.5rem;
+        }
+
+        .probability-bar {
+            height: 35px;
+        }
+
+        .probability-label {
+            font-size: 0.75rem;
+        }
+
+        .player-labels {
+            font-size: 0.75rem;
+        }
+    }
+</style>

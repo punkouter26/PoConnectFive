@@ -90,5 +90,131 @@ namespace PoConnectFive.Tests
             Assert.NotNull(leaderboard);
             Assert.Contains(leaderboard!, e => e.RowKey == "testplayer" || e.PartitionKey == AIDifficulty.Easy.ToString());
         }
+
+        [Fact]
+        public async Task UpdatePlayerStats_InvalidDifficulty_ReturnsBadRequest()
+        {
+            var client = _factory.CreateClient();
+
+            var invalidDto = new
+            {
+                PlayerName = "TestPlayer",
+                Difficulty = 999, // Invalid difficulty
+                Result = 0,
+                GameTimeMilliseconds = 1000
+            };
+
+            var response = await client.PostAsJsonAsync("/api/leaderboard/playerstats", invalidDto);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdatePlayerStats_NullPlayerName_ReturnsBadRequest()
+        {
+            var mockStorage = new Mock<ITableStorageService>();
+
+            var client = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ITableStorageService));
+                    if (descriptor != null) services.Remove(descriptor);
+                    services.AddSingleton<ITableStorageService>(mockStorage.Object);
+                });
+            }).CreateClient();
+
+            var invalidDto = new PlayerStatUpdateDto
+            {
+                PlayerName = null!, // Null player name
+                Difficulty = AIDifficulty.Easy,
+                Result = PlayerGameResult.Win,
+                GameTimeMilliseconds = 1000
+            };
+
+            var response = await client.PostAsJsonAsync("/api/leaderboard/playerstats", invalidDto);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdatePlayerStats_EmptyPlayerName_ReturnsBadRequest()
+        {
+            var mockStorage = new Mock<ITableStorageService>();
+
+            var client = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ITableStorageService));
+                    if (descriptor != null) services.Remove(descriptor);
+                    services.AddSingleton<ITableStorageService>(mockStorage.Object);
+                });
+            }).CreateClient();
+
+            var invalidDto = new PlayerStatUpdateDto
+            {
+                PlayerName = "", // Empty player name
+                Difficulty = AIDifficulty.Easy,
+                Result = PlayerGameResult.Win,
+                GameTimeMilliseconds = 1000
+            };
+
+            var response = await client.PostAsJsonAsync("/api/leaderboard/playerstats", invalidDto);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task GetTopPlayers_ValidDifficulty_ReturnsOk()
+        {
+            var mockStorage = new Mock<ITableStorageService>();
+
+            mockStorage
+                .Setup(s => s.GetTopPlayersByDifficultyAsync(AIDifficulty.Medium, 5))
+                .ReturnsAsync(new List<PlayerStatEntity>());
+
+            var client = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ITableStorageService));
+                    if (descriptor != null) services.Remove(descriptor);
+                    services.AddSingleton<ITableStorageService>(mockStorage.Object);
+                });
+            }).CreateClient();
+
+            var response = await client.GetAsync($"/api/leaderboard/{AIDifficulty.Medium}");
+
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task UpdatePlayerStats_NegativeGameTime_ReturnsBadRequest()
+        {
+            var mockStorage = new Mock<ITableStorageService>();
+
+            var client = _factory.WithWebHostBuilder(builder =>
+            {
+                builder.ConfigureServices(services =>
+                {
+                    var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ITableStorageService));
+                    if (descriptor != null) services.Remove(descriptor);
+                    services.AddSingleton<ITableStorageService>(mockStorage.Object);
+                });
+            }).CreateClient();
+
+            var invalidDto = new PlayerStatUpdateDto
+            {
+                PlayerName = "TestPlayer",
+                Difficulty = AIDifficulty.Easy,
+                Result = PlayerGameResult.Win,
+                GameTimeMilliseconds = -1000 // Negative time
+            };
+
+            var response = await client.PostAsJsonAsync("/api/leaderboard/playerstats", invalidDto);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
     }
 }

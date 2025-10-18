@@ -7,22 +7,6 @@ using Microsoft.Extensions.Logging;
 
 namespace PoConnectFive.Shared.Services
 {
-    /// <summary>
-    /// Implements the core game service operations
-    /// 
-    /// SOLID Principles:
-    /// - Single Responsibility: Handles only game state management and move validation
-    /// - Open/Closed: New game rules or AI strategies can be added without modifying this class
-    /// - Liskov Substitution: Different AI implementations can be used interchangeably
-    /// - Interface Segregation: Uses focused interfaces (IGameService, IAIPlayer)
-    /// - Dependency Inversion: Depends on abstractions (interfaces) not concrete implementations
-    /// 
-    /// Design Patterns:
-    /// - Strategy Pattern: AI players implement different strategies via IAIPlayer
-    /// - Factory Pattern: Uses AIPlayerFactory for creating AI instances
-    /// - State Pattern: GameState represents different game states (in progress, won, draw)
-    /// - Command Pattern: MakeMove implements game moves as commands
-    /// </summary>
     public class GameService : IGameService
     {
         private readonly ILogger<GameService> _logger;
@@ -33,7 +17,7 @@ namespace PoConnectFive.Shared.Services
             _logger = logger;
         }
 
-        public Task<GameState> StartNewGame(string player1Name, string player2Name, bool isAIOpponent = false, AIDifficulty? aiDifficulty = null)
+        public Task<GameState> StartNewGame(string player1Name, string player2Name, bool isAIOpponent = false, AIDifficulty? aiDifficulty = null, AIPersonality? aiPersonality = null)
         {
             // Factory pattern: Creating player instances
             var player1 = new Player(1, player1Name, PlayerType.Human);
@@ -44,8 +28,15 @@ namespace PoConnectFive.Shared.Services
                 if (!aiDifficulty.HasValue)
                     throw new ArgumentException("AI difficulty must be specified for AI opponents");
 
-                // Factory pattern: Creating AI player instance
-                _aiPlayer = AIPlayerFactory.CreateAIPlayer(aiDifficulty.Value);
+                // Factory pattern: Creating AI player instance with personality
+                if (aiDifficulty.Value == AIDifficulty.Hard && aiPersonality.HasValue)
+                {
+                    _aiPlayer = new HardAIPlayer(aiPersonality.Value);
+                }
+                else
+                {
+                    _aiPlayer = AIPlayerFactory.CreateAIPlayer(aiDifficulty.Value);
+                }
             }
             else
             {

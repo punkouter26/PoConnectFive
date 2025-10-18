@@ -28,15 +28,38 @@ namespace PoConnectFive.Shared.Services.AI
         private const int MAX_DEPTH = 5; // Adjust depth based on performance testing
         private readonly Random _random = new Random();
         private readonly IBoardEvaluator _evaluator;
+        private readonly AIPersonality _personality;
         public AIDifficulty Difficulty => AIDifficulty.Hard;
+        public AIPersonality Personality => _personality;
 
-        public HardAIPlayer() : this(new BoardEvaluator())
+        public HardAIPlayer() : this(new BoardEvaluator(), AIPersonality.Balanced)
         {
         }
 
-        public HardAIPlayer(IBoardEvaluator evaluator)
+        public HardAIPlayer(IBoardEvaluator evaluator) : this(evaluator, AIPersonality.Balanced)
+        {
+        }
+
+        public HardAIPlayer(AIPersonality personality) : this(CreateEvaluatorForPersonality(personality), personality)
+        {
+        }
+
+        public HardAIPlayer(IBoardEvaluator evaluator, AIPersonality personality)
         {
             _evaluator = evaluator ?? throw new ArgumentNullException(nameof(evaluator));
+            _personality = personality;
+        }
+
+        private static IBoardEvaluator CreateEvaluatorForPersonality(AIPersonality personality)
+        {
+            return personality switch
+            {
+                AIPersonality.Aggressive => new AggressiveEvaluator(),
+                AIPersonality.Defensive => new DefensiveEvaluator(),
+                AIPersonality.Tricky => new TrickyEvaluator(),
+                AIPersonality.Balanced => new BoardEvaluator(),
+                _ => new BoardEvaluator()
+            };
         }
 
         public Task<int> GetNextMove(GameState gameState)
@@ -101,13 +124,6 @@ namespace PoConnectFive.Shared.Services.AI
         private int Minimax(GameBoard board, int depth, int alpha, int beta, bool isMaximizing, int aiPlayerId)
         {
             var validMoves = GetValidMoves(board);
-            int opponentId = aiPlayerId == 1 ? 2 : 1;
-
-            // Check for terminal state (win/loss/draw) before evaluating depth
-            // This requires adding win check logic within Minimax or EvaluateBoard
-            // Simplified check: if a player won in the previous move that led here
-            // Note: A more robust check would involve checking the current board state for wins.
-            // This is computationally expensive, so EvaluateBoard handles terminal scoring for now.
 
             // Base cases
             if (depth == 0 || validMoves.Count == 0)
@@ -115,48 +131,62 @@ namespace PoConnectFive.Shared.Services.AI
                 return EvaluateBoard(board, aiPlayerId);
             }
 
-            if (isMaximizing) // AI's turn (Maximize score)
-            {
-                int maxScore = int.MinValue;
-                foreach (var move in validMoves)
-                {
-                    var newBoard = board.PlacePiece(move, aiPlayerId);
-                    // Check if this move resulted in a win for AI
-                    int row = FindPieceRow(newBoard, move, aiPlayerId);
-                    if (newBoard.CheckWin(row, move, aiPlayerId))
-                    {
-                        return 100000 + depth; // Prioritize faster wins
-                    }
+            return isMaximizing
+                ? MaximizeScore(board, depth, alpha, beta, aiPlayerId, validMoves)
+                : MinimizeScore(board, depth, alpha, beta, aiPlayerId, validMoves);
+        }
 
-                    int score = Minimax(newBoard, depth - 1, alpha, beta, false, aiPlayerId);
-                    maxScore = Math.Max(maxScore, score);
-                    alpha = Math.Max(alpha, score);
-                    if (beta <= alpha)
-                        break; // Beta cut-off
-                }
-                return maxScore;
-            }
-            else // Opponent's turn (Minimize score)
-            {
-                int minScore = int.MaxValue;
-                foreach (var move in validMoves)
-                {
-                    var newBoard = board.PlacePiece(move, opponentId);
-                    // Check if this move resulted in a win for Opponent
-                    int row = FindPieceRow(newBoard, move, opponentId);
-                    if (newBoard.CheckWin(row, move, opponentId))
-                    {
-                        return -100000 - depth; // Prioritize blocking faster losses
-                    }
+        private int MaximizeScore(GameBoard board, int depth, int alpha, int beta, int aiPlayerId, List<int> validMoves)
+        {
+            int maxScore = int.MinValue;
 
-                    int score = Minimax(newBoard, depth - 1, alpha, beta, true, aiPlayerId);
-                    minScore = Math.Min(minScore, score);
-                    beta = Math.Min(beta, score);
-                    if (beta <= alpha)
-                        break; // Alpha cut-off
+            foreach (var move in validMoves)
+            {
+                var newBoard = board.PlacePiece(move, aiPlayerId);
+                int row = FindPieceRow(newBoard, move, aiPlayerId);
+
+                // Check if this move resulted in a win for AI
+                if (newBoard.CheckWin(row, move, aiPlayerId))
+                {
+                    return 100000 + depth; // Prioritize faster wins
                 }
-                return minScore;
+
+                int score = Minimax(newBoard, depth - 1, alpha, beta, false, aiPlayerId);
+                maxScore = Math.Max(maxScore, score);
+                alpha = Math.Max(alpha, score);
+
+                if (beta <= alpha)
+                    break; // Beta cut-off
             }
+
+            return maxScore;
+        }
+
+        private int MinimizeScore(GameBoard board, int depth, int alpha, int beta, int aiPlayerId, List<int> validMoves)
+        {
+            int minScore = int.MaxValue;
+            int opponentId = aiPlayerId == 1 ? 2 : 1;
+
+            foreach (var move in validMoves)
+            {
+                var newBoard = board.PlacePiece(move, opponentId);
+                int row = FindPieceRow(newBoard, move, opponentId);
+
+                // Check if this move resulted in a win for Opponent
+                if (newBoard.CheckWin(row, move, opponentId))
+                {
+                    return -100000 - depth; // Prioritize blocking faster losses
+                }
+
+                int score = Minimax(newBoard, depth - 1, alpha, beta, true, aiPlayerId);
+                minScore = Math.Min(minScore, score);
+                beta = Math.Min(beta, score);
+
+                if (beta <= alpha)
+                    break; // Alpha cut-off
+            }
+
+            return minScore;
         }
 
         // Strategy Pattern: Board evaluation strategy

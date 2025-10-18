@@ -12,7 +12,7 @@ namespace PoConnectFive.Shared.Interfaces
     /// </summary>
     public interface IGameService
     {
-        Task<GameState> StartNewGame(string player1Name, string player2Name, bool isAIOpponent = false, AIDifficulty? aiDifficulty = null);
+        Task<GameState> StartNewGame(string player1Name, string player2Name, bool isAIOpponent = false, AIDifficulty? aiDifficulty = null, AIPersonality? aiPersonality = null);
         Task<GameState> MakeMove(GameState currentState, int column);
         Task<bool> IsValidMove(GameState currentState, int column);
         Task<int> GetAIMove(GameState currentState);

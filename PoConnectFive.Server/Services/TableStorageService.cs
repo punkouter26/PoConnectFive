@@ -13,9 +13,11 @@ namespace PoConnectFive.Server.Services
     {
         private const string TableName = "PlayerStats";
         private readonly TableServiceClient _tableServiceClient;
-        private readonly TableClient _tableClient;
+        private TableClient? _tableClient;
         private readonly ILogger<TableStorageService> _logger;
         private const string TestTableName = "connectivediagnostics";
+        private bool _initialized = false;
+        private readonly object _initLock = new object();
 
         public TableStorageService(IConfiguration configuration, ILogger<TableStorageService> logger)
         {
@@ -31,14 +33,45 @@ namespace PoConnectFive.Server.Services
             try
             {
                 _tableServiceClient = new TableServiceClient(connectionString);
-                _tableClient = _tableServiceClient.GetTableClient(TableName);
-                _tableClient.CreateIfNotExists();
-                _logger.LogInformation("Table Storage Service initialized successfully");
+                // Lazy initialization - don't create table in constructor
+                _logger.LogInformation("Table Storage Service created (lazy initialization)");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to initialize Table Storage Service: {Message}", ex.Message);
+                _logger.LogError(ex, "Failed to create Table Storage Service: {Message}", ex.Message);
                 throw;
+            }
+        }
+
+        private async Task EnsureInitializedAsync()
+        {
+            if (_initialized && _tableClient != null)
+                return;
+
+            // Use a semaphore instead of lock for async
+            if (_initialized && _tableClient != null)
+                return;
+
+            try
+            {
+                _tableClient = _tableServiceClient.GetTableClient(TableName);
+
+                // Add timeout to prevent hangs
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+                await _tableClient.CreateIfNotExistsAsync(cts.Token);
+
+                _initialized = true;
+                _logger.LogInformation("Table Storage initialized successfully");
+            }
+            catch (TaskCanceledException)
+            {
+                _logger.LogWarning("Table Storage initialization timed out after 10 seconds (will retry on next operation)");
+                // Don't throw - allow retry on next operation
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to initialize table storage (will retry on next operation): {Message}", ex.Message);
+                // Don't throw - allow retry on next operation
             }
         }
 
@@ -46,6 +79,7 @@ namespace PoConnectFive.Server.Services
         {
             try
             {
+                await EnsureInitializedAsync();
                 _logger.LogInformation("Starting Table Storage connection check");
 
                 // First check if we can list tables
@@ -102,6 +136,14 @@ namespace PoConnectFive.Server.Services
 
         public async Task<List<PlayerStatEntity>> GetTopPlayersByDifficultyAsync(AIDifficulty difficulty, int count = 5)
         {
+            await EnsureInitializedAsync();
+
+            if (_tableClient == null)
+            {
+                _logger.LogError("Table client not initialized");
+                return new List<PlayerStatEntity>();
+            }
+
             var partitionKey = difficulty.ToString();
             var topPlayers = new List<PlayerStatEntity>();
 
@@ -132,6 +174,14 @@ namespace PoConnectFive.Server.Services
 
         public async Task UpsertPlayerStatAsync(string playerName, AIDifficulty difficulty, PlayerGameResult result, TimeSpan gameTime)
         {
+            await EnsureInitializedAsync();
+
+            if (_tableClient == null)
+            {
+                _logger.LogError("Table client not initialized");
+                throw new InvalidOperationException("Table client not initialized");
+            }
+
             var partitionKey = difficulty.ToString();
             var rowKey = playerName.ToLowerInvariant();
 

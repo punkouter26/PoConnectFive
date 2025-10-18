@@ -74,11 +74,25 @@
     // Removed _showDifficulties as buttons are always visible now
     // Removed duplicate ShowDifficultyOptions method
 
-    private void StartGameWithDifficulty(AIDifficulty difficulty) // Changed to void
+    private async Task StartGameWithDifficulty(AIDifficulty difficulty)
     {
+        // For Hard difficulty, offer personality selection
+        string? personality = null;
+        if (difficulty == AIDifficulty.Hard)
+        {
+            var personalities = string.Join(", ", Enum.GetNames(typeof(AIPersonality)));
+            personality = await JSRuntime.InvokeAsync<string>("prompt", 
+                $"Select AI Personality ({personalities}):", 
+                AIPersonality.Balanced.ToString());
+        }
+
         var queryParams = System.Web.HttpUtility.ParseQueryString(string.Empty);
         queryParams["mode"] = "single";
         queryParams["difficulty"] = difficulty.ToString();
+        if (!string.IsNullOrEmpty(personality))
+        {
+            queryParams["personality"] = personality;
+        }
         NavigationManager.NavigateTo($"/game?{queryParams}");
     }
 

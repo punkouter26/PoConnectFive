@@ -45,6 +45,8 @@ builder.Services.AddSingleton<ITableStorageService, TableStorageService>();
 builder.Services.AddScoped<GameStateService>();
 // Register AI board evaluator for injection into AI players
 builder.Services.AddSingleton<IBoardEvaluator, BoardEvaluator>();
+// Register health check service
+builder.Services.AddSingleton<IHealthCheckService, HealthCheckService>();
 
 var app = builder.Build();
 

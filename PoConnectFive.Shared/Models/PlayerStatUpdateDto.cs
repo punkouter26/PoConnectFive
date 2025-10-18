@@ -11,9 +11,11 @@ namespace PoConnectFive.Shared.Models // Changed namespace
         public string PlayerName { get; set; } = default!;
 
         [Required]
+        [EnumDataType(typeof(AIDifficulty), ErrorMessage = "Invalid difficulty value")]
         public AIDifficulty Difficulty { get; set; }
 
         [Required]
+        [EnumDataType(typeof(PlayerGameResult), ErrorMessage = "Invalid result value")]
         public PlayerGameResult Result { get; set; }
 
         [Required]

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.ApplicationInsights;
 using Microsoft.ApplicationInsights.DataContracts;
+using System.ComponentModel.DataAnnotations;
 
 namespace PoConnectFive.Server.Controllers;
 
@@ -29,9 +30,9 @@ public class LogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult LogFromClient([FromBody] ClientLogEntry logEntry)
     {
-        if (logEntry == null || string.IsNullOrWhiteSpace(logEntry.Message))
+        if (!ModelState.IsValid)
         {
-            return BadRequest("Log entry must contain a message");
+            return BadRequest(ModelState);
         }
 
         // Get client information
@@ -89,9 +90,9 @@ public class LogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult LogEvent([FromBody] TelemetryEvent telemetryEvent)
     {
-        if (telemetryEvent == null || string.IsNullOrWhiteSpace(telemetryEvent.EventName))
+        if (!ModelState.IsValid)
         {
-            return BadRequest("Event must have a name");
+            return BadRequest(ModelState);
         }
 
         var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -141,9 +142,9 @@ public class LogController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public IActionResult LogPerformance([FromBody] PerformanceMetric performanceMetric)
     {
-        if (performanceMetric == null || string.IsNullOrWhiteSpace(performanceMetric.MetricName))
+        if (!ModelState.IsValid)
         {
-            return BadRequest("Performance metric must have a name");
+            return BadRequest(ModelState);
         }
 
         var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
@@ -171,10 +172,19 @@ public class LogController : ControllerBase
 /// </summary>
 public class ClientLogEntry
 {
+    [Required(ErrorMessage = "Log level is required")]
     public string Level { get; set; } = "Information";
+
+    [Required(ErrorMessage = "Log message is required")]
+    [StringLength(5000, ErrorMessage = "Message cannot exceed 5000 characters")]
     public string Message { get; set; } = "";
+
+    [StringLength(200, ErrorMessage = "Category cannot exceed 200 characters")]
     public string? Category { get; set; }
+
+    [StringLength(10000, ErrorMessage = "Exception cannot exceed 10000 characters")]
     public string? Exception { get; set; }
+
     public Dictionary<string, object>? AdditionalData { get; set; }
 }
 
@@ -183,7 +193,10 @@ public class ClientLogEntry
 /// </summary>
 public class TelemetryEvent
 {
+    [Required(ErrorMessage = "Event name is required")]
+    [StringLength(200, ErrorMessage = "Event name cannot exceed 200 characters")]
     public string EventName { get; set; } = "";
+
     public Dictionary<string, object>? Properties { get; set; }
     public Dictionary<string, object>? Metrics { get; set; }
 }
@@ -193,7 +206,13 @@ public class TelemetryEvent
 /// </summary>
 public class PerformanceMetric
 {
+    [Required(ErrorMessage = "Metric name is required")]
+    [StringLength(200, ErrorMessage = "Metric name cannot exceed 200 characters")]
     public string MetricName { get; set; } = "";
+
+    [Range(0, double.MaxValue, ErrorMessage = "Value must be non-negative")]
     public double Value { get; set; }
+
+    [StringLength(200, ErrorMessage = "Component name cannot exceed 200 characters")]
     public string? Component { get; set; }
 }

@@ -199,13 +199,15 @@ namespace PoConnectFive.Tests
                 newBoard = newBoard.PlacePiece(column, player2Id);
             }
 
-            // Assert
-            Assert.Equal(player1Id, newBoard.GetCell(GameBoard.Rows - 6, column));
-            Assert.Equal(player2Id, newBoard.GetCell(GameBoard.Rows - 5, column));
-            Assert.Equal(player1Id, newBoard.GetCell(GameBoard.Rows - 4, column));
-            Assert.Equal(player2Id, newBoard.GetCell(GameBoard.Rows - 3, column));
-            Assert.Equal(player1Id, newBoard.GetCell(GameBoard.Rows - 2, column));
-            Assert.Equal(player2Id, newBoard.GetCell(GameBoard.Rows - 1, column));
+            // Assert - Pieces stack from bottom (Rows-1) to top
+            // First piece placed (player1) is at bottom (Rows-1)
+            // Last piece placed (player2) is at top (Rows-6)
+            Assert.Equal(player1Id, newBoard.GetCell(GameBoard.Rows - 1, column)); // Bottom - 1st piece
+            Assert.Equal(player2Id, newBoard.GetCell(GameBoard.Rows - 2, column)); // 2nd piece
+            Assert.Equal(player1Id, newBoard.GetCell(GameBoard.Rows - 3, column)); // 3rd piece
+            Assert.Equal(player2Id, newBoard.GetCell(GameBoard.Rows - 4, column)); // 4th piece
+            Assert.Equal(player1Id, newBoard.GetCell(GameBoard.Rows - 5, column)); // 5th piece
+            Assert.Equal(player2Id, newBoard.GetCell(GameBoard.Rows - 6, column)); // Top - 6th piece
         }
     }
 }

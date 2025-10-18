@@ -49,7 +49,9 @@ namespace PoConnectFive.Shared.Models
         public int GetTargetRow(int column)
         {
             if (column < 0 || column >= Columns)
-                throw new ArgumentOutOfRangeException(nameof(column));
+            {
+                return -1;
+            }
 
             for (int row = Rows - 1; row >= 0; row--)
             {

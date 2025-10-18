@@ -1,0 +1,149 @@
+/* High Contrast Theme for Accessibility (WCAG 2.1 AA Compliant) */
+
+.high-contrast {
+    /* High contrast color scheme */
+    --rz-primary: #0000ff;
+    --rz-secondary: #ffff00;
+    --rz-text-color: #000000;
+    --rz-base-background-color: #ffffff;
+    --rz-border-color: #000000;
+}
+
+/* Screen reader only class */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+/* Focus indicators */
+.high-contrast *:focus,
+.high-contrast *:focus-visible {
+    outline: 3px solid #0000ff !important;
+    outline-offset: 2px !important;
+}
+
+/* High contrast game board */
+.high-contrast .game-board {
+    border: 4px solid #000000 !important;
+    background-color: #ffffff !important;
+}
+
+.high-contrast .board-cell {
+    border: 2px solid #000000 !important;
+    background-color: #f0f0f0 !important;
+}
+
+.high-contrast .board-cell:hover {
+    background-color: #e0e0e0 !important;
+    border-color: #0000ff !important;
+}
+
+/* High contrast pieces with patterns for color blindness */
+.high-contrast .piece-red {
+    background: repeating-linear-gradient(45deg,
+            #000000,
+            #000000 10px,
+            #ff0000 10px,
+            #ff0000 20px) !important;
+    border: 3px solid #000000 !important;
+}
+
+.high-contrast .piece-yellow {
+    background: repeating-linear-gradient(-45deg,
+            #000000,
+            #000000 10px,
+            #ffff00 10px,
+            #ffff00 20px) !important;
+    border: 3px solid #000000 !important;
+}
+
+/* High contrast buttons */
+.high-contrast button,
+.high-contrast .rz-button {
+    border: 2px solid #000000 !important;
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    font-weight: bold !important;
+}
+
+.high-contrast button:hover,
+.high-contrast .rz-button:hover {
+    background-color: #0000ff !important;
+    color: #ffffff !important;
+}
+
+/* High contrast text */
+.high-contrast,
+.high-contrast * {
+    color: #000000 !important;
+    background-color: transparent;
+}
+
+.high-contrast a {
+    color: #0000ff !important;
+    text-decoration: underline !important;
+}
+
+.high-contrast a:visited {
+    color: #800080 !important;
+}
+
+/* High contrast cards */
+.high-contrast .rz-card,
+.high-contrast .stat-card,
+.high-contrast .leaderboard-card {
+    border: 3px solid #000000 !important;
+    background-color: #ffffff !important;
+}
+
+/* High contrast probability bar */
+.high-contrast .player1-bar {
+    background: repeating-linear-gradient(90deg,
+            #000000 0px,
+            #000000 5px,
+            #ff0000 5px,
+            #ff0000 10px) !important;
+}
+
+.high-contrast .player2-bar {
+    background: repeating-linear-gradient(90deg,
+            #000000 0px,
+            #000000 5px,
+            #ffff00 5px,
+            #ffff00 10px) !important;
+}
+
+/* Keyboard navigation indicators */
+.keyboard-user *:focus {
+    outline: 3px solid #4d90fe !important;
+    outline-offset: 2px !important;
+}
+
+.keyboard-user .board-cell:focus {
+    background-color: rgba(77, 144, 254, 0.2) !important;
+    transform: scale(1.05);
+    transition: all 0.2s ease;
+}
+
+/* Skip to content link */
+.skip-to-content {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: #000;
+    color: #fff;
+    padding: 8px;
+    text-decoration: none;
+    z-index: 10000;
+}
+
+.skip-to-content:focus {
+    top: 0;
+}
