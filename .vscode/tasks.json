@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/PoConnectFive.Server/PoConnectFive.Server.csproj"
+                "${workspaceFolder}/src/Po.ConnectFive.Api/Po.ConnectFive.Api.csproj"
             ],
             "problemMatcher": "$msCompile"
         },
@@ -44,7 +44,7 @@
             "args": [
                 "run",
                 "--project",
-                "${workspaceFolder}/PoConnectFive.Server/PoConnectFive.Server.csproj"
+                "${workspaceFolder}/src/Po.ConnectFive.Api/Po.ConnectFive.Api.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

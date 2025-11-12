@@ -1,0 +1,157 @@
+@using PoConnectFive.Shared.Models
+@using Radzen.Blazor
+@using Radzen
+
+<RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+    AlignItems="AlignItems.Center" Class="game-header-section">
+    <RadzenButton Click="OnBackClick" Text="Back" Icon="arrow_back" ButtonStyle="ButtonStyle.Light" Class="back-button"
+        Size="ButtonSize.Small" />
+
+    @if (CurrentState != null)
+    {
+        <RadzenCard class="@($"{GetStatusCardClass()} game-status-card-mobile")">
+            <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center"
+                    AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap" Class="players-info">
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem"
+                        Class="@(IsCurrentPlayer(CurrentState.Player1) ? "player-active" : "")">
+                        <RadzenText TextStyle="TextStyle.Body2" Style="font-weight: bold;">@CurrentState.Player1.Name
+                        </RadzenText>
+                        <span class="player-piece-icon red"></span>
+                    </RadzenStack>
+                    <RadzenText Text="VS" TextStyle="TextStyle.Body2"
+                        Style="font-weight: bold; color: var(--rz-text-disabled-color);" />
+                    <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem"
+                        Class="@(IsCurrentPlayer(CurrentState.Player2) ? "player-active" : "")">
+                        <span class="player-piece-icon yellow"></span>
+                        <RadzenText TextStyle="TextStyle.Body2" Style="font-weight: bold;">@CurrentState.Player2.Name
+                        </RadzenText>
+                    </RadzenStack>
+                </RadzenStack>
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                    <RadzenText TextStyle="TextStyle.Subtitle1" TagName="TagName.H2">@StatusMessage</RadzenText>
+                    <RadzenText TextStyle="TextStyle.Caption" TagName="TagName.P">@GameMessage</RadzenText>
+                </RadzenStack>
+            </RadzenStack>
+        </RadzenCard>
+    }
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public GameState? CurrentState { get; set; }
+
+    [Parameter]
+    public string StatusMessage { get; set; } = string.Empty;
+
+    [Parameter]
+    public string GameMessage { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback OnBackClick { get; set; }
+
+    private bool IsCurrentPlayer(Player player)
+    {
+        return CurrentState?.CurrentPlayer == player;
+    }
+
+    private string GetStatusCardClass()
+    {
+        return $"game-status-card {(CurrentState?.Status.ToString().ToLower() ?? "")}";
+    }
+}
+
+<style>
+    /* Style for player piece icons */
+    .player-piece-icon {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+
+    .player-piece-icon.red {
+        background: var(--color-player1, #FF0000);
+    }
+
+    .player-piece-icon.yellow {
+        background: var(--color-player2, #FFFF00);
+    }
+
+    /* Highlight active player */
+    .player-active {
+        background-color: rgba(var(--rz-primary-rgb), 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--rz-border-radius);
+    }
+
+    /* Status card styling based on game outcome */
+    .game-status-card.player1won {
+        border-left: 4px solid var(--rz-success);
+    }
+
+    .game-status-card.player2won {
+        border-left: 4px solid var(--rz-info);
+    }
+
+    .game-status-card.draw {
+        border-left: 4px solid var(--rz-warning);
+    }
+
+    /* Mobile responsive styles */
+    .game-header-section {
+        width: 100%;
+        max-width: 800px;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .game-status-card-mobile {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+    }
+
+    .players-info {
+        font-size: 0.9rem;
+    }
+
+    /* Mobile portrait adjustments */
+    @@media (max-width: 576px) {
+        .game-header-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .back-button {
+            align-self: flex-start;
+        }
+
+        .game-status-card-mobile {
+            width: 100%;
+        }
+
+        .players-info {
+            font-size: 0.85rem;
+        }
+
+        .player-piece-icon {
+            width: 16px;
+            height: 16px;
+        }
+    }
+
+    /* Small mobile devices */
+    @@media (max-width: 400px) {
+        .players-info {
+            font-size: 0.75rem;
+        }
+
+        .player-piece-icon {
+            width: 14px;
+            height: 14px;
+        }
+    }
+</style>

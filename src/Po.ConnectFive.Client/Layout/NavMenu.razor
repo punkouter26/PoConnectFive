@@ -1,0 +1,225 @@
+﻿@namespace PoConnectFive.Client.Shared
+@inject PoConnectFive.Client.Services.ThemeService ThemeService
+
+<nav class="primary-nav" role="navigation" aria-label="Main Navigation">
+    <button class="nav-toggle" @onclick="ToggleNavMenu" aria-expanded="@(!collapseNavMenu).ToString().ToLower()"
+        aria-controls="primary-navigation">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="hamburger" aria-hidden="true"></span>
+    </button>
+
+    <ul id="primary-navigation" class="nav-list @NavMenuCssClass">
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">Home</NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/leaderboard">Leaderboard</NavLink>
+        </li>
+        <li class="nav-item">
+            <NavLink class="nav-link" href="/settings">Settings</NavLink>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link theme-toggle" @onclick="CycleTheme" aria-label="@ThemeService.GetThemeLabel()"
+                title="@GetThemeTooltip()">
+                <span class="theme-icon">@ThemeService.GetThemeIcon()</span>
+                <span class="theme-text">@GetThemeText()</span>
+            </button>
+        </li>
+    </ul>
+</nav>
+
+<style>
+    /* Visually hidden (screen-reader only) */
+    .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+    }
+
+    .primary-nav {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .nav-toggle {
+        display: none;
+        background: transparent;
+        border: none;
+        padding: 0.5rem;
+        cursor: pointer;
+        color: inherit;
+    }
+
+    .hamburger {
+        width: 22px;
+        height: 2px;
+        background: currentColor;
+        display: block;
+        position: relative;
+    }
+
+    .hamburger::before,
+    .hamburger::after {
+        content: "";
+        width: 22px;
+        height: 2px;
+        background: currentColor;
+        position: absolute;
+        left: 0;
+    }
+
+    .hamburger::before {
+        top: -7px;
+    }
+
+    .hamburger::after {
+        top: 7px;
+    }
+
+    .nav-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .nav-item {
+        margin: 0;
+    }
+
+    .nav-link {
+        color: inherit;
+        text-decoration: none;
+        padding: 0.5rem 0.75rem;
+        border-radius: 4px;
+        display: inline-block;
+    }
+
+    .theme-toggle {
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        font-size: inherit;
+        font-family: inherit;
+        color: inherit;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: var(--transition-fast);
+    }
+
+    .theme-toggle:hover {
+        opacity: 0.8;
+        transform: translateY(-1px);
+    }
+
+    .theme-icon {
+        font-size: 1.25rem;
+        display: inline-block;
+        transition: transform var(--transition-base);
+    }
+
+    .theme-toggle:hover .theme-icon {
+        transform: rotate(20deg);
+    }
+
+    .theme-text {
+        font-size: 0.9rem;
+    }
+
+    .nav-link.active {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* Collapsed state for small screens */
+    .nav-list.collapsed {
+        display: none;
+    }
+
+    /* Responsive rules: show toggle on small screens and stack nav vertically */
+    @@media (max-width: 768px) {
+        .nav-toggle {
+            display: inline-flex;
+        }
+
+        .nav-list {
+            flex-direction: column;
+            gap: 0;
+            background: transparent;
+            width: 100%;
+            margin-top: 0.5rem;
+        }
+
+        .nav-link {
+            padding: 0.75rem 1rem;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .nav-list.collapsed {
+            display: none;
+        }
+
+        .nav-list:not(.collapsed) {
+            display: flex;
+        }
+    }
+</style>
+
+@code {
+    private bool collapseNavMenu = true;
+
+    private string NavMenuCssClass => collapseNavMenu ? "collapsed" : "expanded";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.LoadThemePreferenceAsync();
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task CycleTheme()
+    {
+        await ThemeService.CycleThemeAsync();
+    }
+
+    private string GetThemeTooltip()
+    {
+        return ThemeService.CurrentTheme switch
+        {
+            "auto" => "Theme: Auto (follows system)",
+            "light" => "Theme: Light",
+            "dark" => "Theme: Dark",
+            _ => "Toggle Theme"
+        };
+    }
+
+    private string GetThemeText()
+    {
+        return ThemeService.CurrentTheme switch
+        {
+            "auto" => "Auto",
+            "light" => "Light",
+            "dark" => "Dark",
+            _ => "Theme"
+        };
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+}

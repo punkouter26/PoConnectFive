@@ -1,0 +1,690 @@
+@page "/game"
+@using PoConnectFive.Shared.Models
+@using PoConnectFive.Shared.Interfaces
+@using PoConnectFive.Shared.Services
+@using PoConnectFive.Client.Components
+@using PoConnectFive.Client.Services
+@inject IGameService GameService
+@inject IPlayerDataService PlayerDataService
+@inject IJSRuntime JSRuntime
+@inject NavigationManager NavigationManager
+@inject WinProbabilityService WinProbabilityService
+@inject GameStateService GameStateService
+@inject GameStatisticsService StatisticsService
+@inject SoundService SoundService
+
+<PageTitle>PoConnectFive - Game</PageTitle>
+
+<RadzenStack AlignItems="AlignItems.Center" Gap="1rem" Class="rz-p-2 rz-p-md-4 game-page-container">
+
+    @* Header Section *@
+    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.SpaceBetween"
+        AlignItems="AlignItems.Center" Class="game-header-section">
+        <RadzenButton Click="NavigateToMenu" Text="Back" Icon="arrow_back" ButtonStyle="ButtonStyle.Light"
+            Class="back-button" Size="ButtonSize.Small" /> @* Shortened text for mobile *@
+
+        @if (_currentState != null)
+        {
+            <RadzenCard class="@($"{GetStatusCardClass()} game-status-card-mobile")"> @* Used helper method for class *@
+                <RadzenStack AlignItems="AlignItems.Center" Gap="0.5rem">
+                    <RadzenStack Orientation="Orientation.Horizontal" JustifyContent="JustifyContent.Center"
+                        AlignItems="AlignItems.Center" Gap="0.5rem" Wrap="FlexWrap.Wrap" Class="players-info">
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem"
+                            Class="@(IsCurrentPlayer(_currentState.Player1) ? "player-active" : "")">
+                            <RadzenText TextStyle="TextStyle.Body2" Style="font-weight: bold;">@_currentState.Player1.Name
+                            </RadzenText>
+                            <span class="player-piece-icon red"></span>
+                        </RadzenStack>
+                        <RadzenText Text="VS" TextStyle="TextStyle.Body2"
+                            Style="font-weight: bold; color: var(--rz-text-disabled-color);" />
+                        <RadzenStack Orientation="Orientation.Horizontal" AlignItems="AlignItems.Center" Gap="0.25rem"
+                            Class="@(IsCurrentPlayer(_currentState.Player2) ? "player-active" : "")">
+                            <span class="player-piece-icon yellow"></span>
+                            <RadzenText TextStyle="TextStyle.Body2" Style="font-weight: bold;">@_currentState.Player2.Name
+                            </RadzenText>
+                        </RadzenStack>
+                    </RadzenStack>
+                    <RadzenStack AlignItems="AlignItems.Center" Gap="0.25rem">
+                        <RadzenText TextStyle="TextStyle.Subtitle1" TagName="TagName.H2">@GetStatusMessage()</RadzenText>
+                        <RadzenText TextStyle="TextStyle.Caption" TagName="TagName.P">@GetGameMessage()</RadzenText>
+                    </RadzenStack>
+                </RadzenStack>
+            </RadzenCard>
+        }
+    </RadzenStack>
+
+    @* Live Win Probability *@
+    @if (_currentState != null && _currentState.Status == GameStatus.InProgress)
+    {
+        <LiveWinProbability CurrentState="@_currentState" ProbabilityService="@WinProbabilityService" />
+    }
+
+    @* Game Board *@
+    @if (_currentState != null)
+    {
+        <RadzenStack JustifyContent="JustifyContent.Center">
+            <div class="game-board-container @(_isInvalidMove ? "board-shake" : "")">
+                <GameBoardComponent @ref="gameBoardRef" Board="@_currentState.Board" CurrentState="@_currentState"
+                    OnColumnClicked="OnColumnClicked" OnAnimationComplete="OnAnimationComplete" />
+            </div>
+        </RadzenStack>
+    }
+
+    @* Game Controls *@
+    <RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.Center"
+        Class="game-controls-section" Wrap="FlexWrap.Wrap">
+        <RadzenButton Click="OnNewGameClick" Text="New Game" ButtonStyle="ButtonStyle.Primary"
+            Size="ButtonSize.Medium" />
+        <RadzenButton Click="OnResetClick" Text="Reset" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Medium" />
+        <RadzenButton Click="ToggleMute" Icon="@(SoundService.IsMuted ? "volume_off" : "volume_up")"
+            ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+    </RadzenStack>
+
+</RadzenStack>
+
+@code {
+    private GameState? _currentState;
+    private DateTime _gameStartTime;
+    // Removed player IDs, using names and difficulty now for API calls
+    private string? _player1Name;
+    private string? _player2Name;
+    private AIDifficulty? _aiDifficulty; // Store AI difficulty for stat updates
+    private AIPersonality? _aiPersonality; // Store AI personality
+    private GameBoardComponent? gameBoardRef;
+    private List<(int column, double probability)> winProbabilities = new();
+    private bool _isWinning = false;
+    private bool _isInvalidMove = false;
+    // Indicates whether it's currently the AI's turn (blocks player input)
+    private bool _isAITurn = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var uri = new Uri(NavigationManager.Uri);
+        var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+
+        string? mode = query["mode"];
+        if (mode == "single")
+        {
+            string? difficultyStr = query["difficulty"];
+            string? personalityStr = query["personality"];
+
+            if (Enum.TryParse<AIDifficulty>(difficultyStr, true, out var difficulty))
+            {
+                AIPersonality? personality = null;
+                if (!string.IsNullOrEmpty(personalityStr) && Enum.TryParse<AIPersonality>(personalityStr, true, out var
+                parsedPersonality))
+                {
+                    personality = parsedPersonality;
+                }
+                await StartNewGameWithAI(difficulty, personality);
+            }
+        }
+        else if (mode == "two-player")
+        {
+            await StartNewGameTwoPlayer();
+        }
+        else
+        {
+            await StartNewGameTwoPlayer(); // Default to two player mode
+        }
+
+        // Removed the initial win probability calculation to prevent console spam on game start
+        // Win probabilities will be calculated after the first move is made
+    }
+
+    private async Task OnColumnClicked(int column)
+    {
+        // Block player input while AI is thinking or if game not in progress
+        if (_isAITurn || _currentState?.Status != GameStatus.InProgress)
+            return;
+
+        try
+        {
+            if (await GameService.IsValidMove(_currentState, column))
+            {
+                // Apply the player's move
+                _currentState = await GameService.MakeMove(_currentState, column);
+                await SoundService.PlayPieceDrop();
+
+                // If game ended after the player's move, handle it
+                if (_currentState.Status != GameStatus.InProgress)
+                {
+                    _isWinning = true;
+                    await SoundService.PlayWin();
+                    await HandleGameEnd();
+                    return;
+                }
+
+                // If next player is AI, trigger AI move sequence
+                if (_currentState.CurrentPlayer.Type == PlayerType.AI)
+                {
+                    await PerformAIMoveAsync();
+                }
+            }
+            else
+            {
+                _isInvalidMove = true;
+                await SoundService.PlayError();
+                StateHasChanged();
+                await Task.Delay(300);
+                _isInvalidMove = false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error making move: {ex.Message}");
+        }
+    }
+
+    private async Task PerformAIMoveAsync()
+    {
+        if (_currentState == null) return;
+        if (_currentState.CurrentPlayer.Type != PlayerType.AI) return;
+
+        try
+        {
+            _isAITurn = true;
+            StateHasChanged();
+
+            // Small delay to simulate AI thinking and give user feedback
+            await Task.Delay(600);
+
+            // Ask service for AI's chosen column
+            var aiColumn = await GameService.GetAIMove(_currentState);
+
+            // Double-check move validity and that game is still in progress
+            if (_currentState.Status != GameStatus.InProgress || !await GameService.IsValidMove(_currentState, aiColumn))
+            {
+                _isAITurn = false;
+                StateHasChanged();
+                return;
+            }
+
+            // Apply AI move
+            _currentState = await GameService.MakeMove(_currentState, aiColumn);
+            await SoundService.PlayPieceDrop();
+
+            // If game ended after AI move, handle it
+            if (_currentState.Status != GameStatus.InProgress)
+            {
+                _isWinning = true;
+                await SoundService.PlayWin();
+                await HandleGameEnd();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error during AI move: {ex.Message}");
+        }
+        finally
+        {
+            _isAITurn = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleGameEnd()
+    {
+        var gameTime = DateTime.UtcNow - _gameStartTime;
+
+        // Update player statistics via API only for games against AI
+        if (_currentState?.Player2.Type == PlayerType.AI && _player1Name != null && _aiDifficulty.HasValue)
+        {
+            var result = _currentState.Status switch
+            {
+                GameStatus.Player1Won => PlayerGameResult.Win,
+                GameStatus.Player2Won => PlayerGameResult.Loss, // Human (Player 1) lost
+                GameStatus.Draw => PlayerGameResult.Draw,
+                _ => (PlayerGameResult?)null // Should not happen if game ended
+            };
+
+            if (result.HasValue)
+            {
+                // Call the new UpdatePlayerStats overload
+                await PlayerDataService.UpdatePlayerStats(_player1Name, _aiDifficulty.Value, result.Value, gameTime);
+            }
+        }
+        // Note: Stats for Player 2 (AI or Human) in local games are not sent to the API currently.
+
+        // Show game end dialog after a short delay to allow animation to complete
+        await Task.Delay(500);
+        var message = _currentState!.Status switch
+        {
+            GameStatus.Player1Won => $"≡ƒÄë {_currentState.Player1.Name} Wins! ≡ƒÄë",
+            GameStatus.Player2Won => $"≡ƒÄë {_currentState.Player2.Name} Wins! ≡ƒÄë",
+            GameStatus.Draw => "≡ƒñ¥ Game Draw! ≡ƒñ¥",
+            _ => string.Empty
+        };
+
+        var playAgain = await JSRuntime.InvokeAsync<bool>("confirm", $"{message}\n\nPlay again?");
+        if (playAgain)
+        {
+            await OnResetClick();
+        }
+    }
+
+    private async Task OnNewGameClick()
+    {
+        if (_currentState?.Status == GameStatus.InProgress)
+        {
+            if (!await JSRuntime.InvokeAsync<bool>("confirm", "Current game is in progress. Start new game anyway?"))
+                return;
+        }
+
+        bool isAI = await JSRuntime.InvokeAsync<bool>("confirm", "Play against AI?");
+        if (isAI)
+        {
+            var difficulties = Enum.GetNames(typeof(AIDifficulty));
+            var difficultyChoice = await JSRuntime.InvokeAsync<string>("prompt",
+            $"Select AI Difficulty ({string.Join(", ", difficulties)}):",
+            difficulties[0]);
+
+            if (!string.IsNullOrEmpty(difficultyChoice) &&
+            Enum.TryParse<AIDifficulty>(difficultyChoice, true, out var difficulty))
+            {
+                AIPersonality? personality = null;
+
+                // For Hard difficulty, offer personality selection
+                if (difficulty == AIDifficulty.Hard)
+                {
+                    var personalities = Enum.GetNames(typeof(AIPersonality));
+                    var personalityChoice = await JSRuntime.InvokeAsync<string>("prompt",
+                    $"Select AI Personality ({string.Join(", ", personalities)}):",
+                    AIPersonality.Balanced.ToString());
+
+                    if (!string.IsNullOrEmpty(personalityChoice) &&
+                    Enum.TryParse<AIPersonality>(personalityChoice, true, out var parsedPersonality))
+                    {
+                        personality = parsedPersonality;
+                    }
+                }
+
+                await StartNewGameWithAI(difficulty, personality);
+            }
+        }
+        else
+        {
+            await StartNewGameTwoPlayer();
+        }
+    }
+
+    private async Task StartNewGameWithAI(AIDifficulty difficulty, AIPersonality? personality = null)
+    {
+        _player1Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter your name:", "Player 1");
+        if (string.IsNullOrEmpty(_player1Name)) return;
+
+        // Store player name, AI difficulty, and personality
+        _aiDifficulty = difficulty;
+        _aiPersonality = personality;
+
+        // Build AI name with personality if specified
+        _player2Name = personality.HasValue
+        ? $"AI ({difficulty} - {personality.Value})"
+        : $"AI ({difficulty})";
+
+        _gameStartTime = DateTime.UtcNow;
+        _currentState = await GameService.StartNewGame(
+        _player1Name,
+        _player2Name,
+        true,
+        difficulty,
+        personality
+        );
+        StateHasChanged();
+    }
+
+    private async Task StartNewGameTwoPlayer()
+    {
+        _player1Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter name for Player 1:", "Player 1");
+        if (string.IsNullOrEmpty(_player1Name)) return;
+
+        _player2Name = await JSRuntime.InvokeAsync<string>("prompt", "Enter name for Player 2:", "Player 2");
+        if (string.IsNullOrEmpty(_player2Name)) return;
+
+        // Store names, clear AI difficulty, remove direct interaction with PlayerDataService here
+        _aiDifficulty = null;
+
+        _gameStartTime = DateTime.UtcNow;
+        _currentState = await GameService.StartNewGame(_player1Name, _player2Name);
+        StateHasChanged();
+    }
+
+    private async Task OnResetClick()
+    {
+        if (_currentState?.Status == GameStatus.InProgress)
+        {
+            if (!await JSRuntime.InvokeAsync<bool>("confirm", "Are you sure you want to reset the current game?"))
+                return;
+        }
+
+        _gameStartTime = DateTime.UtcNow;
+        _currentState = await GameService.StartNewGame(
+        _currentState!.Player1.Name,
+        _currentState.Player2.Name,
+        _currentState.Player2.Type == PlayerType.AI,
+        _currentState.Player2.AIDifficulty
+        );
+        StateHasChanged();
+    }
+
+    private string GetStatusMessage()
+    {
+        return _currentState?.Status switch
+        {
+            GameStatus.InProgress => $"{_currentState.CurrentPlayer.Name}'s Turn",
+            GameStatus.Player1Won => $"{_currentState.Player1.Name} Wins!",
+            GameStatus.Player2Won => $"{_currentState.Player2.Name} Wins!",
+            GameStatus.Draw => "Game Draw!",
+            _ => string.Empty
+        };
+    }
+
+    private string GetGameMessage()
+    {
+        return _currentState?.Status switch
+        {
+            GameStatus.InProgress => _currentState.CurrentPlayer.Type == PlayerType.AI ?
+            "AI is thinking..." : "Click a column to place your piece",
+            _ => "Click New Game to play again"
+        };
+    }
+
+    private bool IsCurrentPlayer(Player player)
+    {
+        return _currentState?.CurrentPlayer == player;
+    }
+
+    private async Task NavigateToMenu()
+    {
+        if (_currentState?.Status == GameStatus.InProgress)
+        {
+            bool confirmed = await JSRuntime.InvokeAsync<bool>("confirm", "Current game will be lost. Return to menu?");
+            if (confirmed)
+            {
+                NavigationManager.NavigateTo("/");
+            }
+        }
+        else
+        {
+            NavigationManager.NavigateTo("/");
+        }
+    }
+
+    // Helper method for status card styling
+    private string GetStatusCardClass()
+    {
+        return $"game-status-card {(_currentState?.Status.ToString().ToLower() ?? "")}";
+    }
+
+    private async Task MakeMove(int column)
+    {
+        try
+        {
+            _currentState = GameStateService.MakeMove(column);
+            await UpdateWinProbabilities();
+        }
+        catch (InvalidOperationException)
+        {
+            // Silently handle invalid move - no console output needed
+        }
+    }
+    private async Task UpdateWinProbabilities()
+    {
+        try
+        {
+            // Drastically reduced simulations to prevent console spam
+            // Only calculate probabilities if the game is still in progress
+            if (_currentState?.Status == GameStatus.InProgress)
+            {
+                winProbabilities = await WinProbabilityService.CalculateWinProbabilities(GameStateService.GetCurrentState(), 5);
+                StateHasChanged();
+            }
+        }
+        catch (Exception)
+        {
+            // Silently handle any errors during probability calculation
+            // This prevents game from being blocked by probability calculations
+            winProbabilities = new List<(int column, double probability)>();
+        }
+    }
+
+    private string GetCellClass(int playerId)
+    {
+        return playerId switch
+        {
+            1 => "red",
+            2 => "yellow",
+            _ => "empty"
+        };
+    }
+
+    private void ToggleMute()
+    {
+        SoundService.ToggleMute();
+    }
+
+    private void NavigateToStatistics()
+    {
+        NavigationManager.NavigateTo("/statistics");
+    }
+
+    private void OnAnimationComplete()
+    {
+        _isWinning = false;
+        StateHasChanged();
+    }
+}
+
+<style>
+    /* Style for player piece icons */
+    .player-piece-icon {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        vertical-align: middle;
+        flex-shrink: 0;
+    }
+
+    .player-piece-icon.red {
+        background: var(--color-player1, #FF0000);
+    }
+
+    .player-piece-icon.yellow {
+        background: var(--color-player2, #FFFF00);
+    }
+
+    /* Highlight active player */
+    .player-active {
+        background-color: rgba(var(--rz-primary-rgb), 0.1);
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--rz-border-radius);
+    }
+
+    /* Status card styling based on game outcome */
+    .game-status-card.player1won {
+        border-left: 4px solid var(--rz-success);
+    }
+
+    .game-status-card.player2won {
+        border-left: 4px solid var(--rz-info);
+    }
+
+    .game-status-card.draw {
+        border-left: 4px solid var(--rz-warning);
+    }
+
+    /* Mobile responsive styles */
+    .game-page-container {
+        width: 100%;
+        max-width: 100vw;
+        overflow-x: hidden;
+    }
+
+    .game-header-section {
+        width: 100%;
+        max-width: 800px;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .game-status-card-mobile {
+        flex: 1;
+        min-width: 0;
+        margin: 0;
+    }
+
+    .players-info {
+        font-size: 0.9rem;
+    }
+
+    .game-board-container {
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        justify-content: center;
+        overflow: visible;
+    }
+
+    .game-controls-section {
+        width: 100%;
+        max-width: 800px;
+        padding: 0 0.5rem;
+    }
+
+    /* Mobile portrait adjustments */
+    @@media (max-width: 576px) {
+        .game-page-container {
+            padding: 0.5rem !important;
+            gap: 0.75rem !important;
+        }
+
+        .game-header-section {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .back-button {
+            align-self: flex-start;
+        }
+
+        .game-status-card-mobile {
+            width: 100%;
+        }
+
+        .players-info {
+            font-size: 0.85rem;
+        }
+
+        .player-piece-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .game-board-container {
+            margin: 0 !important;
+            padding: 0.25rem !important;
+        }
+
+        .game-board {
+            max-width: 100% !important;
+            width: 100% !important;
+            padding: 0.25rem !important;
+        }
+
+        /* Scale down game board canvas for mobile */
+        .game-board canvas {
+            max-width: 100% !important;
+            height: auto !important;
+            width: 100% !important;
+            display: block;
+        }
+
+        .game-controls-section {
+            padding: 0 0.25rem !important;
+        }
+
+        .game-controls-section .rz-button {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+        }
+    }
+
+    /* Small mobile devices */
+    @@media (max-width: 400px) {
+        .players-info {
+            font-size: 0.75rem;
+        }
+
+        .player-piece-icon {
+            width: 14px;
+            height: 14px;
+        }
+
+        .game-controls-section .rz-button {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.5rem;
+            min-width: 70px;
+        }
+    }
+
+    .game-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2rem;
+        padding: 2rem;
+    }
+
+    .game-board {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        background-color: #1a237e;
+        padding: 1rem;
+        border-radius: 0.5rem;
+    }
+
+    .board-row {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .board-cell {
+        width: 50px;
+        height: 50px;
+        background-color: #0d47a1;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .cell-content {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+    }
+
+    .empty {
+        background-color: white;
+    }
+
+    .red {
+        background-color: #f44336;
+    }
+
+    .yellow {
+        background-color: #ffeb3b;
+    }
+
+    .game-info {
+        text-align: center;
+    }
+
+    /* Board shake animation for invalid moves - animation defined in animations.css */
+    .board-shake {
+        animation: shake 0.3s ease-in-out;
+    }
+</style>

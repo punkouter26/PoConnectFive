@@ -511,3 +511,13 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Azurite local storage emulator files
+__azurite_db_*
+__blobstorage__/
+__queuestorage__/
+AzuriteConfig
+
+# Development log files
+log.txt
+log_*.txt

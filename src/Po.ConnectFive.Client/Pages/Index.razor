@@ -1,0 +1,290 @@
+@page "/"
+@using PoConnectFive.Shared.Models
+@inject NavigationManager NavigationManager
+@inject IJSRuntime JSRuntime
+
+<PageTitle>PoConnectFive</PageTitle>
+
+<div class="home-container bg-gradient-animated">
+    <div class="game-modes-grid stagger-children">
+        <!-- Single Player Mode -->
+        <div class="mode-card-glass scale-in">
+            <div class="mode-icon bounce">🤖</div>
+            <h2 class="mode-title">Single Player</h2>
+            <p class="mode-description">Challenge our adaptive AI</p>
+
+            <div class="difficulty-buttons">
+                @foreach (var difficulty in Enum.GetValues<AIDifficulty>())
+                {
+                    var difficultyName = difficulty.ToString();
+                    <button class="btn-glass @GetDifficultyClass(difficulty)"
+                            @onclick="@(() => StartGameWithDifficulty(difficulty))"
+                            type="button">
+                        <span class="difficulty-emoji">@GetDifficultyEmoji(difficulty)</span>
+                        <span class="difficulty-name">@difficultyName</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Two Player Mode -->
+        <div class="mode-card-glass scale-in" @onclick="StartTwoPlayer" style="cursor: pointer;">
+            <div class="mode-icon bounce">👥</div>
+            <h2 class="mode-title">Two Players</h2>
+            <p class="mode-description">Play against a friend on the same device</p>
+            <div class="mode-cta">
+                <span class="cta-text">Click to start →</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="quick-actions fade-in">
+        <button class="btn-glass-primary" @onclick="ViewLeaderboard">
+            🏆 View Leaderboard
+        </button>
+    </div>
+</div>
+
+@code {
+    private async Task StartGameWithDifficulty(AIDifficulty difficulty)
+    {
+        // For Hard difficulty, offer personality selection
+        string? personality = null;
+        if (difficulty == AIDifficulty.Hard)
+        {
+            var personalities = string.Join(", ", Enum.GetNames(typeof(AIPersonality)));
+            personality = await JSRuntime.InvokeAsync<string>("prompt",
+            $"Select AI Personality ({personalities}):",
+            AIPersonality.Balanced.ToString());
+        }
+
+        var queryParams = System.Web.HttpUtility.ParseQueryString(string.Empty);
+        queryParams["mode"] = "single";
+        queryParams["difficulty"] = difficulty.ToString();
+        if (!string.IsNullOrEmpty(personality))
+        {
+            queryParams["personality"] = personality;
+        }
+        NavigationManager.NavigateTo($"/game?{queryParams}");
+    }
+
+    private void StartTwoPlayer()
+    {
+        var queryParams = System.Web.HttpUtility.ParseQueryString(string.Empty);
+        queryParams["mode"] = "two-player";
+        NavigationManager.NavigateTo($"/game?{queryParams}");
+    }
+
+    private void ViewLeaderboard()
+    {
+        NavigationManager.NavigateTo("/leaderboard");
+    }
+
+    private string GetDifficultyEmoji(AIDifficulty difficulty) => difficulty switch
+    {
+        AIDifficulty.Easy => "😊",
+        AIDifficulty.Medium => "🤔",
+        AIDifficulty.Hard => "🤯",
+        _ => "🤖"
+    };
+
+    private string GetDifficultyClass(AIDifficulty difficulty) => difficulty switch
+    {
+        AIDifficulty.Easy => "difficulty-easy",
+        AIDifficulty.Medium => "difficulty-medium",
+        AIDifficulty.Hard => "difficulty-hard",
+        _ => ""
+    };
+
+    private FluentUI.Appearance GetDifficultyAppearance(AIDifficulty difficulty) => difficulty switch
+    {
+        AIDifficulty.Easy => FluentUI.Appearance.Outline,
+        AIDifficulty.Medium => FluentUI.Appearance.Neutral,
+        AIDifficulty.Hard => FluentUI.Appearance.Accent,
+        _ => FluentUI.Appearance.Neutral
+    };
+}
+
+<style>
+    .home-container {
+        container-type: inline-size;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: var(--space-8) var(--space-4);
+        min-height: calc(100vh - 200px);
+    }
+
+    .game-modes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+        gap: var(--space-8);
+        margin-bottom: var(--space-10);
+        animation: fadeInUp var(--transition-slow);
+    }
+
+    .mode-card-glass {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-xl);
+        box-shadow: var(--shadow-lg), inset 0 1px 0 hsl(0 0% 100% / 0.1);
+        transition: transform var(--transition-base), box-shadow var(--transition-base);
+        padding: var(--space-8);
+    }
+
+    .mode-card-glass:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-xl), inset 0 1px 0 hsl(0 0% 100% / 0.1);
+    }
+
+    .mode-icon {
+        font-size: 4rem;
+        margin-bottom: var(--space-4);
+        filter: drop-shadow(0 4px 12px hsl(var(--shadow-color) / 0.2));
+    }
+
+    .mode-title {
+        font-size: var(--text-2xl);
+        font-weight: 600;
+        color: var(--clr-text);
+        margin-bottom: var(--space-2);
+    }
+
+    .mode-description {
+        color: var(--clr-text-secondary);
+        margin-bottom: var(--space-6);
+        font-size: var(--text-base);
+    }
+
+    .difficulty-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: var(--space-3);
+        width: 100%;
+    }
+
+    .btn-glass {
+        display: flex;
+        align-items: center;
+        gap: var(--space-4);
+        padding: var(--space-4);
+        text-align: left;
+        width: 100%;
+        justify-content: flex-start;
+        background: var(--glass-bg);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-md);
+        color: var(--clr-text);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        font-size: var(--text-base);
+    }
+
+    .btn-glass:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-glass:active {
+        transform: translateY(0);
+    }
+
+    .difficulty-emoji {
+        font-size: 1.75rem;
+        flex-shrink: 0;
+    }
+
+    .difficulty-name {
+        font-weight: 600;
+        font-size: var(--text-base);
+    }
+
+    .difficulty-easy:hover {
+        border-color: var(--clr-success);
+        box-shadow: 0 0 20px color-mix(in srgb, var(--clr-success) 20%, transparent);
+    }
+
+    .difficulty-medium:hover {
+        border-color: var(--clr-warning);
+        box-shadow: 0 0 20px color-mix(in srgb, var(--clr-warning) 20%, transparent);
+    }
+
+    .difficulty-hard:hover {
+        border-color: var(--clr-error);
+        box-shadow: 0 0 20px color-mix(in srgb, var(--clr-error) 20%, transparent);
+    }
+
+    .mode-cta {
+        margin-top: var(--space-6);
+        padding-top: var(--space-6);
+        border-top: 1px solid var(--glass-border);
+    }
+
+    .cta-text {
+        color: var(--clr-primary);
+        font-weight: 600;
+        font-size: var(--text-lg);
+    }
+
+    .quick-actions {
+        display: flex;
+        justify-content: center;
+        gap: var(--space-4);
+        flex-wrap: wrap;
+        animation: fadeIn var(--transition-slow) 0.3s;
+    }
+
+    .btn-glass-primary {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--space-2);
+        padding: var(--space-4) var(--space-6);
+        background: var(--clr-primary);
+        color: white;
+        border: none;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        box-shadow: var(--shadow-md);
+    }
+
+    .btn-glass-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-lg);
+    }
+
+    .btn-glass-primary:active {
+        transform: translateY(0);
+    }
+
+    /* Responsive adjustments */
+    @("@media (max-width: 768px) {")
+        .game-modes-grid {
+            gap: var(--space-6);
+        }
+
+        .mode-icon {
+            font-size: 3rem;
+        }
+    }
+
+    @("@media (max-width: 480px) {")
+        .home-container {
+            padding: var(--space-6) var(--space-3);
+        }
+
+        .mode-card-glass {
+            padding: var(--space-6);
+        }
+
+        .mode-icon {
+            font-size: 2.5rem;
+        }
+
+        .mode-title {
+            font-size: var(--text-xl);
+        }
+    }
+</style>

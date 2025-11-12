@@ -1,0 +1,112 @@
+@PoConnectFive.Server_HostAddress = http://localhost:5245
+
+# ============================================
+# Health Check Endpoints
+# ============================================
+
+### Get overall health status
+GET {{PoConnectFive.Server_HostAddress}}/api/health
+Accept: application/json
+
+### Get storage health check
+GET {{PoConnectFive.Server_HostAddress}}/api/health/checks/storage
+Accept: application/json
+
+### Get internet connectivity health check
+GET {{PoConnectFive.Server_HostAddress}}/api/health/checks/internet
+Accept: application/json
+
+# ============================================
+# Leaderboard Endpoints
+# ============================================
+
+### Get top players for Easy difficulty
+GET {{PoConnectFive.Server_HostAddress}}/api/leaderboard/Easy
+Accept: application/json
+
+### Get top players for Medium difficulty
+GET {{PoConnectFive.Server_HostAddress}}/api/leaderboard/Medium
+Accept: application/json
+
+### Get top players for Hard difficulty
+GET {{PoConnectFive.Server_HostAddress}}/api/leaderboard/Hard
+Accept: application/json
+
+### Update player stats (RESTful)
+PUT {{PoConnectFive.Server_HostAddress}}/api/leaderboard/players/TestPlayer/stats
+Content-Type: application/json
+
+{
+  "playerName": "TestPlayer",
+  "difficulty": "Medium",
+  "result": "Win",
+  "gameTimeMilliseconds": 45000
+}
+
+# ============================================
+# Diagnostics Endpoints
+# ============================================
+
+### Send diagnostics log
+POST {{PoConnectFive.Server_HostAddress}}/api/diagnostics
+Content-Type: application/json
+
+{
+  "results": [
+    {
+      "component": "Storage",
+      "isHealthy": true,
+      "error": null
+    },
+    {
+      "component": "Internet",
+      "isHealthy": false,
+      "error": "Connection timeout"
+    }
+  ]
+}
+
+# ============================================
+# Client Logging Endpoints
+# ============================================
+
+### Log from client
+POST {{PoConnectFive.Server_HostAddress}}/api/log/client
+Content-Type: application/json
+
+{
+  "level": "Error",
+  "message": "Test error from client",
+  "category": "UI",
+  "exception": null,
+  "additionalData": {
+    "page": "Game"
+  }
+}
+
+### Track client event
+POST {{PoConnectFive.Server_HostAddress}}/api/log/event
+Content-Type: application/json
+
+{
+  "eventName": "GameStarted",
+  "properties": {
+    "difficulty": "Medium",
+    "player": "TestPlayer"
+  },
+  "metrics": {
+    "loadTime": 1234
+  }
+}
+
+### Track client performance
+POST {{PoConnectFive.Server_HostAddress}}/api/log/performance
+Content-Type: application/json
+
+{
+  "metricName": "PageLoad",
+  "value": 1500,
+  "component": "GameBoard"
+}
+
+###

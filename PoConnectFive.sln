@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoConnectFive.Client", "PoConnectFive.Client\PoConnectFive.Client.csproj", "{1306FC57-B6BA-4611-8E7C-DB7A55EAFC46}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Po.ConnectFive.Client", "src\Po.ConnectFive.Client\Po.ConnectFive.Client.csproj", "{1306FC57-B6BA-4611-8E7C-DB7A55EAFC46}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoConnectFive.Server", "PoConnectFive.Server\PoConnectFive.Server.csproj", "{A511EB7D-ECB7-4EE8-B44A-95A6275E8574}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Po.ConnectFive.Api", "src\Po.ConnectFive.Api\Po.ConnectFive.Api.csproj", "{A511EB7D-ECB7-4EE8-B44A-95A6275E8574}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoConnectFive.Shared", "PoConnectFive.Shared\PoConnectFive.Shared.csproj", "{B5823924-76D1-4C65-A4F9-67AF8D555C5B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Po.ConnectFive.Shared", "src\Po.ConnectFive.Shared\Po.ConnectFive.Shared.csproj", "{B5823924-76D1-4C65-A4F9-67AF8D555C5B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoConnectFive.Tests", "PoConnectFive.Tests\PoConnectFive.Tests.csproj", "{7CA50049-5CE2-498E-A32D-21A796321B0E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Po.ConnectFive.Tests", "tests\Po.ConnectFive.Tests\Po.ConnectFive.Tests.csproj", "{7CA50049-5CE2-498E-A32D-21A796321B0E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

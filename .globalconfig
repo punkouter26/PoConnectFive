@@ -1,0 +1,63 @@
+# Global Analyzer Configuration
+# This file contains global analyzer settings for the entire solution
+
+is_global = true
+
+# Disable file header requirement (SA1633)
+dotnet_diagnostic.SA1633.severity = none
+
+# Disable 'this.' prefix requirement (SA1101) - modern C# style
+dotnet_diagnostic.SA1101.severity = none
+
+# Disable regions requirement (SA1124) - sometimes useful for organization
+dotnet_diagnostic.SA1124.severity = none
+
+# Disable documentation requirements for test files
+# SA1600: Elements should be documented
+dotnet_diagnostic.SA1600.severity = suggestion
+
+# Allow embedded comments in blocks (SA1108)
+dotnet_diagnostic.SA1108.severity = suggestion
+
+# Allow single-line comments without preceding blank line (SA1515)
+dotnet_diagnostic.SA1515.severity = suggestion
+
+# Make some spacing rules suggestions instead of warnings
+dotnet_diagnostic.SA1516.severity = suggestion
+dotnet_diagnostic.SA1513.severity = suggestion
+dotnet_diagnostic.SA1512.severity = suggestion
+
+# Brace placement rules - make suggestions
+dotnet_diagnostic.SA1503.severity = suggestion
+
+# Parameter placement rules - make suggestions  
+dotnet_diagnostic.SA1111.severity = suggestion
+dotnet_diagnostic.SA1116.severity = suggestion
+dotnet_diagnostic.SA1117.severity = suggestion
+
+# Multi-line initializer trailing comma - suggestion
+dotnet_diagnostic.SA1413.severity = suggestion
+
+# String.Empty for empty strings - suggestion
+dotnet_diagnostic.SA1122.severity = suggestion
+
+# Arithmetic precedence - suggestion
+dotnet_diagnostic.SA1407.severity = suggestion
+
+# Allow fields to start with underscore (SA1309) - common C# convention
+dotnet_diagnostic.SA1309.severity = none
+
+# Opening brace blank line (SA1505)
+dotnet_diagnostic.SA1505.severity = suggestion
+
+# Disable SA0001 (XML comment analysis disabled)
+dotnet_diagnostic.SA0001.severity = none
+
+# SonarAnalyzer - Unused local variables (S1481) - warning
+dotnet_diagnostic.S1481.severity = warning
+
+# SonarAnalyzer - Make method static (S2325) - suggestion
+dotnet_diagnostic.S2325.severity = suggestion
+
+# xUnit2002: Do not use Assert.NotNull on value types
+dotnet_diagnostic.xUnit2002.severity = warning

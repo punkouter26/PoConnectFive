@@ -1,6 +1,0 @@
-@PoConnectFive.Server_HostAddress = http://localhost:5245
-
-GET {{PoConnectFive.Server_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

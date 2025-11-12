@@ -1,0 +1,54 @@
+@using PoConnectFive.Client.Services
+@using Radzen.Blazor
+@using Radzen
+@inject SoundService SoundService
+
+<RadzenStack Orientation="Orientation.Horizontal" Gap="0.5rem" JustifyContent="JustifyContent.Center"
+    Class="game-controls-section" Wrap="FlexWrap.Wrap">
+    <RadzenButton Click="OnNewGameClick" Text="New Game" ButtonStyle="ButtonStyle.Primary" Size="ButtonSize.Medium" />
+    <RadzenButton Click="OnResetClick" Text="Reset" ButtonStyle="ButtonStyle.Secondary" Size="ButtonSize.Medium" />
+    <RadzenButton Click="ToggleMute" Icon="@(SoundService.IsMuted ? "volume_off" : "volume_up")"
+        ButtonStyle="ButtonStyle.Light" Size="ButtonSize.Medium" />
+</RadzenStack>
+
+@code {
+    [Parameter]
+    public EventCallback OnNewGameClick { get; set; }
+
+    [Parameter]
+    public EventCallback OnResetClick { get; set; }
+
+    private void ToggleMute()
+    {
+        SoundService.ToggleMute();
+    }
+}
+
+<style>
+    .game-controls-section {
+        width: 100%;
+        max-width: 800px;
+        padding: 0 0.5rem;
+    }
+
+    /* Mobile portrait adjustments */
+    @@media (max-width: 576px) {
+        .game-controls-section {
+            padding: 0 0.25rem !important;
+        }
+
+        .game-controls-section .rz-button {
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
+        }
+    }
+
+    /* Small mobile devices */
+    @@media (max-width: 400px) {
+        .game-controls-section .rz-button {
+            font-size: 0.8rem;
+            padding: 0.5rem 0.5rem;
+            min-width: 70px;
+        }
+    }
+</style>
