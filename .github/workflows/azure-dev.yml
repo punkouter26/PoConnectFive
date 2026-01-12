@@ -11,15 +11,16 @@ permissions:
   id-token: write
   contents: read
 
+env:
+  AZURE_SUBSCRIPTION_ID: bbb8dfbe-9169-432f-9b7a-fbf861b51037
+  RESOURCE_GROUP: PoConnectFive
+  ACR_NAME: acrposhared
+  CONTAINER_APP_NAME: ca-poconnectfive-web
+  IMAGE_NAME: poconnectfive-web
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-      AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
-      AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -35,24 +36,34 @@ jobs:
       - name: Build solution
         run: dotnet build --configuration Release
 
-      - name: Install azd
-        uses: Azure/setup-azd@v2
+      - name: Publish app
+        run: dotnet publish src/Po.ConnectFive.Api/Po.ConnectFive.Api.csproj -c Release -o ./publish
 
-      - name: Log in with Azure (OIDC)
+      - name: Azure Login (OIDC)
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Login to ACR
+        run: az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push image to ACR
         run: |
-          azd auth login `
-            --client-id "$Env:AZURE_CLIENT_ID" `
-            --federated-credential-provider "github" `
-            --tenant-id "$Env:AZURE_TENANT_ID"
-        shell: pwsh
+          az acr build --registry ${{ env.ACR_NAME }} \
+            --image ${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --image ${{ env.IMAGE_NAME }}:latest \
+            --file src/Po.ConnectFive.Api/Dockerfile \
+            .
 
-      - name: Deploy to Azure Container Apps
-        run: azd up --no-prompt
-        env:
-          AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
-          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
-          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Deploy to Container App
+        run: |
+          az containerapp update \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
 
       - name: Show deployment URL
-        run: azd show
-        continue-on-error: true
+        run: |
+          echo "🚀 Deployed to: https://ca-poconnectfive-web.braveground-e6b1356c.eastus.azurecontainerapps.io/"
