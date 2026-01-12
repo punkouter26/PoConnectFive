@@ -13,21 +13,32 @@ trim_trailing_whitespace = true
 
 [*.cs]
 # Suppress StyleCop rules that are too strict for this project
+dotnet_diagnostic.SA0001.severity = none  # XML comment analysis disabled
 dotnet_diagnostic.SA1101.severity = none  # Prefix local calls with this
 dotnet_diagnostic.SA1116.severity = none  # Parameters should begin on line after declaration
 dotnet_diagnostic.SA1117.severity = none  # Parameters should be on same line or each on own line
 dotnet_diagnostic.SA1124.severity = none  # Do not use regions
+dotnet_diagnostic.SA1201.severity = none  # Element ordering
+dotnet_diagnostic.SA1202.severity = none  # Public members before private
+dotnet_diagnostic.SA1309.severity = none  # Field should not begin with underscore
+dotnet_diagnostic.SA1402.severity = none  # File may only contain single type
 dotnet_diagnostic.SA1407.severity = none  # Arithmetic expressions should declare precedence
 dotnet_diagnostic.SA1413.severity = none  # Use trailing comma in multi-line initializers
+dotnet_diagnostic.SA1513.severity = none  # Closing brace followed by blank line
+dotnet_diagnostic.SA1515.severity = none  # Single-line comment preceded by blank line
+dotnet_diagnostic.SA1516.severity = none  # Elements separated by blank line
+dotnet_diagnostic.SA1517.severity = none  # Blank lines at start of file
 dotnet_diagnostic.SA1633.severity = none  # File header XML
-dotnet_diagnostic.SA0001.severity = none  # XML comment analysis disabled
+dotnet_diagnostic.SA1649.severity = none  # File name should match first type name
 
 # Suppress SonarAnalyzer rules
+dotnet_diagnostic.S125.severity = suggestion   # Commented out code
 dotnet_diagnostic.S1172.severity = suggestion  # Unused parameter
 dotnet_diagnostic.S1481.severity = suggestion  # Unused local variable
 dotnet_diagnostic.S2325.severity = suggestion  # Make method static
 dotnet_diagnostic.S3267.severity = suggestion  # Simplify using LINQ
 dotnet_diagnostic.S3358.severity = suggestion  # Nested ternary
+dotnet_diagnostic.S4487.severity = suggestion  # Unread private field
 dotnet_diagnostic.S6608.severity = suggestion  # Use indexing instead of First()
 
 [*.{json,yaml,yml}]
