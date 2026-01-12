@@ -98,7 +98,7 @@ else
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
+app.UseStatusCodePagesWithReExecute("/not-found");
 app.UseHttpsRedirection();
 
 // UseStaticFiles serves static assets from wwwroot
