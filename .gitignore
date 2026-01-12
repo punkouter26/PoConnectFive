@@ -521,3 +521,4 @@ AzuriteConfig
 # Development log files
 log.txt
 log_*.txt
+test-publish/
