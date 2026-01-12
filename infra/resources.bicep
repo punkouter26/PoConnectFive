@@ -71,16 +71,7 @@ resource gamesTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2023
   name: 'PoConnectFiveGames'
 }
 
-// Role assignment for managed identity to access storage
-resource storageTableDataContributor 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storageAccount.id, managedIdentity.id, 'Storage Table Data Contributor')
-  scope: storageAccount
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
+// Note: Role assignment removed - use storage connection string with key instead of managed identity for storage access
 
 // Container App for the web application
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
