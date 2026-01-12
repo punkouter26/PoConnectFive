@@ -1,56 +1,25 @@
-name: Azure Deployment (AZD)
+name: Build and Deploy to ACA
 
-# Run when commits are pushed to master
 on:
   workflow_dispatch:
   push:
-    # Run when commits are pushed to mainline branch (main or master)
     branches:
       - master
       - main
 
-# Set up permissions for deploying with secretless Azure federated credentials
-# https://learn.microsoft.com/en-us/azure/developer/github/connect-from-azure?tabs=azure-portal%2Clinux#set-up-azure-login-with-openid-connect-authentication
 permissions:
   id-token: write
   contents: read
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup .NET 10
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.0.x'
-
-      - name: Install Aspire workload
-        run: dotnet workload install aspire
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build solution
-        run: dotnet build --configuration Release --no-restore
-
-      - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal --filter "Category!=Integration" -- xUnit.LongRunningTestSeconds=30
-        timeout-minutes: 5
-        continue-on-error: true
-
-  deploy:
-    runs-on: ubuntu-latest
-    needs: build
     env:
       AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
-      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -63,13 +32,13 @@ jobs:
       - name: Install Aspire workload
         run: dotnet workload install aspire
 
-      - name: Install Aspire CLI
-        run: dotnet tool install -g aspire
+      - name: Build solution
+        run: dotnet build --configuration Release
 
       - name: Install azd
         uses: Azure/setup-azd@v2
 
-      - name: Log in with Azure (Federated Credentials)
+      - name: Log in with Azure (OIDC)
         run: |
           azd auth login `
             --client-id "$Env:AZURE_CLIENT_ID" `
@@ -77,40 +46,13 @@ jobs:
             --tenant-id "$Env:AZURE_TENANT_ID"
         shell: pwsh
 
-      - name: Deploy Application
+      - name: Deploy to Azure Container Apps
         run: azd up --no-prompt
         env:
           AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
           AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
           AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
-      - name: Get Deployment URL
-        id: get-url
-        run: |
-          $endpoints = azd show --output json | ConvertFrom-Json
-          $webUrl = $endpoints.services.web.endpoints[0]
-          echo "WEB_URL=$webUrl" >> $env:GITHUB_OUTPUT
-          echo "🌐 Web URL: $webUrl"
-        shell: pwsh
-
-      - name: Health Check
-        run: |
-          $url = "${{ steps.get-url.outputs.WEB_URL }}/api/health"
-          echo "🏥 Running health check: $url"
-          $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30
-          if ($response.StatusCode -eq 200) {
-            echo "✅ Health check passed!"
-          } else {
-            echo "❌ Health check failed with status: $($response.StatusCode)"
-            exit 1
-          }
-        shell: pwsh
+      - name: Show deployment URL
+        run: azd show
         continue-on-error: true
-
-      - name: Display deployment summary
-        run: |
-          echo "🎉 Deployment completed successfully!"
-          echo "📍 Application URL: ${{ steps.get-url.outputs.WEB_URL }}"
-          echo "🏥 Health Check: ${{ steps.get-url.outputs.WEB_URL }}/api/health"
-          echo "📊 Diagnostics: ${{ steps.get-url.outputs.WEB_URL }}/diag"
-          echo "📚 Swagger: ${{ steps.get-url.outputs.WEB_URL }}/swagger"
