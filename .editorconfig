@@ -11,12 +11,13 @@ indent_size = 4
 insert_final_newline = true
 trim_trailing_whitespace = true
 
-[*.cs]
+[*.{cs,razor}]
 # Suppress StyleCop rules that are too strict for this project
 dotnet_diagnostic.SA0001.severity = none  # XML comment analysis disabled
 dotnet_diagnostic.SA1101.severity = none  # Prefix local calls with this
 dotnet_diagnostic.SA1116.severity = none  # Parameters should begin on line after declaration
 dotnet_diagnostic.SA1117.severity = none  # Parameters should be on same line or each on own line
+dotnet_diagnostic.SA1122.severity = none  # Use string.Empty for empty strings
 dotnet_diagnostic.SA1124.severity = none  # Do not use regions
 dotnet_diagnostic.SA1201.severity = none  # Element ordering
 dotnet_diagnostic.SA1202.severity = none  # Public members before private
@@ -37,11 +38,13 @@ dotnet_diagnostic.SA1649.severity = none  # File name should match first type na
 
 # Suppress SonarAnalyzer rules (make them suggestions, not errors)
 dotnet_diagnostic.S101.severity = suggestion   # Pascal case naming
+dotnet_diagnostic.S108.severity = suggestion   # Empty code block
 dotnet_diagnostic.S125.severity = suggestion   # Commented out code
 dotnet_diagnostic.S1144.severity = suggestion  # Unused private method
 dotnet_diagnostic.S1172.severity = suggestion  # Unused parameter
 dotnet_diagnostic.S1481.severity = suggestion  # Unused local variable
 dotnet_diagnostic.S2325.severity = suggestion  # Make method static
+dotnet_diagnostic.S2486.severity = suggestion  # Exception handling
 dotnet_diagnostic.S2953.severity = suggestion  # Dispose method confusion
 dotnet_diagnostic.S3260.severity = suggestion  # Private class should be sealed
 dotnet_diagnostic.S3267.severity = suggestion  # Simplify using LINQ
@@ -58,4 +61,5 @@ dotnet_diagnostic.CS0414.severity = suggestion  # Field assigned but never used
 indent_size = 2
 
 [*.md]
+trim_trailing_whitespace = false
 trim_trailing_whitespace = false
