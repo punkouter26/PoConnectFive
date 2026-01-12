@@ -37,7 +37,8 @@ jobs:
         run: dotnet build --configuration Release --no-restore
 
       - name: Run tests
-        run: dotnet test --configuration Release --no-build --verbosity normal --filter "Category!=Integration"
+        run: dotnet test --configuration Release --no-build --verbosity normal --filter "Category!=Integration" -- xUnit.LongRunningTestSeconds=30
+        timeout-minutes: 5
         continue-on-error: true
 
   deploy:
