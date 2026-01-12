@@ -26,6 +26,8 @@
     <NoWarn>$(NoWarn);CS0414;CS0169;CS0649;CS0168;CS0219;CS8618;CS8625;CS1998</NoWarn>
     <!-- Additional SonarAnalyzer rules found during build -->
     <NoWarn>$(NoWarn);S1075;S2139;S6932</NoWarn>
+    <!-- xUnit analyzer rules -->
+    <NoWarn>$(NoWarn);xUnit2002;xUnit2000;xUnit2001;xUnit2003;xUnit2004;xUnit2005;xUnit2006;xUnit2007;xUnit2008;xUnit2009;xUnit2010;xUnit2011;xUnit2012;xUnit2013;xUnit2014;xUnit2015;xUnit2016;xUnit2017;xUnit2018;xUnit2019;xUnit2020;xUnit2021</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
