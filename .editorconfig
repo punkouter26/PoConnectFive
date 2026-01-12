@@ -1,0 +1,37 @@
+# EditorConfig for PoConnectFive
+# https://editorconfig.org
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.cs]
+# Suppress StyleCop rules that are too strict for this project
+dotnet_diagnostic.SA1101.severity = none  # Prefix local calls with this
+dotnet_diagnostic.SA1116.severity = none  # Parameters should begin on line after declaration
+dotnet_diagnostic.SA1117.severity = none  # Parameters should be on same line or each on own line
+dotnet_diagnostic.SA1124.severity = none  # Do not use regions
+dotnet_diagnostic.SA1407.severity = none  # Arithmetic expressions should declare precedence
+dotnet_diagnostic.SA1413.severity = none  # Use trailing comma in multi-line initializers
+dotnet_diagnostic.SA1633.severity = none  # File header XML
+dotnet_diagnostic.SA0001.severity = none  # XML comment analysis disabled
+
+# Suppress SonarAnalyzer rules
+dotnet_diagnostic.S1172.severity = suggestion  # Unused parameter
+dotnet_diagnostic.S1481.severity = suggestion  # Unused local variable
+dotnet_diagnostic.S2325.severity = suggestion  # Make method static
+dotnet_diagnostic.S3267.severity = suggestion  # Simplify using LINQ
+dotnet_diagnostic.S3358.severity = suggestion  # Nested ternary
+dotnet_diagnostic.S6608.severity = suggestion  # Use indexing instead of First()
+
+[*.{json,yaml,yml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
