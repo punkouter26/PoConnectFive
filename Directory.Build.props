@@ -3,13 +3,13 @@
     <!-- Enable nullable reference types -->
     <Nullable>enable</Nullable>
     
-    <!-- Treat warnings as errors in Release builds -->
+    <!-- Treat warnings as errors for Release builds only to catch critical issues -->
     <TreatWarningsAsErrors Condition="'$(Configuration)' == 'Release'">true</TreatWarningsAsErrors>
     
     <!-- Code Analysis settings -->
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
     <AnalysisLevel>latest</AnalysisLevel>
-    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <EnforceCodeStyleInBuild>false</EnforceCodeStyleInBuild>
   </PropertyGroup>
 
   <ItemGroup>

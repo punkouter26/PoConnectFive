@@ -22,10 +22,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup .NET 9
+      - name: Setup .NET 10
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
+
+      - name: Install Aspire workload
+        run: dotnet workload install aspire
 
       - name: Restore dependencies
         run: dotnet restore
@@ -46,9 +49,21 @@ jobs:
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
       AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+      AZURE_RESOURCE_GROUP: ${{ vars.AZURE_RESOURCE_GROUP }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install Aspire workload
+        run: dotnet workload install aspire
+
+      - name: Install Aspire CLI
+        run: dotnet tool install -g aspire
 
       - name: Install azd
         uses: Azure/setup-azd@v2
@@ -62,12 +77,39 @@ jobs:
         shell: pwsh
 
       - name: Deploy Application
-        run: azd deploy --no-prompt
+        run: azd up --no-prompt
+        env:
+          AZURE_ENV_NAME: ${{ vars.AZURE_ENV_NAME }}
+          AZURE_LOCATION: ${{ vars.AZURE_LOCATION }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Get Deployment URL
+        id: get-url
+        run: |
+          $endpoints = azd show --output json | ConvertFrom-Json
+          $webUrl = $endpoints.services.web.endpoints[0]
+          echo "WEB_URL=$webUrl" >> $env:GITHUB_OUTPUT
+          echo "🌐 Web URL: $webUrl"
+        shell: pwsh
+
+      - name: Health Check
+        run: |
+          $url = "${{ steps.get-url.outputs.WEB_URL }}/api/health"
+          echo "🏥 Running health check: $url"
+          $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 30
+          if ($response.StatusCode -eq 200) {
+            echo "✅ Health check passed!"
+          } else {
+            echo "❌ Health check failed with status: $($response.StatusCode)"
+            exit 1
+          }
+        shell: pwsh
+        continue-on-error: true
 
       - name: Display deployment summary
         run: |
           echo "🎉 Deployment completed successfully!"
-          echo "📍 Application URL: https://poconnectfive.azurewebsites.net"
-          echo "🏥 Health Check: https://poconnectfive.azurewebsites.net/api/health"
-          echo "📊 Diagnostics: https://poconnectfive.azurewebsites.net/diag"
-          echo "📚 Swagger: https://poconnectfive.azurewebsites.net/swagger"
+          echo "📍 Application URL: ${{ steps.get-url.outputs.WEB_URL }}"
+          echo "🏥 Health Check: ${{ steps.get-url.outputs.WEB_URL }}/api/health"
+          echo "📊 Diagnostics: ${{ steps.get-url.outputs.WEB_URL }}/diag"
+          echo "📚 Swagger: ${{ steps.get-url.outputs.WEB_URL }}/swagger"

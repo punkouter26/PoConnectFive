@@ -1,0 +1,156 @@
+@namespace PoConnectFive.Client.Layout
+@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@inject PoConnectFive.Client.Services.ThemeService ThemeService
+
+<a class="skip-link" href="#maincontent">Skip to main content</a>
+
+<header class="site-header" role="banner" aria-label="Main header">
+    <div class="container header-inner">
+        <a class="site-logo" href="/" aria-label="PoConnectFive home">PoConnectFive</a>
+        <NavMenu />
+    </div>
+</header>
+
+<main id="maincontent" role="main" class="site-main">
+    <div class="container content">
+        @Body
+    </div>
+</main>
+
+<!-- Bottom Navigation for Mobile -->
+<nav class="bottom-nav" role="navigation" aria-label="Mobile Navigation">
+    <a href="/" class="bottom-nav-item @(IsActive("/") ? "active" : "")" aria-label="Home">
+        <span class="icon">🏠</span>
+        <span>Home</span>
+    </a>
+    <a href="/leaderboard" class="bottom-nav-item @(IsActive("/leaderboard") ? "active" : "")" aria-label="Leaderboard">
+        <span class="icon">🏆</span>
+        <span>Leaders</span>
+    </a>
+    <a href="/settings" class="bottom-nav-item @(IsActive("/settings") ? "active" : "")" aria-label="Settings">
+        <span class="icon">⚙️</span>
+        <span>Settings</span>
+    </a>
+    <button class="bottom-nav-item" @onclick="ToggleTheme" aria-label="@ThemeService.GetThemeLabel()">
+        <span class="icon">@ThemeService.GetThemeIcon()</span>
+        <span>Theme</span>
+    </button>
+</nav>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        await ThemeService.LoadThemePreferenceAsync();
+        ThemeService.OnThemeChanged += StateHasChanged;
+    }
+
+    private bool IsActive(string href)
+    {
+        var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+        if (href == "/" && currentPath == "/")
+            return true;
+        if (href != "/" && currentPath.StartsWith(href, StringComparison.OrdinalIgnoreCase))
+            return true;
+        return false;
+    }
+
+    private async Task ToggleTheme()
+    {
+        await ThemeService.CycleThemeAsync();
+    }
+
+    public void Dispose()
+    {
+        ThemeService.OnThemeChanged -= StateHasChanged;
+    }
+}
+
+<style>
+    /* Layout utility classes */
+    .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 var(--space-4);
+    }
+
+    .skip-link {
+        position: absolute;
+        left: -999px;
+        top: auto;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        background: var(--clr-surface);
+        color: var(--clr-text);
+        padding: var(--space-2) var(--space-4);
+        border-radius: var(--radius-md);
+        text-decoration: none;
+        z-index: 1000;
+    }
+
+    .skip-link:focus {
+        left: var(--space-4);
+        top: var(--space-4);
+        width: auto;
+        height: auto;
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* Header with glassmorphism */
+    .site-header {
+        background: var(--glass-bg);
+        backdrop-filter: blur(20px) saturate(180%);
+        color: var(--clr-text);
+        padding: var(--space-3) 0;
+        box-shadow: var(--shadow-sm);
+        border-bottom: 1px solid var(--glass-border);
+        position: sticky;
+        top: 0;
+        z-index: 50;
+    }
+
+    .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .site-logo {
+        font-weight: 700;
+        font-size: var(--text-xl);
+        color: var(--clr-primary);
+        text-decoration: none;
+        transition: color var(--transition-fast);
+    }
+
+    .site-logo:hover {
+        color: var(--clr-primary-dark);
+    }
+
+    /* Main content with gradient background */
+    .site-main {
+        flex: 1 1 auto;
+        padding: var(--space-8) 0;
+        background: linear-gradient(180deg,
+                var(--clr-background) 0%,
+                color-mix(in srgb, var(--clr-background) 95%, var(--clr-primary) 5%) 100%);
+        min-height: calc(100vh - 150px);
+    }
+
+    .content {
+        background: transparent;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .site-logo {
+            font-size: var(--text-lg);
+        }
+
+        .site-main {
+            padding: var(--space-4) 0;
+            padding-bottom: calc(var(--space-16) + env(safe-area-inset-bottom));
+        }
+    }
+</style>

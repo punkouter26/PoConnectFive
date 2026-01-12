@@ -3,20 +3,26 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using PoConnectFive.Server;
 using PoConnectFive.Server.Services;
 using PoConnectFive.Shared.Models;
+using PoConnectFive.Tests.Infrastructure;
 using Xunit;
 
 namespace PoConnectFive.Tests
 {
-    public class LeaderboardIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+    public class LeaderboardIntegrationTests : IDisposable
     {
-        private readonly WebApplicationFactory<Program> _factory;
+        private readonly CustomWebApplicationFactory _factory;
 
-        public LeaderboardIntegrationTests(WebApplicationFactory<Program> factory)
+        public LeaderboardIntegrationTests()
         {
-            _factory = factory;
+            _factory = new CustomWebApplicationFactory();
+        }
+
+        public void Dispose()
+        {
+            _factory.Dispose();
+            GC.SuppressFinalize(this);
         }
 
         [Fact]
@@ -104,7 +110,7 @@ namespace PoConnectFive.Tests
                 GameTimeMilliseconds = 1000
             };
 
-            var response = await client.PostAsJsonAsync("/api/leaderboard/playerstats", invalidDto);
+            var response = await client.PutAsJsonAsync("/api/leaderboard/players/TestPlayer/stats", invalidDto);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -119,20 +125,21 @@ namespace PoConnectFive.Tests
                 builder.ConfigureServices(services =>
                 {
                     var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ITableStorageService));
-                    if (descriptor != null) services.Remove(descriptor);
+                    if (descriptor != null)
+                        services.Remove(descriptor);
                     services.AddSingleton<ITableStorageService>(mockStorage.Object);
                 });
             }).CreateClient();
 
             var invalidDto = new PlayerStatUpdateDto
             {
-                PlayerName = null!, // Null player name
+                PlayerName = null!, // Null player name - route has name but body is null
                 Difficulty = AIDifficulty.Easy,
                 Result = PlayerGameResult.Win,
                 GameTimeMilliseconds = 1000
             };
 
-            var response = await client.PostAsJsonAsync("/api/leaderboard/playerstats", invalidDto);
+            var response = await client.PutAsJsonAsync("/api/leaderboard/players/TestPlayer/stats", invalidDto);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -147,7 +154,8 @@ namespace PoConnectFive.Tests
                 builder.ConfigureServices(services =>
                 {
                     var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ITableStorageService));
-                    if (descriptor != null) services.Remove(descriptor);
+                    if (descriptor != null)
+                        services.Remove(descriptor);
                     services.AddSingleton<ITableStorageService>(mockStorage.Object);
                 });
             }).CreateClient();
@@ -179,7 +187,8 @@ namespace PoConnectFive.Tests
                 builder.ConfigureServices(services =>
                 {
                     var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ITableStorageService));
-                    if (descriptor != null) services.Remove(descriptor);
+                    if (descriptor != null)
+                        services.Remove(descriptor);
                     services.AddSingleton<ITableStorageService>(mockStorage.Object);
                 });
             }).CreateClient();
@@ -199,7 +208,8 @@ namespace PoConnectFive.Tests
                 builder.ConfigureServices(services =>
                 {
                     var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(ITableStorageService));
-                    if (descriptor != null) services.Remove(descriptor);
+                    if (descriptor != null)
+                        services.Remove(descriptor);
                     services.AddSingleton<ITableStorageService>(mockStorage.Object);
                 });
             }).CreateClient();

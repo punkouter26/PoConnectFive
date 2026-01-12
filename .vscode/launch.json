@@ -6,7 +6,7 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
-            "program": "${workspaceFolder}/src/Po.ConnectFive.Api/bin/Debug/net9.0/Po.ConnectFive.Api.dll",
+            "program": "${workspaceFolder}/src/Po.ConnectFive.Api/bin/Debug/net10.0/Po.ConnectFive.Api.dll",
             "args": [],
             "cwd": "${workspaceFolder}/src/Po.ConnectFive.Api",
             "stopAtEntry": false,

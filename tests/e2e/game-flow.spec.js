@@ -2,45 +2,62 @@
 const { test, expect } = require('@playwright/test');
 
 /**
- * Completes the in-app game setup dialog using default values unless overridden.
+ * Navigates from the home page to the game page and completes setup for single player mode.
+ * The app uses browser prompt() for player name entry AFTER navigation to /game.
  * @param {import('@playwright/test').Page} page
- * @param {{ player1?: string; player2?: string; mode?: 'single' | 'two'; }} [options]
+ * @param {'Easy' | 'Medium' | 'Hard'} difficulty
+ * @param {string} [playerName='TestPlayer'] - The name to enter for the player
  */
-async function completeGameSetup(page, options = {}) {
-    const { player1, player2, mode = 'single' } = options;
+async function startSinglePlayerGame(page, difficulty, playerName = 'TestPlayer') {
+    // Set up a one-time dialog handler that will catch the name prompt on the Game page
+    // Use 'once' to prevent conflicts with other dialog handlers in tests
+    const dialogHandler = async dialog => {
+        if (dialog.type() === 'prompt') {
+            await dialog.accept(playerName);
+        } else {
+            await dialog.accept();
+        }
+        // Remove ourselves after handling to avoid conflicts
+        page.off('dialog', dialogHandler);
+    };
+    page.on('dialog', dialogHandler);
 
-    const dialog = page.getByRole('dialog', { name: 'Start New Game' });
-    await expect(dialog).toBeVisible({ timeout: 10000 });
+    // Get the difficulty button
+    const button = page.getByRole('button', { name: new RegExp(difficulty, 'i') });
 
-    if (mode === 'two') {
-        await dialog.getByRole('radio', { name: 'Two Players' }).check();
-    } else {
-        await dialog.getByRole('radio', { name: 'Single Player (vs AI)' }).check();
-    }
+    // Use Playwright's click with retry - wait for actionability and keep retrying
+    // The click will be retried until it succeeds or times out
+    // Using a polling approach to handle Blazor WASM event handler attachment delay
+    const maxAttempts = 15;
 
-    if (player1) {
-        await dialog.getByLabel('Player 1 Name').fill(player1);
-    }
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        // Check if we're already on the game page (navigation might have happened)
+        if (page.url().includes('/game')) {
+            break;
+        }
 
-    if (mode === 'two') {
-        if (player2) {
-            await dialog.getByLabel('Player 2 Name').fill(player2);
+        try {
+            // Try clicking with force to ensure the click goes through
+            await button.click({ force: true, timeout: 2000 });
+
+            // Check if navigation started within a short time
+            await page.waitForURL(/game/, { timeout: 3000 });
+            break; // Navigation successful
+        } catch {
+            // If click didn't trigger navigation, wait a bit and retry
+            if (attempt < maxAttempts - 1) {
+                await page.waitForTimeout(500);
+            }
         }
     }
 
-    await dialog.getByRole('button', { name: 'Start Game' }).click();
-    await expect(dialog).toBeHidden({ timeout: 10000 });
-}
+    // Final check - verify we actually navigated
+    if (!page.url().includes('/game')) {
+        throw new Error(`Failed to navigate to game page after ${maxAttempts} click attempts. Current URL: ${page.url()}`);
+    }
 
-/**
- * Navigates from the home page to the game page and completes setup for single player mode.
- * @param {import('@playwright/test').Page} page
- * @param {'Easy' | 'Medium' | 'Hard'} difficulty
- */
-async function startSinglePlayerGame(page, difficulty) {
-    await page.getByRole('button', { name: new RegExp(difficulty, 'i') }).click();
-    await expect(page).toHaveURL(/game/);
-    await completeGameSetup(page, { mode: 'single' });
+    // Wait for the game to fully initialize - use the heading which is unique
+    await expect(page.getByRole('heading', { name: new RegExp(`${playerName}'s Turn`, 'i') })).toBeVisible({ timeout: 15000 });
 }
 
 test.describe('Game Flow', () => {
@@ -48,6 +65,24 @@ test.describe('Game Flow', () => {
         await page.goto('/');
         // Wait for Blazor WASM to fully load by checking for actual content
         await page.getByRole('heading', { name: 'Single Player' }).waitFor({ timeout: 60000 });
+        // Wait for Blazor WASM to become fully interactive
+        // The key indicator is that the 'blazor-loading' class is removed and Blazor is initialized
+        await page.waitForFunction(() => {
+            // Check multiple indicators that Blazor WASM is fully loaded and interactive:
+            // 1. Blazor object exists
+            // 2. Blazor._internal exists (indicates runtime is loaded)
+            // 3. The document no longer has loading indicators
+            const blazorReady = typeof window.Blazor !== 'undefined' &&
+                window.Blazor._internal !== undefined;
+            const noLoadingIndicator = !document.body.classList.contains('blazor-loading');
+            return blazorReady && noLoadingIndicator;
+        }, { timeout: 60000 });
+        // Wait for WASM to fully load and event handlers to attach
+        // Blazor WASM components need significant time after hydration
+        // Wait for network to be idle (no pending requests for 500ms)
+        await page.waitForLoadState('networkidle', { timeout: 30000 });
+        // Additional safety margin for Blazor component initialization
+        await page.waitForTimeout(3000);
     });
 
     test('should load the home page successfully', async ({ page }) => {

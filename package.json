@@ -1,24 +1,13 @@
 {
-    "name": "poconnectfive-e2e-tests",
+    "name": "poconnectfive-e2e",
     "version": "1.0.0",
-    "description": "End-to-end tests for PoConnectFive using Playwright",
+    "description": "E2E tests for PoConnectFive",
     "scripts": {
         "test": "playwright test",
-        "test:headed": "playwright test --headed",
-        "test:debug": "playwright test --debug",
-        "test:ui": "playwright test --ui",
-        "test:report": "playwright show-report",
-        "test:codegen": "playwright codegen http://localhost:5000"
+        "test:chromium": "playwright test --project=chromium",
+        "test:mobile": "playwright test --project='Mobile Chrome'"
     },
-    "keywords": [
-        "e2e",
-        "testing",
-        "playwright"
-    ],
-    "author": "",
-    "license": "MIT",
     "devDependencies": {
-        "@playwright/test": "^1.40.0",
-        "@types/node": "^20.10.0"
+        "@playwright/test": "^1.52.0"
     }
 }

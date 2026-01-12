@@ -1,22 +1,19 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+# Azure Developer CLI (azd) configuration for PoConnectFive
+# Uses Aspire AppHost for orchestration and deployment to Azure Container Apps
 
-name: PoConnectFive
+name: poconnectfive
 metadata:
-  template: PoConnectFive
-  version: 1.0.0
-  description: PoConnectFive - Blazor WASM hosted app deployed to Azure App Service
+  template: aspire-starter@1.0.0
+
+# Use Aspire for service orchestration
 services:
-  web:
-    project: ./src/Po.ConnectFive.Api
+  app:
     language: dotnet
-    host: appservice
-infra:
-  provider: bicep
-  path: infra
-  module: main
-  parameters:
-    environmentName: dev
-    location: eastus2
-    resourceGroupName: PoConnectFive
-    sharedResourceGroupName: PoShared
-    sharedAppServicePlanName: PoShared
+    project: ./src/PoConnectFive.AppHost/PoConnectFive.AppHost.csproj
+    host: containerapp
+
+# Azure configuration
+azure:
+  # Use existing shared resources from PoShared resource group
+  location: eastus

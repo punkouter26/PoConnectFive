@@ -1,76 +1,98 @@
-using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.FluentUI.AspNetCore.Components; // Add FluentUI namespace
+using Microsoft.FluentUI.AspNetCore.Components;
 using PoConnectFive.Client;
 using PoConnectFive.Client.Services;
 using PoConnectFive.Shared.Interfaces;
 using PoConnectFive.Shared.Models;
 using PoConnectFive.Shared.Services;
 using PoConnectFive.Shared.Services.AI;
-using Radzen; // Add Radzen namespace
+using Radzen;
 using Serilog;
 using Serilog.Extensions.Logging;
 
+// Entry point for Blazor WebAssembly runtime initialization
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
-builder.RootComponents.Add<App>("#app");
-builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Configure Serilog - Changed to Information level to reduce console spam
-Log.Logger = new LoggerConfiguration()
-    .MinimumLevel.Information() // Changed from Debug to Information
-    .WriteTo.Console()
-    .CreateLogger();
-
-// Add logging
-builder.Services.AddLogging(logging =>
-{
-    logging.AddSerilog(Log.Logger);
-    logging.SetMinimumLevel(LogLevel.Information);  // Changed from Debug to Information
-});
-
-// Read configuration from wwwroot/appsettings.json.temp
-var apiUrl = builder.Configuration["ApiBaseUrl"];
-if (string.IsNullOrEmpty(apiUrl))
-{
-    // Fallback or throw error if not configured
-    apiUrl = builder.HostEnvironment.BaseAddress; // Default to base address if not found
-    Console.WriteLine("Warning: ApiBaseUrl not found in configuration. Falling back to host base address.");
-}
-
-// Configure HttpClient for backend API communication
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(apiUrl) });
-
-// Register services
-builder.Services.AddScoped<ILocalStorageService, BrowserStorageService>();
-builder.Services.AddScoped<IStorageService>(sp => sp.GetRequiredService<ILocalStorageService>() as IStorageService ?? throw new InvalidOperationException("ILocalStorageService could not be cast to IStorageService"));
-builder.Services.AddScoped<IPlayerDataService, ApiPlayerDataService>();
-builder.Services.AddScoped<ILeaderboardService, LeaderboardService>();
-builder.Services.AddScoped<ErrorHandlingService>();
-
-// Register game services
-builder.Services.AddScoped<IGameService, GameService>();
-builder.Services.AddScoped<GameStateService>();
-builder.Services.AddScoped<GamePageStateManager>();
-builder.Services.AddScoped<WinProbabilityService>();
-builder.Services.AddScoped<SoundService>();
-builder.Services.AddScoped<GameStatisticsService>();
-builder.Services.AddScoped<GameAnalyticsService>();
-
-// Register theme service
-builder.Services.AddScoped<PoConnectFive.Client.Services.ThemeService>(); // Fully qualified to avoid conflict with Radzen.ThemeService
-
-// Register AI players
-builder.Services.AddScoped<IAIPlayer>(sp =>
-{
-    // Default to medium difficulty, but this will be overridden when starting a new game
-    return AIPlayerFactory.CreateAIPlayer(AIDifficulty.Medium);
-});
-
-// Add Radzen component services
-builder.Services.AddRadzenComponents();
-
-// Add FluentUI component services
-builder.Services.AddFluentUIComponents();
+// Register all client services inline (extension method not visible to top-level statements in same file)
+ClientServiceRegistration.ConfigureServices(builder.Services, builder.HostEnvironment.BaseAddress);
 
 await builder.Build().RunAsync();
+
+namespace PoConnectFive.Client
+{
+    /// <summary>
+    /// Provides methods for registering client-side services in the DI container.
+    /// Used by both the server (for SSR) and the WebAssembly client (for interactive rendering).
+    /// </summary>
+    public static class ClientServiceRegistration
+    {
+        /// <summary>
+        /// Registers all client-side services required for Blazor WebAssembly interactive rendering.
+        /// </summary>
+        /// <param name="services">The service collection to add services to.</param>
+        /// <param name="baseAddress">The base address for HTTP client configuration.</param>
+        /// <returns>The service collection for method chaining.</returns>
+        public static IServiceCollection AddClientServices(this IServiceCollection services, string baseAddress)
+        {
+            return ConfigureServices(services, baseAddress);
+        }
+
+        /// <summary>
+        /// Internal method to configure services - callable from top-level statements.
+        /// </summary>
+        public static IServiceCollection ConfigureServices(IServiceCollection services, string baseAddress)
+        {
+            // Configure Serilog - Information level to reduce console spam
+            Log.Logger = new LoggerConfiguration()
+                .MinimumLevel.Information()
+                .WriteTo.Console()
+                .CreateLogger();
+
+            // Add logging
+            services.AddLogging(logging =>
+            {
+                logging.AddSerilog(Log.Logger);
+                logging.SetMinimumLevel(LogLevel.Information);
+            });
+
+            // Configure HttpClient for backend API communication
+            services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(baseAddress) });
+
+            // Register services
+            services.AddScoped<ILocalStorageService, BrowserStorageService>();
+            services.AddScoped<IStorageService>(sp => sp.GetRequiredService<ILocalStorageService>() as IStorageService ?? throw new InvalidOperationException("ILocalStorageService could not be cast to IStorageService"));
+            services.AddScoped<IPlayerDataService, ApiPlayerDataService>();
+            services.AddScoped<ILeaderboardService, LeaderboardService>();
+            services.AddScoped<ErrorHandlingService>();
+
+            // Register game services
+            services.AddScoped<IGameService, GameService>();
+            services.AddScoped<GameStateService>();
+            services.AddScoped<GamePageStateManager>();
+            services.AddScoped<WinProbabilityService>();
+            services.AddScoped<SoundService>();
+            services.AddScoped<GameStatisticsService>();
+            services.AddScoped<GameAnalyticsService>();
+
+            // Register theme service
+            services.AddScoped<PoConnectFive.Client.Services.ThemeService>();
+
+            // Register AI players
+            services.AddScoped<IAIPlayer>(sp =>
+            {
+                // Default to medium difficulty, but this will be overridden when starting a new game
+                return AIPlayerFactory.CreateAIPlayer(AIDifficulty.Medium);
+            });
+
+            // Add Radzen component services
+            services.AddRadzenComponents();
+
+            // Add FluentUI component services
+            services.AddFluentUIComponents();
+
+            return services;
+        }
+    }
+}

@@ -1,0 +1,24 @@
+# Ignore build outputs
+**/bin/
+**/obj/
+
+# Ignore package folders
+**/node_modules/
+
+# Ignore test results
+**/TestResults/
+**/coverage/
+
+# Ignore IDE folders
+.vs/
+.idea/
+
+# Ignore Playwright test artifacts
+playwright-report/
+test-results/
+
+# Ignore generated files
+**/wwwroot/_framework/
+
+# Ignore Azure deployment artifacts
+.azure/

@@ -2,19 +2,26 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using PoConnectFive.Server.Services;
+using PoConnectFive.Tests.Infrastructure;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit;
 
 namespace PoConnectFive.Tests.Integration;
 
-public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class HealthControllerIntegrationTests : IDisposable
 {
-    private readonly WebApplicationFactory<Program> _factory;
+    private readonly CustomWebApplicationFactory _factory;
 
-    public HealthControllerIntegrationTests(WebApplicationFactory<Program> factory)
+    public HealthControllerIntegrationTests()
     {
-        _factory = factory;
+        _factory = new CustomWebApplicationFactory();
+    }
+
+    public void Dispose()
+    {
+        _factory.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -37,13 +44,14 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IHealthCheckService));
-                if (descriptor != null) services.Remove(descriptor);
+                if (descriptor != null)
+                    services.Remove(descriptor);
                 services.AddSingleton<IHealthCheckService>(mockHealthService.Object);
             });
         }).CreateClient();
 
         // Act
-        var response = await client.GetAsync("/api/health/checks/internet");
+        var response = await client.GetAsync("/api/health");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -72,7 +80,8 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IHealthCheckService));
-                if (descriptor != null) services.Remove(descriptor);
+                if (descriptor != null)
+                    services.Remove(descriptor);
                 services.AddSingleton<IHealthCheckService>(mockHealthService.Object);
             });
         }).CreateClient();
@@ -108,7 +117,8 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IHealthCheckService));
-                if (descriptor != null) services.Remove(descriptor);
+                if (descriptor != null)
+                    services.Remove(descriptor);
                 services.AddSingleton<IHealthCheckService>(mockHealthService.Object);
             });
         }).CreateClient();
@@ -141,7 +151,8 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IHealthCheckService));
-                if (descriptor != null) services.Remove(descriptor);
+                if (descriptor != null)
+                    services.Remove(descriptor);
                 services.AddSingleton<IHealthCheckService>(mockHealthService.Object);
             });
         }).CreateClient();
@@ -177,7 +188,8 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IHealthCheckService));
-                if (descriptor != null) services.Remove(descriptor);
+                if (descriptor != null)
+                    services.Remove(descriptor);
                 services.AddSingleton<IHealthCheckService>(mockHealthService.Object);
             });
         }).CreateClient();
@@ -214,13 +226,14 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IHealthCheckService));
-                if (descriptor != null) services.Remove(descriptor);
+                if (descriptor != null)
+                    services.Remove(descriptor);
                 services.AddSingleton<IHealthCheckService>(mockHealthService.Object);
             });
         }).CreateClient();
 
         // Act
-        var response = await client.GetAsync("/api/health/internet");
+        var response = await client.GetAsync("/api/health/checks/internet");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -247,7 +260,8 @@ public class HealthControllerIntegrationTests : IClassFixture<WebApplicationFact
             builder.ConfigureServices(services =>
             {
                 var descriptor = services.FirstOrDefault(d => d.ServiceType == typeof(IHealthCheckService));
-                if (descriptor != null) services.Remove(descriptor);
+                if (descriptor != null)
+                    services.Remove(descriptor);
                 services.AddSingleton<IHealthCheckService>(mockHealthService.Object);
             });
         }).CreateClient();

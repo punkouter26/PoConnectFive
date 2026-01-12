@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using PoConnectFive.Shared.Interfaces; // Added reference to the interface in Shared project
 using PoConnectFive.Shared.Models; // Now contains PlayerStatEntity, PlayerStatUpdateDto, etc.
 // using PoConnectFive.Server.Controllers; // Removed

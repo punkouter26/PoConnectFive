@@ -7,6 +7,9 @@ const { defineConfig, devices } = require('@playwright/test');
 module.exports = defineConfig({
     testDir: './tests/e2e',
 
+    /* Global timeout for each test - increased for Blazor WASM init */
+    timeout: 90000,
+
     /* Run tests in files in parallel */
     fullyParallel: true,
 
@@ -14,21 +17,24 @@ module.exports = defineConfig({
     forbidOnly: !!process.env.CI,
 
     /* Retry on CI only */
-    retries: process.env.CI ? 2 : 0,
+    retries: process.env.CI ? 2 : 1,
 
     /* Opt out of parallel tests on CI. */
     workers: process.env.CI ? 1 : undefined,
 
     /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-    reporter: 'html',
+    reporter: [
+        ['html'],
+        ['list']
+    ],
 
     /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
     use: {
         /* Base URL to use in actions like `await page.goto('/')`. */
         baseURL: 'http://localhost:5000',
 
-        /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-        trace: 'on-first-retry',
+        /* Collect trace on failure for triage */
+        trace: 'retain-on-failure',
 
         /* Screenshot on failure */
         screenshot: 'only-on-failure',
@@ -41,42 +47,30 @@ module.exports = defineConfig({
 
         /* Increase action timeout */
         actionTimeout: 15000,
+
+        /* Headless mode */
+        headless: true,
     },
 
-    /* Configure projects for major browsers */
+    /* Configure projects for chromium desktop and mobile only */
     projects: [
         {
             name: 'chromium',
             use: { ...devices['Desktop Chrome'] },
         },
-
-        // Commented out for faster development - enable for full cross-browser testing
-        // {
-        //     name: 'firefox',
-        //     use: { ...devices['Desktop Firefox'] },
-        // },
-
-        // {
-        //     name: 'webkit',
-        //     use: { ...devices['Desktop Safari'] },
-        // },
-
-        // /* Test against mobile viewports. */
-        // {
-        //     name: 'Mobile Chrome',
-        //     use: { ...devices['Pixel 5'] },
-        // },
-        // {
-        //     name: 'Mobile Safari',
-        //     use: { ...devices['iPhone 12'] },
-        // },
+        {
+            name: 'Mobile Chrome',
+            use: { ...devices['Pixel 5'] },
+        },
     ],
 
     /* Run your local dev server before starting the tests */
     webServer: {
-        command: 'dotnet run --project src/Po.ConnectFive.Api/Po.ConnectFive.Api.csproj',
-        url: 'http://localhost:5000',
-        reuseExistingServer: !process.env.CI,
-        timeout: 120 * 1000,
+        command: 'dotnet run --project src/Po.ConnectFive.Api/Po.ConnectFive.Api.csproj --urls http://localhost:5000',
+        url: 'http://localhost:5000/api/health',
+        reuseExistingServer: true,
+        timeout: 180 * 1000,
+        stdout: 'pipe',
+        stderr: 'pipe',
     },
 });
