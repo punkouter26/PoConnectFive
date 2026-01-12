@@ -12,9 +12,9 @@ permissions:
   contents: read
 
 env:
-  AZURE_SUBSCRIPTION_ID: f0504e26-451a-4249-8fb3-46270defdd5b
+  AZURE_SUBSCRIPTION_ID: bbb8dfbe-9169-432f-9b7a-fbf861b51037
   RESOURCE_GROUP: PoConnectFive
-  ACR_NAME: acrposhared26
+  ACR_NAME: acrposhared
   CONTAINER_APP_NAME: ca-poconnectfive-web
   IMAGE_NAME: poconnectfive-web
 
